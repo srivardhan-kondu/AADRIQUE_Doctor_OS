@@ -1,20 +1,19 @@
 /**
  * Shared domain types for the app shell.
  *
- * These are the shell-level contracts only. The full clinical model lands with
- * Prisma in Part 2 (spec §25); anything defined here that the schema also
- * describes will be re-exported from the generated types at that point.
+ * Anything the database also describes is re-exported from the generated
+ * Prisma enums, so there is exactly one definition of a role, a queue state or
+ * an appointment status across the schema, the permission matrix and the UI.
  */
 
-/** Spec §21 — RBAC roles. */
-export type Role =
-  | "SUPER_ADMIN"
-  | "HOSPITAL_ADMIN"
-  | "DOCTOR"
-  | "NURSE"
-  | "RECEPTIONIST"
-  | "STAFF"
-  | "PATIENT";
+/**
+ * Spec §21 — RBAC roles.
+ *
+ * Re-exported from the generated Prisma enums so the database, the permission
+ * matrix and the UI can never drift apart.
+ */
+export type { Role } from "@/generated/prisma/enums";
+import type { Role } from "@/generated/prisma/enums";
 
 /** The three workspaces the shell can render (spec §4). */
 export type Workspace = "doctor" | "reception" | "admin";
@@ -30,33 +29,22 @@ export const WORKSPACE_FOR_ROLE: Record<Role, Workspace> = {
 };
 
 /** Spec §5.1 — the patient flow stages visualised on the dashboard. */
-export type PatientFlowStage =
-  | "REGISTERED"
-  | "WAITING"
-  | "VITALS"
-  | "WITH_DOCTOR"
-  | "COMPLETED"
-  | "FOLLOW_UP";
+export type { PatientFlowStage } from "@/generated/prisma/enums";
 
 /** Spec §11 — appointment lifecycle. */
-export type AppointmentStatus =
-  | "SCHEDULED"
-  | "CHECKED_IN"
-  | "WAITING"
-  | "IN_CONSULTATION"
-  | "COMPLETED"
-  | "CANCELLED"
-  | "NO_SHOW"
-  | "RESCHEDULED";
+export type { AppointmentStatus } from "@/generated/prisma/enums";
 
 /** Spec §20 — notification priority levels. */
-export type NotificationLevel = "NORMAL" | "IMPORTANT" | "ALERT" | "AI";
+export type { NotificationLevel } from "@/generated/prisma/enums";
 
 export interface CurrentUser {
   id: string;
   name: string;
+  email: string;
   role: Role;
-  department?: string;
+  /** The doctor profile id, when this user is a clinician. */
+  doctorId: string | null;
+  department: string | null;
   facility: string;
   organization: string;
   avatarUrl?: string;

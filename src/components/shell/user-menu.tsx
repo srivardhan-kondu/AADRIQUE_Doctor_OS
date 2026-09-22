@@ -25,9 +25,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { useSession } from "@/lib/session";
-import { WORKSPACE_META } from "@/lib/nav";
-import { WORKSPACE_FOR_ROLE, type Role } from "@/types";
+import { signOutAction } from "@/lib/auth/actions";
 import { useMounted } from "@/hooks/use-mounted";
+import type { Role } from "@/types";
 
 const ROLE_LABEL: Record<Role, string> = {
   SUPER_ADMIN: "Super Admin",
@@ -39,19 +39,11 @@ const ROLE_LABEL: Record<Role, string> = {
   PATIENT: "Patient",
 };
 
-/** Roles the demo shell can switch between. Removed when real auth lands. */
-const DEMO_ROLES: Role[] = ["DOCTOR", "NURSE", "RECEPTIONIST", "HOSPITAL_ADMIN"];
-
 export function UserMenu() {
-  const { user, setRole } = useSession();
+  const user = useSession();
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const mounted = useMounted();
-
-  function switchRole(role: Role) {
-    setRole(role);
-    router.push(WORKSPACE_META[WORKSPACE_FOR_ROLE[role]].href);
-  }
 
   return (
     <DropdownMenu>
@@ -85,7 +77,10 @@ export function UserMenu() {
       <DropdownMenuContent className="w-64">
         <div className="px-2.5 py-2">
           <p className="text-sm font-semibold">{user.name}</p>
-          <p className="text-[12px] text-muted-foreground">
+          <p className="truncate text-[12px] text-muted-foreground">
+            {user.email}
+          </p>
+          <p className="mt-0.5 text-[12px] text-muted-foreground">
             {user.department ? `${user.department} · ` : ""}
             {user.facility}
           </p>
@@ -128,25 +123,16 @@ export function UserMenu() {
 
         <DropdownMenuSeparator />
 
-        {/* Demo affordance — replaced by real sign-in in Part 2. */}
-        <DropdownMenuLabel>Demo role</DropdownMenuLabel>
-        <DropdownMenuRadioGroup
-          value={user.role}
-          onValueChange={(v) => switchRole(v as Role)}
-        >
-          {DEMO_ROLES.map((role) => (
-            <DropdownMenuRadioItem key={role} value={role}>
-              {ROLE_LABEL[role]}
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
-
-        <DropdownMenuSeparator />
-
-        <DropdownMenuItem variant="destructive" onSelect={() => router.push("/")}>
-          <LogOut />
-          Sign out
-        </DropdownMenuItem>
+        <form action={signOutAction}>
+          <button type="submit" className="w-full">
+            <DropdownMenuItem variant="destructive" asChild>
+              <span>
+                <LogOut />
+                Sign out
+              </span>
+            </DropdownMenuItem>
+          </button>
+        </form>
       </DropdownMenuContent>
     </DropdownMenu>
   );

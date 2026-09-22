@@ -30,6 +30,29 @@ Open <http://localhost:3000>. The root redirects into the doctor workspace.
 
 ## Build status
 
+**Part 2b — authentication, service layer, Doctor Command Center. Complete.**
+
+Sign in at [`/sign-in`](http://localhost:3000/sign-in) with any seeded account
+(password `aadrique123`):
+
+| Account | Role |
+|---|---|
+| `ananya.rao@aadrique.demo` | Doctor |
+| `frontdesk@aadrique.demo` | Receptionist |
+| `nurse@aadrique.demo` | Nurse |
+| `admin@aadrique.demo` | Hospital Admin |
+
+- **Auth.js credentials sign-in**, scrypt password hashing, 12-hour sessions
+  carrying the tenant and role. Unknown email and wrong password are
+  indistinguishable, and both burn the same CPU time.
+- **Server-side authorization** — `src/server/context.ts` builds the actor from
+  the session and the database; the proxy only decides whether to show the
+  sign-in page.
+- **Doctor Command Center** at `/doctor` — live queue, today's schedule,
+  patient flow, daily brief with Start My Day, and metrics with count-up.
+- **Data layer** — 41-table Prisma schema on PostgreSQL with a seeded demo
+  organisation (100 patients, 297 visits, a live queue).
+
 **Part 1 — project setup, design system, app shell. Complete.**
 
 What exists today:
@@ -55,10 +78,8 @@ the notification tray are the only placeholder data, and they are isolated in
 
 ### Next
 
-Part 2 brings the Prisma schema, Auth.js authentication, RBAC, tenant isolation,
-the Doctor Command Center with a live queue, the patient module, appointments
-and the consultation workspace. It needs a PostgreSQL connection string in
-`.env` as `DATABASE_URL`.
+Part 2c: the patient module (search and Patient 360), the appointment module,
+queue actions (call next, start, complete) and the consultation workspace.
 
 ---
 
@@ -83,8 +104,18 @@ src/
   types/                shell-level domain types
 ```
 
-Arriving in Part 2: `src/server/` (services, repositories, workflows),
-`prisma/schema.prisma`, and `src/lib/{auth,db,permissions,validation}`.
+    (auth)/             sign-in
+  server/
+    context.ts          builds the authorized actor from the session
+    services/           all database access lives behind these
+  lib/
+    auth/               Auth.js config, password hashing
+    db/                 Prisma client singleton
+    permissions/        role matrix, tenant + permission assertions
+  proxy.ts              redirects unauthenticated users to sign-in
+prisma/
+  schema.prisma         41 models
+  seed.ts               the demo dataset
 
 ---
 

@@ -958,7 +958,17 @@ async function seedToday({
 
     let tokenSeq = 0;
     let position = 0;
-    let slotTime = at(TODAY, 9, 30);
+    // Anchor the session on the clock, not on a fixed 09:30 start: the block
+    // of completed consultations ends about now, the active one is in
+    // progress, and the people waiting joined in the last few minutes. Seeding
+    // at any hour then produces a queue that looks like a real one.
+    const sessionStart = new Date(
+      Math.max(
+        minutesAfter(now, -(completedCount * doctor.consultationMinutes)).getTime(),
+        at(TODAY, 8, 0).getTime(),
+      ),
+    );
+    let slotTime = sessionStart;
 
     const pushEntry = (
       status: QueueEntryStatus,
@@ -977,7 +987,12 @@ async function seedToday({
       const completed = status === QueueEntryStatus.COMPLETED;
       const inConsultation = status === QueueEntryStatus.IN_CONSULTATION;
 
-      const joinedAt = minutesAfter(scheduledStart, -random.int(5, 20));
+      // A patient still waiting joined `waitMinutes` ago; one already seen
+      // arrived shortly before their slot.
+      const joinedAt =
+        opts.waitMinutes !== undefined
+          ? minutesAfter(now, -opts.waitMinutes)
+          : minutesAfter(scheduledStart, -random.int(5, 20));
       const startedAt = completed || inConsultation ? scheduledStart : null;
       const completedAt = completed
         ? minutesAfter(scheduledStart, doctor.consultationMinutes)

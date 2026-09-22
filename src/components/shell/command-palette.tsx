@@ -48,7 +48,7 @@ export function CommandPalette({
 }) {
   const router = useRouter();
   const { setTheme, resolvedTheme } = useTheme();
-  const { user } = useSession();
+  const user = useSession();
   const navItems = React.useMemo(() => flatNav(workspace), [workspace]);
 
   const run = React.useCallback(

@@ -5,7 +5,6 @@ import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { SessionProvider } from "@/lib/session";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   // One client per browser session; created lazily so it is never shared
@@ -31,22 +30,20 @@ export function Providers({ children }: { children: React.ReactNode }) {
       disableTransitionOnChange
     >
       <QueryClientProvider client={queryClient}>
-        <SessionProvider>
-          <TooltipProvider>
-            {children}
-            <Toaster
-              position="bottom-right"
-              closeButton
-              toastOptions={{
-                classNames: {
-                  toast:
-                    "!rounded-xl !border-border !bg-popover !text-popover-foreground !shadow-overlay",
-                  description: "!text-muted-foreground",
-                },
-              }}
-            />
-          </TooltipProvider>
-        </SessionProvider>
+        <TooltipProvider>
+          {children}
+          <Toaster
+            position="bottom-right"
+            closeButton
+            toastOptions={{
+              classNames: {
+                toast:
+                  "!rounded-xl !border-border !bg-popover !text-popover-foreground !shadow-overlay",
+                description: "!text-muted-foreground",
+              },
+            }}
+          />
+        </TooltipProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );

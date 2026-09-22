@@ -21,7 +21,9 @@ before implementing a feature.
 | Part | Scope | Status |
 |------|-------|--------|
 | 1 | Project setup, design system, app shell | Done |
-| 2 | Prisma schema, auth, RBAC, tenancy, dashboard, patients, appointments, queue, consultation | Next |
+| 2a | Prisma schema, RBAC, tenancy, demo seed | Done |
+| 2b | Auth.js sign-in, service layer, Doctor Command Center | Done |
+| 2c | Patients + Patient 360, appointments, queue actions, consultation workspace | Next |
 | 3 | Patient 360, follow-ups, communication, analytics, audit logs | Planned |
 | 4 | AI abstraction, pre-consultation brief, documentation copilot, history retrieval | Planned |
 | 5 | Workflow engine, integrations, admin, testing, performance, security review | Planned |
@@ -59,9 +61,21 @@ before implementing a feature.
 ## Checks before finishing a feature
 
 ```bash
-npx tsc --noEmit
+npm run typecheck
 npx eslint .
+npm test
 npm run build
 ```
+
+## Database
+
+```bash
+npm run db:migrate   # create and apply a migration
+npm run db:seed      # reset and reseed the demo organisation
+npm run db:studio    # browse the data
+```
+
+Migrations use `DIRECT_DATABASE_URL` (Neon's direct endpoint); the app connects
+over the pooled `DATABASE_URL`.
 
 <!-- END:aadrique-project-rules -->

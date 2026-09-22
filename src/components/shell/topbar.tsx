@@ -35,7 +35,7 @@ export function Topbar({
   copilotOpen: boolean;
   notifications: ShellNotification[];
 }) {
-  const { user } = useSession();
+  const user = useSession();
   const mounted = useMounted();
 
   // Rendered after mount: the greeting and date depend on the viewer's clock
