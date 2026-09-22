@@ -1,0 +1,1545 @@
+// AADRIQUE Doctor OS — data model
+//
+// Implements spec §25 (entities), §21 (RBAC), §22 (multi-tenancy) and
+// §26 (consultation model).
+//
+// Tenancy rule: every business record carries `organizationId`. Queries are
+// always scoped through the tenant context in src/server/ — never by trusting
+// an id that arrived from the client (spec §22).
+//
+// Clinical schemas here cover the OPD scope the spec asks for. They are
+// deliberately conservative and should get domain review before production use.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// =============================================================================
+// Enums
+// =============================================================================
+
+/// Spec §21 — roles.
+enum Role {
+  SUPER_ADMIN
+  HOSPITAL_ADMIN
+  DOCTOR
+  NURSE
+  RECEPTIONIST
+  STAFF
+  PATIENT
+}
+
+/// Spec §21 — granular permissions. The default role→permission matrix lives in
+/// src/lib/permissions; rows in RolePermission override it per organization.
+enum Permission {
+  PATIENT_READ
+  PATIENT_CREATE
+  PATIENT_UPDATE
+  PATIENT_DELETE
+  CONSULTATION_READ
+  CONSULTATION_CREATE
+  CONSULTATION_UPDATE
+  CONSULTATION_SIGN
+  APPOINTMENT_READ
+  APPOINTMENT_CREATE
+  APPOINTMENT_UPDATE
+  APPOINTMENT_CANCEL
+  QUEUE_READ
+  QUEUE_MANAGE
+  PRESCRIPTION_READ
+  PRESCRIPTION_CREATE
+  VITALS_READ
+  VITALS_RECORD
+  LAB_READ
+  LAB_UPLOAD
+  COMMUNICATION_READ
+  COMMUNICATION_SEND
+  COMMUNICATION_TEMPLATE_MANAGE
+  FOLLOWUP_READ
+  FOLLOWUP_MANAGE
+  ANALYTICS_READ
+  AUDIT_READ
+  AI_USE
+  AI_MANAGE
+  ADMIN_MANAGE
+  INTEGRATION_MANAGE
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  UNDISCLOSED
+}
+
+enum BloodGroup {
+  A_POSITIVE
+  A_NEGATIVE
+  B_POSITIVE
+  B_NEGATIVE
+  AB_POSITIVE
+  AB_NEGATIVE
+  O_POSITIVE
+  O_NEGATIVE
+  UNKNOWN
+}
+
+enum Severity {
+  LOW
+  MODERATE
+  HIGH
+  CRITICAL
+}
+
+/// Spec §11 — appointment lifecycle.
+enum AppointmentStatus {
+  SCHEDULED
+  CHECKED_IN
+  WAITING
+  IN_CONSULTATION
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+  RESCHEDULED
+}
+
+enum AppointmentType {
+  NEW_CONSULTATION
+  FOLLOW_UP
+  WALK_IN
+  PROCEDURE
+  TELECONSULTATION
+}
+
+enum BookingSource {
+  FRONT_DESK
+  ONLINE
+  PHONE
+  WALK_IN
+  DOCTOR
+}
+
+/// Spec §5.1 — the patient flow stages the dashboard visualises.
+enum PatientFlowStage {
+  REGISTERED
+  WAITING
+  VITALS
+  WITH_DOCTOR
+  COMPLETED
+  FOLLOW_UP
+}
+
+enum QueueEntryStatus {
+  WAITING
+  VITALS
+  CALLED
+  IN_CONSULTATION
+  COMPLETED
+  SKIPPED
+  LEFT
+}
+
+enum QueuePriority {
+  NORMAL
+  PRIORITY
+  EMERGENCY
+}
+
+enum QueueStatus {
+  OPEN
+  PAUSED
+  CLOSED
+}
+
+enum VisitStatus {
+  OPEN
+  COMPLETED
+  CANCELLED
+}
+
+/// Spec §26 — a consultation is a draft until a doctor signs it.
+enum ConsultationStatus {
+  DRAFT
+  REVIEWED
+  SIGNED
+}
+
+enum PrescriptionStatus {
+  DRAFT
+  ISSUED
+  CANCELLED
+}
+
+enum LabReportStatus {
+  ORDERED
+  COLLECTED
+  RESULT_AVAILABLE
+  REVIEWED
+  CANCELLED
+}
+
+/// Spec §14 — communication channels.
+enum MessageChannel {
+  WHATSAPP
+  SMS
+  EMAIL
+}
+
+enum MessageDirection {
+  OUTBOUND
+  INBOUND
+}
+
+enum MessageCategory {
+  TRANSACTIONAL
+  ENGAGEMENT
+}
+
+/// Spec §14 — delivery status shown on every communication timeline.
+enum MessageStatus {
+  PENDING
+  QUEUED
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+enum FollowUpStatus {
+  PENDING
+  SCHEDULED
+  COMPLETED
+  MISSED
+  CANCELLED
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  RUNNING
+  COMPLETED
+  CANCELLED
+}
+
+/// Spec §20 — notification priority levels.
+enum NotificationLevel {
+  NORMAL
+  IMPORTANT
+  ALERT
+  AI
+}
+
+/// Spec §29 — integration categories, each behind an adapter.
+enum IntegrationCategory {
+  WHATSAPP
+  SMS
+  EMAIL
+  LAB
+  PHARMACY
+  HMS
+  EMR
+  OTHER
+}
+
+enum IntegrationStatus {
+  CONNECTED
+  NEEDS_ATTENTION
+  DISCONNECTED
+  NOT_CONFIGURED
+}
+
+/// Spec §30 — the events that must be traceable.
+enum AuditAction {
+  LOGIN
+  LOGOUT
+  RECORD_CREATED
+  RECORD_UPDATED
+  RECORD_VIEWED
+  RECORD_DELETED
+  PRESCRIPTION_CREATED
+  CONSULTATION_SIGNED
+  AI_OUTPUT_GENERATED
+  AI_OUTPUT_ACCEPTED
+  AI_OUTPUT_REJECTED
+  MESSAGE_SENT
+  INTEGRATION_CHANGED
+  PERMISSION_CHANGED
+}
+
+/// Spec §9 — what the Copilot is allowed to do.
+enum AIActionType {
+  PATIENT_SUMMARY
+  PRE_CONSULTATION_BRIEF
+  CONSULTATION_NOTE_DRAFT
+  VOICE_TO_NOTE
+  FOLLOW_UP_MESSAGE
+  HISTORY_SEARCH
+  KNOWLEDGE_ANSWER
+  MISSING_DOCUMENTATION
+}
+
+/// Spec §10 — generated content is never silently applied.
+enum AIActionStatus {
+  GENERATING
+  AWAITING_REVIEW
+  ACCEPTED
+  REJECTED
+  FAILED
+}
+
+enum DocumentStatus {
+  UPLOADED
+  PROCESSING
+  INDEXED
+  FAILED
+  ARCHIVED
+}
+
+enum WorkflowTriggerType {
+  APPOINTMENT_SCHEDULED
+  APPOINTMENT_COMPLETED
+  APPOINTMENT_CANCELLED
+  TOKEN_GENERATED
+  TOKEN_APPROACHING
+  CONSULTATION_SIGNED
+  FOLLOW_UP_DUE
+  PATIENT_REGISTERED
+}
+
+enum WorkflowRunStatus {
+  PENDING
+  RUNNING
+  WAITING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+// =============================================================================
+// Tenancy & identity  (spec §22)
+//
+//   Organization → Facility → Department → Doctor → Patients/Visits
+// =============================================================================
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  timezone  String   @default("Asia/Kolkata")
+  locale    String   @default("en-IN")
+  /// Spec §2 — customers enable modules independently.
+  modules   Json     @default("{}")
+  settings  Json     @default("{}")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  facilities      Facility[]
+  memberships     Membership[]
+  rolePermissions RolePermission[]
+  patients        Patient[]
+  appointments    Appointment[]
+  visits          Visit[]
+  consultations   Consultation[]
+  queues          Queue[]
+  messages        Message[]
+  templates       MessageTemplate[]
+  campaigns       CommunicationCampaign[]
+  followUps       FollowUp[]
+  feedback        Feedback[]
+  notifications   Notification[]
+  auditLogs       AuditLog[]
+  integrations    Integration[]
+  aiConversations AIConversation[]
+  aiActions       AIAction[]
+  documents       HospitalDocument[]
+  workflows       Workflow[]
+  attachments     Attachment[]
+
+  @@index([active])
+}
+
+model Facility {
+  id             String  @id @default(cuid())
+  organizationId String
+  name           String
+  code           String
+  addressLine    String?
+  city           String?
+  state          String?
+  postalCode     String?
+  phone          String?
+  email          String?
+  timezone       String  @default("Asia/Kolkata")
+  active         Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  departments   Department[]
+  memberships   Membership[]
+  patients      Patient[]
+  appointments  Appointment[]
+  visits        Visit[]
+  queues        Queue[]
+  doctorProfile DoctorProfile[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+}
+
+model Department {
+  id         String  @id @default(cuid())
+  facilityId String
+  name       String
+  code       String
+  /// Spec §17 — the wait threshold that drives the Operational Pulse.
+  waitThresholdMinutes Int @default(20)
+  queueCapacity        Int @default(5)
+  active     Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  facility Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+
+  doctors      DoctorProfile[]
+  appointments Appointment[]
+  queues       Queue[]
+  visits       Visit[]
+
+  @@unique([facilityId, code])
+  @@index([facilityId])
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  /// scrypt hash (see src/lib/auth/password.ts). Null for accounts that only
+  /// sign in through a provider.
+  passwordHash  String?
+  name          String
+  phone         String?
+  avatarUrl     String?
+  /// Spec §23 — optional MFA, required for administrators by policy.
+  mfaEnabled    Boolean   @default(false)
+  mfaSecret     String?
+  active        Boolean   @default(true)
+  lastLoginAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships   Membership[]
+  doctorProfile DoctorProfile?
+  sessions      Session[]
+  accounts      Account[]
+
+  createdPatients     Patient[]        @relation("PatientCreatedBy")
+  recordedVitals      Vital[]          @relation("VitalRecordedBy")
+  authoredMessages    Message[]        @relation("MessageSentBy")
+  auditLogs           AuditLog[]
+  notifications       Notification[]
+  aiConversations     AIConversation[]
+  aiActions           AIAction[]
+  uploadedAttachments Attachment[]     @relation("AttachmentUploadedBy")
+  uploadedDocuments   HospitalDocument[] @relation("DocumentUploadedBy")
+
+  @@index([active])
+}
+
+/// A user's role within one organization, optionally narrowed to one facility.
+/// Spec §22 — this is the only thing that grants cross-tenant visibility, and
+/// it is always checked server-side.
+model Membership {
+  id             String  @id @default(cuid())
+  userId         String
+  organizationId String
+  facilityId     String?
+  role           Role
+  active         Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  facility     Facility?    @relation(fields: [facilityId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, organizationId, facilityId])
+  @@index([organizationId, role])
+  @@index([userId])
+}
+
+/// Per-organization override of the default role→permission matrix.
+/// `granted = false` removes a permission the default matrix would allow.
+model RolePermission {
+  id             String     @id @default(cuid())
+  organizationId String
+  role           Role
+  permission     Permission
+  granted        Boolean    @default(true)
+
+  createdAt DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, role, permission])
+  @@index([organizationId, role])
+}
+
+/// Auth.js session store.
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// Auth.js OAuth account links.
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model DoctorProfile {
+  id           String  @id @default(cuid())
+  userId       String  @unique
+  facilityId   String
+  departmentId String?
+
+  registrationNo String?
+  qualifications String?
+  specialization String?
+  experienceYears Int?
+  bio            String?
+
+  /// Spec §12 — how the queue should treat this doctor's time.
+  consultationMinutes Int     @default(15)
+  tokenPrefix         String  @default("A")
+  acceptsWalkIns      Boolean @default(true)
+  online              Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  facility   Facility    @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  department Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+  availability  DoctorAvailability[]
+  appointments  Appointment[]
+  queues        Queue[]
+  visits        Visit[]
+  consultations Consultation[]
+  prescriptions Prescription[]
+  followUps     FollowUp[]
+  feedback      Feedback[]
+
+  @@index([facilityId])
+  @@index([departmentId])
+}
+
+/// Spec §11 — recurring availability. `dayOfWeek` is 0 (Sunday) to 6.
+model DoctorAvailability {
+  id        String @id @default(cuid())
+  doctorId  String
+  dayOfWeek Int
+  /// Minutes from midnight, in the facility's timezone.
+  startMinute Int
+  endMinute   Int
+  /// A break or block-out rather than a bookable window.
+  isBlock     Boolean @default(false)
+  label       String?
+  effectiveFrom DateTime?
+  effectiveTo   DateTime?
+
+  doctor DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@index([doctorId, dayOfWeek])
+}
+
+// =============================================================================
+// Patients  (spec §7, §13)
+// =============================================================================
+
+model Patient {
+  id             String  @id @default(cuid())
+  organizationId String
+  facilityId     String
+  /// Human-readable medical record number, e.g. P-000184.
+  mrn            String
+
+  firstName String
+  lastName  String?
+  gender    Gender      @default(UNDISCLOSED)
+  dateOfBirth DateTime?
+  /// Captured when a patient knows their age but not their date of birth.
+  approximateAge Int?
+  bloodGroup BloodGroup @default(UNKNOWN)
+
+  phone          String
+  alternatePhone String?
+  email          String?
+  addressLine    String?
+  city           String?
+  state          String?
+  postalCode     String?
+
+  emergencyContactName  String?
+  emergencyContactPhone String?
+
+  photoUrl String?
+  notes    String?
+
+  /// Spec §14 — a patient with no consent is never sent engagement messages.
+  whatsappOptIn Boolean @default(true)
+  smsOptIn      Boolean @default(true)
+  emailOptIn    Boolean @default(false)
+  preferredLanguage String @default("en")
+
+  active      Boolean   @default(true)
+  createdById String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  lastVisitAt DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  facility     Facility     @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  createdBy    User?        @relation("PatientCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  identifiers   PatientIdentifier[]
+  allergies     PatientAllergy[]
+  conditions    PatientCondition[]
+  flags         PatientFlag[]
+  appointments  Appointment[]
+  queueEntries  QueueEntry[]
+  visits        Visit[]
+  consultations Consultation[]
+  vitals        Vital[]
+  diagnoses     Diagnosis[]
+  prescriptions Prescription[]
+  labReports    LabReport[]
+  attachments   Attachment[]
+  messages      Message[]
+  followUps     FollowUp[]
+  feedback      Feedback[]
+  aiConversations AIConversation[]
+  aiActions     AIAction[]
+
+  @@unique([organizationId, mrn])
+  @@index([organizationId, facilityId])
+  @@index([organizationId, phone])
+  @@index([organizationId, lastName, firstName])
+  @@index([organizationId, lastVisitAt])
+}
+
+/// External identifiers — Aadhaar, insurance member id, HMS/EMR record id.
+model PatientIdentifier {
+  id        String  @id @default(cuid())
+  patientId String
+  /// e.g. "AADHAAR", "INSURANCE", "HMS", "ABHA".
+  type      String
+  value     String
+  issuer    String?
+  isPrimary Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@unique([patientId, type, value])
+  @@index([type, value])
+}
+
+/// Spec §6 — allergies are a first-class safety flag on the snapshot panel.
+model PatientAllergy {
+  id        String   @id @default(cuid())
+  patientId String
+  substance String
+  reaction  String?
+  severity  Severity @default(MODERATE)
+  notedAt   DateTime @default(now())
+  active    Boolean  @default(true)
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId, active])
+}
+
+model PatientCondition {
+  id        String    @id @default(cuid())
+  patientId String
+  name      String
+  /// ICD-10 or a local code, when one is recorded.
+  code      String?
+  since     DateTime?
+  isChronic Boolean   @default(true)
+  active    Boolean   @default(true)
+  notes     String?
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId, active])
+}
+
+/// Free-form clinical or operational flag, e.g. "Pregnant", "Interpreter needed".
+model PatientFlag {
+  id        String   @id @default(cuid())
+  patientId String
+  label     String
+  severity  Severity @default(LOW)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId, active])
+}
+
+// =============================================================================
+// Appointments, queue & visits  (spec §11, §12)
+// =============================================================================
+
+model Appointment {
+  id             String @id @default(cuid())
+  organizationId String
+  facilityId     String
+  departmentId   String?
+  patientId      String
+  doctorId       String
+
+  scheduledStart DateTime
+  scheduledEnd   DateTime
+  durationMinutes Int      @default(15)
+
+  type   AppointmentType   @default(NEW_CONSULTATION)
+  status AppointmentStatus @default(SCHEDULED)
+  source BookingSource     @default(FRONT_DESK)
+
+  reason String?
+  notes  String?
+
+  checkedInAt DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  cancelledAt     DateTime?
+  cancellationReason String?
+  /// Set on the old appointment when it is moved, pointing at the new one.
+  rescheduledToId String?   @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  facility     Facility      @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  department   Department?   @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  patient      Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor       DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  rescheduledTo   Appointment?  @relation("Reschedule", fields: [rescheduledToId], references: [id], onDelete: SetNull)
+  rescheduledFrom Appointment?  @relation("Reschedule")
+
+  queueEntry QueueEntry?
+  visit      Visit?
+  followUp   FollowUp?
+  messages   Message[]
+
+  @@index([organizationId, scheduledStart])
+  @@index([doctorId, scheduledStart])
+  @@index([patientId, scheduledStart])
+  @@index([organizationId, status])
+}
+
+/// One doctor's queue for one day (spec §12).
+model Queue {
+  id             String @id @default(cuid())
+  organizationId String
+  facilityId     String
+  departmentId   String?
+  doctorId       String
+
+  /// Midnight in the facility's timezone — the day this queue belongs to.
+  date   DateTime @db.Date
+  status QueueStatus @default(OPEN)
+
+  tokenPrefix  String  @default("A")
+  lastTokenSeq Int     @default(0)
+  counterLabel String?
+  roomLabel    String?
+
+  pausedAt     DateTime?
+  pauseReason  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  facility     Facility      @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  department   Department?   @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  doctor       DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  entries QueueEntry[]
+
+  @@unique([doctorId, date])
+  @@index([organizationId, date])
+}
+
+model QueueEntry {
+  id      String @id @default(cuid())
+  queueId String
+  patientId String
+  appointmentId String? @unique
+
+  /// Display token, e.g. "A018".
+  token    String
+  /// Numeric part, used for ordering and "patients ahead" maths.
+  tokenSeq Int
+
+  status   QueueEntryStatus @default(WAITING)
+  priority QueuePriority    @default(NORMAL)
+  /// Manual re-ordering without rewriting token numbers.
+  position Int
+
+  joinedAt    DateTime  @default(now())
+  vitalsAt    DateTime?
+  calledAt    DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  /// Denormalised so the queue list renders without recomputing every row.
+  waitMinutes Int?
+
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  queue       Queue        @relation(fields: [queueId], references: [id], onDelete: Cascade)
+  patient     Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointment Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  visit       Visit?
+
+  @@unique([queueId, token])
+  @@index([queueId, status, position])
+  @@index([patientId])
+}
+
+/// One attendance at the OPD. Groups everything recorded on the day.
+model Visit {
+  id             String @id @default(cuid())
+  organizationId String
+  facilityId     String
+  departmentId   String?
+  patientId      String
+  doctorId       String
+  appointmentId  String? @unique
+  queueEntryId   String? @unique
+
+  visitNumber String
+  stage       PatientFlowStage @default(REGISTERED)
+  status      VisitStatus      @default(OPEN)
+
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  chiefComplaint String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  facility     Facility      @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  department   Department?   @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  patient      Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor       DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  appointment  Appointment?  @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  queueEntry   QueueEntry?   @relation(fields: [queueEntryId], references: [id], onDelete: SetNull)
+
+  consultation  Consultation?
+  vitals        Vital[]
+  diagnoses     Diagnosis[]
+  prescriptions Prescription[]
+  labReports    LabReport[]
+  attachments   Attachment[]
+  followUps     FollowUp[]
+  feedback      Feedback?
+
+  @@unique([organizationId, visitNumber])
+  @@index([patientId, startedAt])
+  @@index([doctorId, startedAt])
+  @@index([organizationId, startedAt])
+}
+
+// =============================================================================
+// Clinical record  (spec §26)
+// =============================================================================
+
+model Consultation {
+  id             String @id @default(cuid())
+  organizationId String
+  visitId        String @unique
+  patientId      String
+  doctorId       String
+
+  chiefComplaint String?
+  symptoms       String?
+  history        String?
+  examination    String?
+  assessment     String?
+  plan           String?
+  doctorNotes    String?
+
+  status ConsultationStatus @default(DRAFT)
+
+  /// Spec §10 — generated sections are stored apart from the doctor's own text
+  /// so nothing AI produced can be mistaken for what the doctor wrote.
+  aiGeneratedSections Json?
+
+  /// Spec §35 rule 4 — drafts autosave; this is when the last autosave landed.
+  draftSavedAt DateTime?
+  signedAt     DateTime?
+  /// Snapshot of the signing doctor's name, so a later profile edit cannot
+  /// change what a signed record says.
+  signedByName String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  visit        Visit         @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  patient      Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor       DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  diagnoses     Diagnosis[]
+  prescriptions Prescription[]
+  aiActions     AIAction[]
+
+  @@index([patientId, createdAt])
+  @@index([doctorId, status])
+  @@index([organizationId, status])
+}
+
+model Vital {
+  id        String  @id @default(cuid())
+  visitId   String
+  patientId String
+
+  heightCm       Decimal? @db.Decimal(5, 2)
+  weightKg       Decimal? @db.Decimal(5, 2)
+  temperatureC   Decimal? @db.Decimal(4, 1)
+  pulseBpm       Int?
+  respiratoryRate Int?
+  systolicBp     Int?
+  diastolicBp    Int?
+  spo2           Int?
+  bloodGlucose   Decimal? @db.Decimal(5, 1)
+  notes          String?
+
+  recordedById String?
+  recordedAt   DateTime @default(now())
+
+  visit      Visit   @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  patient    Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  recordedBy User?   @relation("VitalRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@index([patientId, recordedAt])
+  @@index([visitId])
+}
+
+model Diagnosis {
+  id             String  @id @default(cuid())
+  visitId        String
+  consultationId String?
+  patientId      String
+
+  name      String
+  code      String?
+  isPrimary Boolean @default(false)
+  notes     String?
+
+  createdAt DateTime @default(now())
+
+  visit        Visit         @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  consultation Consultation? @relation(fields: [consultationId], references: [id], onDelete: SetNull)
+  patient      Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId, createdAt])
+  @@index([visitId])
+}
+
+/// Formulary entry. Shared across prescriptions so names stay consistent.
+model Medication {
+  id           String  @id @default(cuid())
+  name         String
+  genericName  String?
+  form         String?
+  strength     String?
+  active       Boolean @default(true)
+
+  createdAt DateTime @default(now())
+
+  items PrescriptionItem[]
+
+  @@unique([name, strength, form])
+  @@index([name])
+}
+
+model Prescription {
+  id             String @id @default(cuid())
+  visitId        String
+  consultationId String?
+  patientId      String
+  doctorId       String
+
+  prescriptionNo String
+  status         PrescriptionStatus @default(DRAFT)
+  advice         String?
+  issuedAt       DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  visit        Visit         @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  consultation Consultation? @relation(fields: [consultationId], references: [id], onDelete: SetNull)
+  patient      Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor       DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  items PrescriptionItem[]
+
+  @@unique([prescriptionNo])
+  @@index([patientId, createdAt])
+  @@index([visitId])
+}
+
+model PrescriptionItem {
+  id             String  @id @default(cuid())
+  prescriptionId String
+  medicationId   String?
+
+  /// Stored alongside the relation so a signed prescription still reads
+  /// correctly if the formulary entry is later renamed or deactivated.
+  medicationName String
+  dosage         String?
+  frequency      String?
+  route          String?
+  durationDays   Int?
+  instructions   String?
+  sortOrder      Int     @default(0)
+
+  prescription Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  medication   Medication?  @relation(fields: [medicationId], references: [id], onDelete: SetNull)
+
+  @@index([prescriptionId, sortOrder])
+}
+
+model LabReport {
+  id        String @id @default(cuid())
+  visitId   String?
+  patientId String
+
+  testName    String
+  panel       String?
+  status      LabReportStatus @default(ORDERED)
+  orderedAt   DateTime        @default(now())
+  collectedAt DateTime?
+  resultAt    DateTime?
+  reviewedAt  DateTime?
+
+  /// Structured results where the provider supplies them, e.g.
+  /// [{ "analyte": "HbA1c", "value": 6.2, "unit": "%", "flag": "HIGH" }].
+  results     Json?
+  summary     String?
+  abnormal    Boolean @default(false)
+
+  /// Set when the report arrived through a lab integration (spec §29).
+  externalRef String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  visit   Visit?  @relation(fields: [visitId], references: [id], onDelete: SetNull)
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  attachments Attachment[]
+
+  @@index([patientId, orderedAt])
+  @@index([visitId])
+}
+
+/// Spec §23 — files live in object storage; only the key is stored here, and
+/// access is granted through short-lived signed URLs (spec §31).
+model Attachment {
+  id             String @id @default(cuid())
+  organizationId String
+  patientId      String?
+  visitId        String?
+  labReportId    String?
+
+  fileName    String
+  storageKey  String  @unique
+  contentType String
+  sizeBytes   Int
+  kind        String  @default("DOCUMENT")
+
+  uploadedById String?
+  createdAt    DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  patient      Patient?     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  visit        Visit?       @relation(fields: [visitId], references: [id], onDelete: SetNull)
+  labReport    LabReport?   @relation(fields: [labReportId], references: [id], onDelete: SetNull)
+  uploadedBy   User?        @relation("AttachmentUploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([patientId, createdAt])
+  @@index([organizationId])
+}
+
+// =============================================================================
+// Communication, follow-up & feedback  (spec §14, §15, §28)
+// =============================================================================
+
+model MessageTemplate {
+  id             String @id @default(cuid())
+  organizationId String
+
+  key      String
+  name     String
+  channel  MessageChannel
+  category MessageCategory @default(TRANSACTIONAL)
+  language String          @default("en")
+
+  subject String?
+  body    String
+  /// Placeholder names this template expects, e.g. ["patientName","token"].
+  variables Json   @default("[]")
+  /// Provider-side template identifier, required by WhatsApp.
+  providerTemplateId String?
+
+  active Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  messages Message[]
+
+  @@unique([organizationId, key, channel, language])
+  @@index([organizationId, channel])
+}
+
+model Message {
+  id             String @id @default(cuid())
+  organizationId String
+  patientId      String?
+  appointmentId  String?
+  templateId     String?
+  campaignId     String?
+
+  channel   MessageChannel
+  direction MessageDirection @default(OUTBOUND)
+  category  MessageCategory  @default(TRANSACTIONAL)
+  status    MessageStatus    @default(PENDING)
+
+  toAddress String
+  subject   String?
+  body      String
+
+  /// Provider message id, for reconciling delivery receipts.
+  providerRef   String?
+  providerName  String?
+  failureReason String?
+  attemptCount  Int     @default(0)
+
+  queuedAt    DateTime?
+  sentAt      DateTime?
+  deliveredAt DateTime?
+  readAt      DateTime?
+  failedAt    DateTime?
+
+  sentById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  patient      Patient?               @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointment  Appointment?           @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  template     MessageTemplate?       @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  campaign     CommunicationCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  sentBy       User?                  @relation("MessageSentBy", fields: [sentById], references: [id], onDelete: SetNull)
+
+  @@index([patientId, createdAt])
+  @@index([organizationId, status])
+  @@index([organizationId, createdAt])
+  @@index([providerRef])
+}
+
+model CommunicationCampaign {
+  id             String @id @default(cuid())
+  organizationId String
+
+  name        String
+  description String?
+  channel     MessageChannel
+  status      CampaignStatus @default(DRAFT)
+
+  /// Audience rule, evaluated server-side at send time.
+  audienceFilter Json    @default("{}")
+  scheduledFor   DateTime?
+  startedAt      DateTime?
+  completedAt    DateTime?
+
+  recipientCount Int @default(0)
+  sentCount      Int @default(0)
+  failedCount    Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  messages Message[]
+
+  @@index([organizationId, status])
+}
+
+model FollowUp {
+  id             String @id @default(cuid())
+  organizationId String
+  patientId      String
+  doctorId       String
+  visitId        String?
+  appointmentId  String? @unique
+
+  dueDate DateTime
+  reason  String?
+  notes   String?
+  status  FollowUpStatus @default(PENDING)
+
+  reminderSentAt DateTime?
+  completedAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  patient      Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor       DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  visit        Visit?        @relation(fields: [visitId], references: [id], onDelete: SetNull)
+  appointment  Appointment?  @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, dueDate, status])
+  @@index([doctorId, dueDate])
+  @@index([patientId])
+}
+
+/// Spec §15 — feedback and review automation.
+model Feedback {
+  id             String @id @default(cuid())
+  organizationId String
+  patientId      String
+  doctorId       String
+  visitId        String @unique
+
+  /// 1–5. Null until the patient responds.
+  rating     Int?
+  comment    String?
+  requestedAt DateTime  @default(now())
+  respondedAt DateTime?
+
+  /// Set when the patient was routed to a public review platform.
+  reviewRequested Boolean @default(false)
+  reviewPlatform  String?
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  patient      Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor       DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  visit        Visit         @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, respondedAt])
+  @@index([doctorId, rating])
+}
+
+/// Spec §20 — in-app notifications with priority levels.
+model Notification {
+  id             String @id @default(cuid())
+  organizationId String
+  userId         String
+
+  level   NotificationLevel @default(NORMAL)
+  title   String
+  body    String
+  /// Where clicking the notification should take the user.
+  linkHref String?
+  readAt   DateTime?
+
+  createdAt DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+}
+
+// =============================================================================
+// Workflow engine  (spec §28)
+// =============================================================================
+
+/// A reusable automation: trigger → (wait | condition | action)*.
+model Workflow {
+  id             String @id @default(cuid())
+  organizationId String
+
+  name        String
+  description String?
+  trigger     WorkflowTriggerType
+  /// Ordered step list. Each step is
+  /// { "type": "WAIT" | "CONDITION" | "ACTION", ... }.
+  steps       Json    @default("[]")
+  enabled     Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  runs WorkflowRun[]
+
+  @@index([organizationId, trigger, enabled])
+}
+
+model WorkflowRun {
+  id         String @id @default(cuid())
+  workflowId String
+
+  status    WorkflowRunStatus @default(PENDING)
+  /// The record that fired the trigger.
+  subjectType String
+  subjectId   String
+  /// Values the steps read from, captured when the run started.
+  context   Json     @default("{}")
+  stepIndex Int      @default(0)
+  /// When a WAIT step should next be picked up by the job runner.
+  resumeAt  DateTime?
+
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  error       String?
+
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@index([status, resumeAt])
+  @@index([workflowId, startedAt])
+  @@index([subjectType, subjectId])
+}
+
+// =============================================================================
+// AI  (spec §9, §10, §32)
+// =============================================================================
+
+model AIConversation {
+  id             String @id @default(cuid())
+  organizationId String
+  userId         String
+  patientId      String?
+
+  title     String?
+  /// Turn list: [{ "role": "user"|"assistant", "content": "...", "at": "..." }].
+  messages  Json   @default("[]")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  patient      Patient?     @relation(fields: [patientId], references: [id], onDelete: SetNull)
+
+  actions AIAction[]
+
+  @@index([userId, updatedAt])
+  @@index([patientId])
+}
+
+/// Spec §10 — one row per generated output, recording what was produced, what
+/// it was grounded in, and whether a human accepted it. Nothing generated
+/// reaches the clinical record without an ACCEPTED row here.
+model AIAction {
+  id             String @id @default(cuid())
+  organizationId String
+  userId         String
+  patientId      String?
+  consultationId String?
+  conversationId String?
+
+  type   AIActionType
+  status AIActionStatus @default(GENERATING)
+
+  /// What the user asked for, after server-side templating.
+  input  Json?
+  /// What the model returned.
+  output Json?
+
+  /// Spec §8 — the record events this output was derived from, so a doctor can
+  /// inspect the source of every statement.
+  sources Json @default("[]")
+
+  provider  String?
+  model     String?
+  promptTokens     Int?
+  completionTokens Int?
+  latencyMs        Int?
+
+  reviewedAt     DateTime?
+  rejectionReason String?
+  error          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  patient      Patient?        @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  consultation Consultation?   @relation(fields: [consultationId], references: [id], onDelete: SetNull)
+  conversation AIConversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, type, status])
+  @@index([patientId, createdAt])
+  @@index([userId, createdAt])
+}
+
+/// Spec §9 — source material for the Hospital Knowledge Assistant.
+model HospitalDocument {
+  id             String @id @default(cuid())
+  organizationId String
+
+  title       String
+  category    String?
+  storageKey  String  @unique
+  contentType String
+  sizeBytes   Int
+  status      DocumentStatus @default(UPLOADED)
+  /// Only approved documents are retrievable by the assistant.
+  approved    Boolean @default(false)
+  version     Int     @default(1)
+
+  uploadedById String?
+  indexedAt    DateTime?
+  error        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  uploadedBy   User?        @relation("DocumentUploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  chunks DocumentChunk[]
+
+  @@index([organizationId, status, approved])
+}
+
+/// Chunked document text for retrieval. The embedding column is added by a
+/// follow-up migration once pgvector is enabled on the target database.
+model DocumentChunk {
+  id         String @id @default(cuid())
+  documentId String
+
+  chunkIndex Int
+  content    String
+  /// Page number, section heading — whatever lets the UI cite the source.
+  metadata   Json   @default("{}")
+  tokenCount Int?
+
+  createdAt DateTime @default(now())
+
+  document HospitalDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, chunkIndex])
+  @@index([documentId])
+}
+
+// =============================================================================
+// Audit & integrations  (spec §29, §30)
+// =============================================================================
+
+model AuditLog {
+  id             String @id @default(cuid())
+  organizationId String
+  userId         String?
+
+  action     AuditAction
+  entityType String
+  entityId   String?
+  /// Human-readable summary, e.g. "Signed consultation · Patient P-000184".
+  summary    String
+  /// Changed fields where relevant. Never stores clinical free text (spec §50).
+  metadata   Json    @default("{}")
+
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([entityType, entityId])
+  @@index([userId, createdAt])
+}
+
+model Integration {
+  id             String @id @default(cuid())
+  organizationId String
+
+  category IntegrationCategory
+  provider String
+  name     String
+  status   IntegrationStatus @default(NOT_CONFIGURED)
+
+  /// Non-secret settings only. Credentials live in the secret store and are
+  /// referenced by `credentialRef` (spec §31 — never store secrets here).
+  config        Json    @default("{}")
+  credentialRef String?
+
+  lastHealthCheckAt DateTime?
+  lastSyncAt        DateTime?
+  lastError         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, category, provider])
+  @@index([organizationId, status])
+}
