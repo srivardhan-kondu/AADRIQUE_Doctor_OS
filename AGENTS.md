@@ -23,7 +23,8 @@ before implementing a feature.
 | 1 | Project setup, design system, app shell | Done |
 | 2a | Prisma schema, RBAC, tenancy, demo seed | Done |
 | 2b | Auth.js sign-in, service layer, Doctor Command Center | Done |
-| 2c | Patients + Patient 360, appointments, queue actions, consultation workspace | Next |
+| 2c | Patients + Patient 360, queue actions, consultation workspace | Done |
+| 3 | Appointments module, follow-ups, communication centre, analytics, audit UI | Next |
 | 3 | Patient 360, follow-ups, communication, analytics, audit logs | Planned |
 | 4 | AI abstraction, pre-consultation brief, documentation copilot, history retrieval | Planned |
 | 5 | Workflow engine, integrations, admin, testing, performance, security review | Planned |
@@ -38,6 +39,9 @@ before implementing a feature.
 - Every business record carries tenant context. Never query across
   organisations (spec §22).
 - Validate all external input with Zod.
+- Multi-write workflows go in a transaction, with `TX_OPTIONS` — the hosted
+  database is far enough away that Prisma's default 5s interactive-transaction
+  timeout aborts normal work.
 - No `any` without a comment explaining why.
 
 ## AI rules (spec §10)

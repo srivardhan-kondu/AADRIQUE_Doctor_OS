@@ -8,6 +8,7 @@ import {
   Users,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { CallNextButton } from "@/components/queue/queue-actions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageBody, PageHeader } from "@/components/shell/page-header";
 import { DailyBrief } from "@/components/dashboard/daily-brief";
@@ -46,9 +47,13 @@ async function Dashboard() {
           data.doctor.room ? ` · ${data.doctor.room}` : ""
         }${data.doctor.counter ? ` · ${data.doctor.counter}` : ""}`}
         actions={
-          <Badge variant={data.doctor.online ? "success" : "muted"}>
-            {data.doctor.online ? "On duty" : "Away"}
-          </Badge>
+          <>
+            <Badge variant={data.doctor.online ? "success" : "muted"}>
+              {data.doctor.online ? "On duty" : "Away"}
+            </Badge>
+            {/* Spec §35 rule 1 — the next patient is one click from home. */}
+            <CallNextButton waitingCount={data.metrics.waiting} />
+          </>
         }
       />
 

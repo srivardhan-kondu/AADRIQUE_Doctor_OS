@@ -30,6 +30,23 @@ Open <http://localhost:3000>. The root redirects into the doctor workspace.
 
 ## Build status
 
+**Part 2c — patients, Patient 360, queue actions, consultation workspace. Complete.**
+
+The MVP journey from spec §40 now runs end to end: sign in → dashboard → queue
+→ Call Next → consultation → write the note → sign → queue updates.
+
+- **Queue actions** (§12) — Call Next (`N`), complete, move to vitals, skip as
+  no-show, pause/resume. Calling the next patient closes out whoever is with
+  the doctor, opens their visit and creates the draft consultation, in one
+  transaction.
+- **Patients** (§13) — search by name, mobile, patient ID or appointment ID,
+  debounced, `/` to focus.
+- **Patient 360** (§7) — one timeline across consultations, prescriptions, lab
+  reports, messages, appointments and follow-ups, with filters.
+- **Consultation workspace** (§6) — patient snapshot, the structured note with
+  autosave, history/medications/orders tabs, and signing. A signed consultation
+  is immutable.
+
 **Part 2b — authentication, service layer, Doctor Command Center. Complete.**
 
 Sign in at [`/sign-in`](http://localhost:3000/sign-in) with any seeded account
@@ -78,8 +95,8 @@ the notification tray are the only placeholder data, and they are isolated in
 
 ### Next
 
-Part 2c: the patient module (search and Patient 360), the appointment module,
-queue actions (call next, start, complete) and the consultation workspace.
+Part 3: the appointment module, follow-up queue, communication centre with the
+WhatsApp/SMS/email abstraction, analytics, and the audit log UI.
 
 ---
 
