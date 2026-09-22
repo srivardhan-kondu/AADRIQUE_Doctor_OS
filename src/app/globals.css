@@ -1,0 +1,387 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* =========================================================================
+   AADRIQUE Doctor OS — Design Tokens
+   Spec §33: warm white / deep navy / orange accent / charcoal / soft neutrals.
+   Orange is an ACCENT. Navy carries structure. Warm white carries surface.
+   ========================================================================= */
+
+:root {
+  /* --- Brand scale: orange accent --- */
+  --brand-50: #fef4ee;
+  --brand-100: #fde5d5;
+  --brand-200: #fac7aa;
+  --brand-300: #f6a174;
+  --brand-400: #f1793f;
+  --brand-500: #ea6a26;
+  --brand-600: #d0511a;
+  --brand-700: #a93c18;
+  --brand-800: #87321b;
+  --brand-900: #6d2c19;
+
+  /* --- Brand scale: deep navy --- */
+  --navy-50: #f2f5f9;
+  --navy-100: #e2e9f1;
+  --navy-200: #c9d6e6;
+  --navy-300: #a2b9d4;
+  --navy-400: #7495bd;
+  --navy-500: #5476a5;
+  --navy-600: #405d8a;
+  --navy-700: #354b70;
+  --navy-800: #2f405e;
+  --navy-900: #12233b;
+  --navy-950: #0b1524;
+
+  /* --- Semantic surface tokens --- */
+  --background: #faf8f5;
+  --foreground: #16202e;
+
+  --card: #ffffff;
+  --card-foreground: #16202e;
+
+  --popover: #ffffff;
+  --popover-foreground: #16202e;
+
+  --primary: #12233b;
+  --primary-foreground: #f8fafc;
+
+  --secondary: #f1ede7;
+  --secondary-foreground: #2f405e;
+
+  --muted: #f2eee8;
+  --muted-foreground: #6f6a63;
+
+  --accent: #ea6a26;
+  --accent-foreground: #ffffff;
+  --accent-soft: #fdf1e9;
+
+  --destructive: #c0392b;
+  --destructive-foreground: #ffffff;
+  --destructive-soft: #fdeceb;
+
+  --success: #15803d;
+  --success-foreground: #ffffff;
+  --success-soft: #eaf6ee;
+
+  --warning: #b45309;
+  --warning-foreground: #ffffff;
+  --warning-soft: #fdf3e3;
+
+  --info: #1d4ed8;
+  --info-foreground: #ffffff;
+  --info-soft: #eaf0fd;
+
+  /* AI-generated content is always visually distinct (spec §10) */
+  --ai: #6d4aff;
+  --ai-foreground: #ffffff;
+  --ai-soft: #f1edff;
+  --ai-border: #ddd3ff;
+
+  --border: #e7e1d8;
+  --input: #e7e1d8;
+  --ring: #ea6a26;
+
+  /* Sidebar carries the navy identity */
+  --sidebar: #12233b;
+  --sidebar-foreground: #c9d6e6;
+  --sidebar-muted: #7495bd;
+  --sidebar-accent: #1d3149;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #24384f;
+  --sidebar-ring: #ea6a26;
+
+  /* Clinical queue states — used by queue, timeline and status chips */
+  --state-registered: #64748b;
+  --state-waiting: #b45309;
+  --state-vitals: #0e7490;
+  --state-with-doctor: #ea6a26;
+  --state-completed: #15803d;
+  --state-followup: #6d28d9;
+
+  --radius: 0.75rem;
+
+  /* Very soft shadows (spec §33) */
+  --shadow-soft: 0 1px 2px 0 rgb(18 35 59 / 0.04), 0 1px 3px 0 rgb(18 35 59 / 0.06);
+  --shadow-raised: 0 2px 4px -1px rgb(18 35 59 / 0.05), 0 8px 16px -4px rgb(18 35 59 / 0.08);
+  --shadow-overlay: 0 8px 24px -6px rgb(18 35 59 / 0.14), 0 16px 48px -12px rgb(18 35 59 / 0.16);
+}
+
+.dark {
+  --background: #0b1524;
+  --foreground: #e9eef5;
+
+  --card: #111e30;
+  --card-foreground: #e9eef5;
+
+  --popover: #132236;
+  --popover-foreground: #e9eef5;
+
+  --primary: #e9eef5;
+  --primary-foreground: #0b1524;
+
+  --secondary: #1a2a3f;
+  --secondary-foreground: #c9d6e6;
+
+  --muted: #17263a;
+  --muted-foreground: #8ea3bd;
+
+  --accent: #f1793f;
+  --accent-foreground: #17100b;
+  --accent-soft: #2a1a11;
+
+  --destructive: #ef6a5c;
+  --destructive-foreground: #1a0e0c;
+  --destructive-soft: #2c1512;
+
+  --success: #4ade80;
+  --success-foreground: #05190d;
+  --success-soft: #0f2318;
+
+  --warning: #f0b429;
+  --warning-foreground: #1d1305;
+  --warning-soft: #271b0b;
+
+  --info: #7aa2f7;
+  --info-foreground: #0a1124;
+  --info-soft: #141f38;
+
+  --ai: #a894ff;
+  --ai-foreground: #14092e;
+  --ai-soft: #1c1633;
+  --ai-border: #362c5c;
+
+  --border: #23344a;
+  --input: #23344a;
+  --ring: #f1793f;
+
+  --sidebar: #0a1220;
+  --sidebar-foreground: #a2b9d4;
+  --sidebar-muted: #5476a5;
+  --sidebar-accent: #16253a;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #1c2c42;
+  --sidebar-ring: #f1793f;
+
+  --state-registered: #94a3b8;
+  --state-waiting: #fbbf24;
+  --state-vitals: #22d3ee;
+  --state-with-doctor: #f1793f;
+  --state-completed: #4ade80;
+  --state-followup: #a78bfa;
+
+  --shadow-soft: 0 1px 2px 0 rgb(0 0 0 / 0.3), 0 1px 3px 0 rgb(0 0 0 / 0.24);
+  --shadow-raised: 0 2px 4px -1px rgb(0 0 0 / 0.3), 0 8px 16px -4px rgb(0 0 0 / 0.4);
+  --shadow-overlay: 0 8px 24px -6px rgb(0 0 0 / 0.5), 0 16px 48px -12px rgb(0 0 0 / 0.55);
+}
+
+/* =========================================================================
+   Tailwind theme mapping
+   ========================================================================= */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-soft: var(--warning-soft);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-soft: var(--info-soft);
+  --color-ai: var(--ai);
+  --color-ai-foreground: var(--ai-foreground);
+  --color-ai-soft: var(--ai-soft);
+  --color-ai-border: var(--ai-border);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-state-registered: var(--state-registered);
+  --color-state-waiting: var(--state-waiting);
+  --color-state-vitals: var(--state-vitals);
+  --color-state-with-doctor: var(--state-with-doctor);
+  --color-state-completed: var(--state-completed);
+  --color-state-followup: var(--state-followup);
+
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+
+  --color-navy-50: var(--navy-50);
+  --color-navy-100: var(--navy-100);
+  --color-navy-200: var(--navy-200);
+  --color-navy-300: var(--navy-300);
+  --color-navy-400: var(--navy-400);
+  --color-navy-500: var(--navy-500);
+  --color-navy-600: var(--navy-600);
+  --color-navy-700: var(--navy-700);
+  --color-navy-800: var(--navy-800);
+  --color-navy-900: var(--navy-900);
+  --color-navy-950: var(--navy-950);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-jakarta), var(--font-inter), ui-sans-serif, sans-serif;
+  --font-mono: var(--font-mono-code), ui-monospace, SFMono-Regular, monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  --shadow-soft: var(--shadow-soft);
+  --shadow-raised: var(--shadow-raised);
+  --shadow-overlay: var(--shadow-overlay);
+}
+
+/* =========================================================================
+   Base layer
+   ========================================================================= */
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Spec §33: clear numerical typography. Numbers must not shift width
+     as live metrics and wait timers tick. */
+  .tabular,
+  [data-numeric] {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display tracking-tight text-balance;
+  }
+
+  /* Spec §51: visible focus states everywhere. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+
+  /* Scrollbars stay quiet — this is a calm clinical surface. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--muted-foreground) 30%, transparent) transparent;
+  }
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--muted-foreground) 26%, transparent);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--muted-foreground) 44%, transparent);
+    background-clip: content-box;
+  }
+}
+
+/* =========================================================================
+   Utilities
+   ========================================================================= */
+
+@layer utilities {
+  /* The "live" pulse used by queue + operational pulse indicators. */
+  .pulse-ring::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: currentColor;
+    opacity: 0.55;
+    animation: aadrique-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes aadrique-pulse {
+    0%   { transform: scale(1);   opacity: 0.55; }
+    70%  { transform: scale(2.4); opacity: 0; }
+    100% { transform: scale(2.4); opacity: 0; }
+  }
+
+  /* AI surfaces read as clearly non-chart content (spec §10). */
+  .ai-surface {
+    background: var(--ai-soft);
+    border: 1px solid var(--ai-border);
+  }
+
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--foreground) 6%, transparent),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: aadrique-shimmer 1.6s ease-in-out infinite;
+  }
+
+  @keyframes aadrique-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+}
+
+/* Spec §51: respect reduced-motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
