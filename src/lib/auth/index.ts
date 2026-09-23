@@ -2,6 +2,14 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import {
+  SIGN_IN_ACCOUNT_LIMIT,
+  SIGN_IN_ADDRESS_LIMIT,
+  callerAddress,
+  rateLimit,
+  resetRateLimit,
+  signInKeys,
+} from "@/lib/security/rate-limit";
 import { authConfig } from "./config";
 import { verifyPassword } from "./password";
 
@@ -26,11 +34,34 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
 
-      async authorize(raw) {
+      /**
+       * Spec §31 — rate limiting lives here, not in the sign-in form.
+       *
+       * Every credential attempt passes through `authorize`, including ones
+       * posted straight at `/api/auth/callback/credentials`. A limit on the
+       * server action alone would guard the form and leave the endpoint it
+       * submits to wide open.
+       */
+      async authorize(raw, request) {
         const parsed = credentialsSchema.safeParse(raw);
         if (!parsed.success) return null;
 
         const { email, password } = parsed.data;
+
+        // An unidentifiable caller shares one bucket rather than skipping it.
+        const address =
+          callerAddress(request?.headers ?? new Headers()) ?? "unknown";
+        const keys = signInKeys(address, email);
+
+        const byAddress = rateLimit(keys.address, SIGN_IN_ADDRESS_LIMIT);
+        const byAccount = rateLimit(keys.account, SIGN_IN_ACCOUNT_LIMIT);
+
+        if (!byAddress.allowed || !byAccount.allowed) {
+          // Refused exactly like a wrong password, so the limiter cannot be
+          // used to learn which accounts exist.
+          await verifyPassword(password, DUMMY_HASH);
+          return null;
+        }
 
         const user = await prisma.user.findUnique({
           where: { email: email.toLowerCase() },
@@ -59,6 +90,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const membership = user.memberships.find((m) => m.organization.active);
         if (!membership) return null;
+
+        // A genuine sign-in clears the counters, so a user is never held back
+        // by their own earlier typos.
+        resetRateLimit(keys.address);
+        resetRateLimit(keys.account);
 
         await prisma.user.update({
           where: { id: user.id },

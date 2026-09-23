@@ -7,6 +7,7 @@ import { bookAppointment, startOfDay } from "./appointments";
 import { writeAudit } from "./audit";
 import { sendTemplatedMessage } from "./communication";
 import { ServiceError, invalidState, notFound } from "./errors";
+import { fireTrigger } from "./workflows";
 
 /**
  * Spec §42 — the smart follow-up queue.
@@ -340,6 +341,9 @@ export async function createFollowUp(
 
     return created;
   }, TX_OPTIONS);
+
+  // Spec §28 — a reminder workflow waits on this and fires the day before.
+  await fireTrigger(actor, "FOLLOW_UP_DUE", { type: "FollowUp", id: followUp.id });
 
   return {
     id: followUp.id,

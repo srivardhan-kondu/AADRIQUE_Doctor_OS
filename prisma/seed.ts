@@ -554,17 +554,30 @@ async function seedTemplatesAndIntegrations(organizationId: string) {
         id: id("wf"),
         organizationId,
         name: "Token notification",
-        description: "Tell the patient their token, then warn them when they are next.",
+        description: "Tell the patient their token as soon as it is issued.",
         trigger: WorkflowTriggerType.TOKEN_GENERATED,
-        enabled: false,
+        enabled: true,
         steps: [
+          { type: "CONDITION", field: "patient.smsOptIn", operator: "EQUALS", value: true },
           { type: "ACTION", action: "SEND_MESSAGE", templateKey: "token_generated", channel: "SMS" },
+        ],
+      },
+      {
+        id: id("wf"),
+        organizationId,
+        name: "Cancellation notice",
+        description: "Tell the patient when their appointment is cancelled, and how to rebook.",
+        trigger: WorkflowTriggerType.APPOINTMENT_CANCELLED,
+        enabled: true,
+        steps: [
+          { type: "CONDITION", field: "patient.smsOptIn", operator: "EQUALS", value: true },
+          { type: "ACTION", action: "SEND_MESSAGE", templateKey: "appointment_cancelled", channel: "SMS" },
         ],
       },
     ],
   });
 
-  console.log(`  ${templates.length} message templates, 6 integrations, 4 workflows`);
+  console.log(`  ${templates.length} message templates, 6 integrations, 5 workflows`);
 }
 
 /**

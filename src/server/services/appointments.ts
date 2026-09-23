@@ -8,7 +8,7 @@ import { prisma } from "@/lib/db";
 import { Permission, assertPermission, tenantScope } from "@/lib/permissions";
 import type { RequestActor } from "@/server/context";
 import { writeAudit } from "./audit";
-import { sendTemplatedMessage } from "./communication";
+import { fireTrigger } from "./workflows";
 import { ServiceError, invalidState, notFound } from "./errors";
 
 /**
@@ -422,7 +422,8 @@ export interface BookResult {
   appointmentId: string;
   start: Date;
   patientName: string;
-  notified: boolean;
+  /** How many automations the booking started (spec §28). */
+  automations: number;
 }
 
 /**
@@ -537,30 +538,24 @@ export async function bookAppointment(
     return created.id;
   }, TX_OPTIONS);
 
-  // Spec §14 — the confirmation goes out after the booking is committed, so a
-  // gateway problem can never roll back a real appointment.
-  let notified = false;
-  if (input.notify !== false) {
-    const result = await sendTemplatedMessage(actor, {
-      patientId: patient.id,
-      templateKey: "appointment_confirmation",
-      channel: "WHATSAPP",
-      appointmentId,
-      variables: {
-        patientName: patient.firstName,
-        doctorName: doctor.user.name,
-        appointmentDate: formatDate(start),
-        appointmentTime: formatTime(start),
-      },
-    });
-    notified = result?.status !== "FAILED" && result !== null;
-  }
+  // Spec §28 — the confirmation is not sent from here. Booking fires a
+  // trigger and whatever automation is listening does the sending, so a
+  // clinic can change when patients hear from it without a deploy. The
+  // trigger is fired after the booking commits, so a gateway problem can
+  // never roll back a real appointment.
+  const automations =
+    input.notify === false
+      ? 0
+      : await fireTrigger(actor, "APPOINTMENT_SCHEDULED", {
+          type: "Appointment",
+          id: appointmentId,
+        });
 
   return {
     appointmentId,
     start,
     patientName: `${patient.firstName} ${patient.lastName ?? ""}`.trim(),
-    notified,
+    automations,
   };
 }
 
@@ -707,24 +702,18 @@ export async function rescheduleAppointment(
     return replacement.id;
   }, TX_OPTIONS);
 
-  const notified = await sendTemplatedMessage(actor, {
-    patientId: existing.patientId,
-    templateKey: "appointment_confirmation",
-    channel: "WHATSAPP",
-    appointmentId: newId,
-    variables: {
-      patientName: existing.patient.firstName,
-      doctorName: existing.doctor.user.name,
-      appointmentDate: formatDate(start),
-      appointmentTime: formatTime(start),
-    },
+  // The replacement is a newly scheduled appointment, so it starts the same
+  // automations a fresh booking would.
+  const automations = await fireTrigger(actor, "APPOINTMENT_SCHEDULED", {
+    type: "Appointment",
+    id: newId,
   });
 
   return {
     appointmentId: newId,
     start,
     patientName: `${existing.patient.firstName} ${existing.patient.lastName ?? ""}`.trim(),
-    notified: notified?.status !== "FAILED" && notified !== null,
+    automations,
   };
 }
 
@@ -733,7 +722,7 @@ export async function cancelAppointment(
   actor: RequestActor,
   appointmentId: string,
   reason?: string,
-): Promise<{ patientName: string; notified: boolean }> {
+): Promise<{ patientName: string; automations: number }> {
   assertPermission(actor, Permission.APPOINTMENT_CANCEL);
 
   const existing = await loadAppointment(actor, appointmentId);
@@ -782,21 +771,14 @@ export async function cancelAppointment(
     });
   }, TX_OPTIONS);
 
-  const notified = await sendTemplatedMessage(actor, {
-    patientId: existing.patientId,
-    templateKey: "appointment_cancelled",
-    channel: "SMS",
-    appointmentId: existing.id,
-    variables: {
-      doctorName: existing.doctor.user.name,
-      appointmentDate: formatDate(existing.scheduledStart),
-      facilityPhone: existing.facility.phone ?? existing.facility.name,
-    },
+  const automations = await fireTrigger(actor, "APPOINTMENT_CANCELLED", {
+    type: "Appointment",
+    id: existing.id,
   });
 
   return {
     patientName: `${existing.patient.firstName} ${existing.patient.lastName ?? ""}`.trim(),
-    notified: notified?.status !== "FAILED" && notified !== null,
+    automations,
   };
 }
 
@@ -804,7 +786,7 @@ export interface CheckInResult {
   token: string;
   patientName: string;
   position: number;
-  notified: boolean;
+  automations: number;
 }
 
 /**
@@ -870,7 +852,8 @@ export async function checkInAppointment(
     const token = `${queue.tokenPrefix}${String(tokenSeq).padStart(3, "0")}`;
     const now = new Date();
 
-    await tx.queueEntry.create({
+    const entry = await tx.queueEntry.create({
+      select: { id: true },
       data: {
         queueId: queue.id,
         patientId: appointment.patientId,
@@ -907,30 +890,26 @@ export async function checkInAppointment(
       metadata: { token, patientMrn: appointment.patient.mrn },
     });
 
-    return { token, position: ahead, currentToken: current?.token ?? null };
+    return {
+      token,
+      position: ahead,
+      currentToken: current?.token ?? null,
+      queueEntryId: entry.id,
+    };
   }, TX_OPTIONS);
 
-  // Spec §12 — the token message carries the wait, which is the only part the
-  // patient actually wants.
-  const notified = await sendTemplatedMessage(actor, {
-    patientId: appointment.patientId,
-    templateKey: "token_generated",
-    channel: "SMS",
-    appointmentId: appointment.id,
-    variables: {
-      token: result.token,
-      currentToken: result.currentToken ?? "—",
-      waitMinutes: String(
-        Math.max(0, result.position - 1) * appointment.doctor.consultationMinutes,
-      ),
-    },
+  // Spec §12 + §28 — issuing a token is a trigger; the token message is an
+  // automation listening for it.
+  const automations = await fireTrigger(actor, "TOKEN_GENERATED", {
+    type: "QueueEntry",
+    id: result.queueEntryId,
   });
 
   return {
     token: result.token,
     position: result.position,
     patientName: `${appointment.patient.firstName} ${appointment.patient.lastName ?? ""}`.trim(),
-    notified: notified?.status !== "FAILED" && notified !== null,
+    automations,
   };
 }
 
@@ -985,10 +964,3 @@ function formatTime(date: Date): string {
   });
 }
 
-function formatDate(date: Date): string {
-  return date.toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}

@@ -4,6 +4,7 @@ import { Permission, assertPermission } from "@/lib/permissions";
 import type { RequestActor } from "@/server/context";
 import { writeAudit } from "./audit";
 import { invalidState, notFound } from "./errors";
+import { fireTrigger } from "./workflows";
 
 /**
  * Spec §12 — token and queue management.
@@ -297,6 +298,16 @@ export async function completeConsultation(
       metadata: { token: entry.token, patientMrn: entry.patient.mrn },
     });
  }, TX_OPTIONS);
+
+  // Spec §28 — the visit is over; feedback and follow-up automations listen
+  // for this. Fired after the transaction commits, so an automation can never
+  // roll back a completed consultation.
+  if (entry.visit) {
+    await fireTrigger(actor, "APPOINTMENT_COMPLETED", {
+      type: "Visit",
+      id: entry.visit.id,
+    });
+  }
 }
 
 /** Moves a patient to the vitals stage (spec §5.1 flow). */

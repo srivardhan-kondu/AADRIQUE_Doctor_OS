@@ -121,9 +121,9 @@ export async function bookAppointmentAction(
     return {
       ok: true,
       message: `${result.patientName} is booked for ${formatWhen(result.start)}.`,
-      action: result.notified
-        ? "A WhatsApp confirmation is on its way."
-        : "No confirmation went out — check their contact preferences.",
+      action: result.automations
+        ? "A confirmation is on its way."
+        : "No automation is listening, so nothing was sent to them.",
     };
   } catch (error) {
     return toResult(error);

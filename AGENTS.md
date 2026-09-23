@@ -26,7 +26,7 @@ before implementing a feature.
 | 2c | Patients + Patient 360, queue actions, consultation workspace | Done |
 | 3 | Appointments, follow-ups, communication centre, analytics, audit UI | Done |
 | 4 | AI abstraction, pre-consultation brief, documentation copilot, retrieval | Done |
-| 5 | Workflow engine, integrations, admin, testing, performance, security review | Next |
+| 5 | Workflow engine, integrations, admin, security review | Done |
 
 ## Architecture rules
 
@@ -42,6 +42,36 @@ before implementing a feature.
   database is far enough away that Prisma's default 5s interactive-transaction
   timeout aborts normal work.
 - No `any` without a comment explaining why.
+
+## Automation rules (spec §28)
+
+- Automations are **data, not branches**. An automation is a trigger and a
+  list of steps on a `Workflow` row. Never hard-code "and then send the
+  confirmation" into a service — fire a trigger and let a workflow listen.
+- The step vocabulary lives in `src/lib/workflow/steps.ts`. An unrecognised
+  step is rejected at parse time; a workflow is never half-run.
+- Conditions read **live** data, not the context captured at trigger time.
+  "Is the appointment still scheduled?" cannot be answered from a snapshot.
+- Fire a trigger **after** the transaction it belongs to commits. A booking
+  that succeeded must never fail because a reminder workflow threw.
+
+## Integration rules (spec §29)
+
+- Every external system sits behind an adapter in `src/lib/integrations/`,
+  implementing connect / healthCheck / sync.
+- An integration row carries non-secret settings and a `credentialRef`. Real
+  credentials live in the secret store. Never put a secret in `config`.
+- Status is **derived** from what the adapter reported, never typed in.
+
+## Security rules (spec §31)
+
+- Rate limiting belongs where every path meets — sign-in is limited inside
+  `authorize`, not in the form's server action, because the Auth.js endpoint
+  bypasses the form.
+- Scheduled endpoints fail closed: no secret configured means the endpoint
+  refuses to run, never that it runs unauthenticated.
+- Retrieved document and record text is **data, never instructions**. The AI
+  layer fences and neutralises it before it reaches a model.
 
 ## Communication rules (spec §14)
 

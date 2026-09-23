@@ -30,6 +30,35 @@ Open <http://localhost:3000>. The root redirects into the doctor workspace.
 
 ## Build status
 
+**Part 5 — workflow engine, integrations, administration, security review. Complete.**
+
+- **Workflow engine** (§28) — automations are data, not branches. A trigger
+  and a list of WAIT / CONDITION / ACTION steps on a row, so a clinic changes
+  when patients hear from it without a deploy. The appointment confirmation,
+  the 24-hour reminder, the token message, the cancellation notice and the
+  post-visit feedback request all moved out of the services and into
+  workflows. Conditions read live data — "is it *still* scheduled?" cannot be
+  answered from a snapshot — and a trigger is always fired after the
+  transaction it belongs to commits, so an automation can never roll back a
+  booking. Waiting runs resume through `POST /api/jobs/workflows`.
+- **Integrations** (§29) — WhatsApp, SMS, email, lab, pharmacy and HMS behind
+  one connect/healthCheck/sync adapter, with the spec's four states derived
+  from what the adapter reported rather than typed in. Settings are stored;
+  credentials are a pointer into the secret store, and anything secret-shaped
+  is redacted before it leaves the server.
+- **Operational intelligence** (§17) — bottleneck detection at
+  [`/admin/operations`](http://localhost:3000/admin/operations): wait times
+  against each department's own threshold, consultations running long, paused
+  queues, failed messages, unhealthy integrations. Every insight states the
+  measurement behind it. Operational analytics, never a clinical judgement.
+- **Administration** — hospital overview, doctor and department directories,
+  editable queue thresholds, and a role screen showing what each role can
+  actually do after this organization's overrides.
+- **Security review** (§31) — sign-in rate limiting enforced inside
+  `authorize` (where the REST endpoint meets the form, not just the form),
+  security headers on every response, a scheduled endpoint that fails closed
+  without its secret, and prompt-injection defences on the document-based AI.
+
 **Part 4 — AI abstraction, pre-consultation brief, documentation copilot. Complete.**
 
 The AI layer is built so that the safety rules in spec §10 are structural
@@ -142,8 +171,10 @@ the notification tray are the only placeholder data, and they are isolated in
 
 ### Next
 
-Part 5: the workflow engine, the integration layer, hospital administration,
-and the performance and security review.
+The build parts are complete. What remains is front-desk depth (walk-in
+registration, the reception queue console), patient-facing surfaces, and
+hardening the deployment: a shared-store rate limiter, a nonce-based CSP, and
+real integration credentials.
 
 ---
 
@@ -177,6 +208,9 @@ src/
   lib/
     ai/                 provider abstraction — Claude, and the grounded
                         fallback that needs no credentials
+    integrations/       connect / healthCheck / sync adapters per system
+    security/           rate limiting
+    workflow/           the automation step vocabulary
     auth/               Auth.js config, password hashing
     db/                 Prisma client singleton
     messaging/          WhatsApp / SMS / email provider abstraction

@@ -9,6 +9,7 @@ import {
 import type { RequestActor } from "@/server/context";
 import { writeAudit } from "./audit";
 import { invalidState, notFound } from "./errors";
+import { fireTrigger } from "./workflows";
 
 /**
  * The consultation workspace (spec §6, §26).
@@ -416,4 +417,8 @@ export async function signConsultation(
       metadata: { patientMrn: consultation.patient.mrn, visitId },
     });
   }, TX_OPTIONS);
+
+  // Spec §28 — signing is a trigger. Fired after the transaction, so an
+  // automation can never undo a signature.
+  await fireTrigger(actor, "CONSULTATION_SIGNED", { type: "Visit", id: visitId });
 }
