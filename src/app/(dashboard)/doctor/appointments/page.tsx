@@ -47,7 +47,7 @@ async function ScheduleScreen({ searchParams }: PageProps) {
         actions={
           <>
             <ScheduleNav date={isoOf(date)} view={view} />
-            <BookAppointmentDialog defaultDate={isoOf(date)} />
+            <BookAppointmentDialog defaultDate={isoOf(date)} openParam="book" />
           </>
         }
       />

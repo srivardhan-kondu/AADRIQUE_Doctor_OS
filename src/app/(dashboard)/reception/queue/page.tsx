@@ -66,7 +66,7 @@ async function QueueScreen() {
                 Waiting-room display
               </Link>
             </Button>
-            <WalkInDialog doctors={doctors} />
+            <WalkInDialog doctors={doctors} openParam="walk-in" />
           </>
         }
       />

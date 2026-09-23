@@ -92,6 +92,7 @@ async function ScheduleScreen({ searchParams }: PageProps) {
               doctors={doctors}
               defaultDoctorId={doctor.id}
               defaultDate={isoOf(date)}
+              openParam="book"
             />
           </>
         }

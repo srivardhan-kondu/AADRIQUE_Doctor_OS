@@ -14,7 +14,7 @@ function Card({
     <div
       data-slot="card"
       className={cn(
-        "rounded-xl border border-border bg-card text-card-foreground shadow-soft",
+        "min-w-0 rounded-xl border border-border bg-card text-card-foreground shadow-soft",
         interactive &&
           "cursor-pointer transition-[box-shadow,border-color,transform] duration-200 hover:border-border hover:shadow-raised focus-visible:shadow-raised",
         className,

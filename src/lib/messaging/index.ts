@@ -10,9 +10,11 @@ import type { MessageChannel } from "@/generated/prisma/enums";
  * The same rule as the AI layer (AGENTS.md): no provider SDK is imported from
  * a component, a route handler or a service. They talk to `dispatch`.
  *
- * Real transports (Meta Cloud API, MSG91, Resend) are wired in Part 5 behind
- * the `Integration` records. Until then every channel resolves to the
- * simulated provider, which behaves like a gateway without contacting one.
+ * No real transport is connected yet: every channel resolves to the simulated
+ * provider, which behaves like a gateway without contacting one. A real one
+ * (Meta Cloud API, MSG91, Resend) implements `MessagingProvider` and replaces
+ * its entry in `PROVIDERS`, with its credentials read from the secret store
+ * named by the channel's `Integration` record — nothing else changes.
  */
 
 export interface OutboundMessage {

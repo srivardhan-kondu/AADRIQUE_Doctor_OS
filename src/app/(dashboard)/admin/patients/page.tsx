@@ -59,7 +59,7 @@ export default async function AdminPatientsPage({
               </Button>
             )}
             {hasPermission(actor, Permission.PATIENT_CREATE) && (
-              <RegisterPatientDialog />
+              <RegisterPatientDialog openParam="register" />
             )}
           </>
         }

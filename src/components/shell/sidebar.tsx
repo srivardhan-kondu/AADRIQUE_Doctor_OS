@@ -11,7 +11,7 @@ import { Logo, Wordmark } from "@/components/shell/logo";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { OperationalPulse } from "@/components/shell/operational-pulse";
 
-/** Live counters rendered beside nav items. Wired to real data in Part 2. */
+/** Live counters rendered beside nav items, from the shell data in the layout. */
 export type NavCounters = Partial<Record<NonNullable<NavItem["counter"]>, number>>;
 
 interface SidebarProps {

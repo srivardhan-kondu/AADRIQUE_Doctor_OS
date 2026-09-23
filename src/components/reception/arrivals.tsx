@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarCheck2, Footprints } from "lucide-react";
+import { CalendarCheck2, ChevronDown, Footprints } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,11 +19,18 @@ import type { ArrivalRow } from "@/server/services/front-desk";
  * Spec §13 — today's arrivals and check-ins.
  *
  * Split the way the desk works: the people still expected, with the check-in
- * button in reach, and then everyone who has already been dealt with.
+ * button in reach; the people in the building now; and, folded away, the
+ * visits that are finished — by mid-afternoon those are most of the day and
+ * would otherwise bury the people still waiting.
  */
 export function ArrivalsCard({ arrivals }: { arrivals: ArrivalRow[] }) {
   const expected = arrivals.filter((a) => a.status === "SCHEDULED");
-  const arrived = arrivals.filter((a) => a.status !== "SCHEDULED");
+  const here = arrivals.filter(
+    (a) => a.status !== "SCHEDULED" && a.status !== "COMPLETED" && a.status !== "NO_SHOW",
+  );
+  const finished = arrivals.filter(
+    (a) => a.status === "COMPLETED" || a.status === "NO_SHOW",
+  );
 
   return (
     <Card>
@@ -33,7 +40,7 @@ export function ArrivalsCard({ arrivals }: { arrivals: ArrivalRow[] }) {
           <p className="mt-1 text-[13px] text-muted-foreground">
             {arrivals.length === 0
               ? "Nothing booked today"
-              : `${expected.length} expected · ${arrived.length} arrived`}
+              : `${expected.length} expected · ${here.length} in the building · ${finished.length} finished`}
           </p>
         </div>
       </CardHeader>
@@ -46,10 +53,28 @@ export function ArrivalsCard({ arrivals }: { arrivals: ArrivalRow[] }) {
         />
       ) : (
         <div className="pb-2">
-          {expected.length > 0 && (
-            <Section title="Expected" rows={expected} />
+          {expected.length > 0 && <Section title="Expected" rows={expected} />}
+          {here.length > 0 && <Section title="In the building" rows={here} />}
+          {expected.length === 0 && here.length === 0 && (
+            <p className="px-5 py-6 text-center text-[13px] text-muted-foreground">
+              Everyone booked today has been seen.
+            </p>
           )}
-          {arrived.length > 0 && <Section title="Arrived" rows={arrived} />}
+          {finished.length > 0 && (
+            <details className="group">
+              <summary className="flex cursor-pointer list-none items-center gap-1.5 bg-muted/50 px-5 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground">
+                <ChevronDown className="size-3.5 transition-transform group-open:rotate-180" />
+                Finished · {finished.length}
+              </summary>
+              <ul className="divide-y divide-border">
+                {finished.map((row) => (
+                  <li key={row.appointmentId}>
+                    <ArrivalItem row={row} />
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
         </div>
       )}
     </Card>

@@ -33,7 +33,13 @@ export function PageHeader({
           </p>
         )}
       </div>
-      {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+      {/* Wraps rather than widening the page: on a phone, three header
+          buttons are wider than the screen (spec §34). */}
+      {actions && (
+        <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
+          {actions}
+        </div>
+      )}
     </div>
   );
 }

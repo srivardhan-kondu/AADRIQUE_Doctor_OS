@@ -54,6 +54,7 @@ import {
   minutesAfter,
   phoneNumber,
   sequenceNo,
+  type Random,
 } from "./seed-helpers.js";
 
 /**
@@ -311,8 +312,9 @@ async function seedPeople(
       consultationMinutes: d.consultationMinutes,
       tokenPrefix: d.tokenPrefix,
       acceptsWalkIns: true,
-      // The first doctor is the demo persona and is always on duty.
-      online: index === 0,
+      // Every seeded doctor has patients in the building today, so all are on
+      // duty; "Away" is one click on a doctor's profile.
+      online: true,
     })),
   });
 
@@ -1578,10 +1580,7 @@ async function seedCommunications({
           ? (patient.email ?? `${patient.mrn.toLowerCase()}@example.demo`)
           : patient.phone,
       subject: template.subject,
-      body: template.body
-        .replace(/\{\{patientName\}\}/g, patient.firstName)
-        .replace(/\{\{doctorName\}\}/g, "Dr. Ananya Rao")
-        .replace(/\{\{[a-zA-Z]+\}\}/g, "—"),
+      body: fillDemoMessage(template.body, patient.firstName, createdAt, random),
       providerName:
         template.channel === MessageChannel.WHATSAPP
           ? "meta-cloud-api"
@@ -1819,3 +1818,49 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+
+/**
+ * A sent message as a patient would have received it: every placeholder
+ * filled with a value that fits the message, never a dash standing in for a
+ * date. The app itself refuses to send a message with a blank (spec §14), so
+ * the demo history must not show one either.
+ */
+function fillDemoMessage(
+  body: string,
+  firstName: string,
+  sentAt: Date,
+  random: Random,
+): string {
+  const later = new Date(sentAt);
+  later.setDate(later.getDate() + random.int(1, 6));
+  const date = later.toLocaleDateString("en-IN", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+  const time = random.pick(["9:30 am", "10:15 am", "11:00 am", "5:30 pm", "6:15 pm"]);
+  const seq = random.int(3, 40);
+
+  const values: Record<string, string> = {
+    patientName: firstName,
+    doctorName: "Dr. Ananya Rao",
+    appointmentDate: date,
+    appointmentTime: time,
+    followUpDate: date,
+    followUpTime: time,
+    campDate: later.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" }),
+    token: `A${String(seq).padStart(3, "0")}`,
+    currentToken: `A${String(Math.max(1, seq - random.int(1, 4))).padStart(3, "0")}`,
+    waitMinutes: String(random.int(2, 6) * 5),
+    roomLabel: "Room 101",
+    facilityPhone: "040 4488 2200",
+  };
+
+  return body.replace(/\{\{\s*([a-zA-Z]+)\s*\}\}/g, (match, name: string) => {
+    const value = values[name];
+    if (value === undefined) {
+      throw new Error(`Seed message template uses {{${name}}}, which has no demo value`);
+    }
+    return value;
+  });
+}

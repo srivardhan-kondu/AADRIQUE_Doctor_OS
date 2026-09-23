@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { CalendarPlus, UserPlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Kbd } from "@/components/ui/kbd";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -69,6 +71,7 @@ async function Desk({ searchParams }: PageProps) {
   ]);
 
   const waiting = boards.reduce((sum, b) => sum + b.waiting.length, 0);
+  const lines = boards.filter((b) => b.waiting.length > 0).length;
 
   return (
     <>
@@ -77,14 +80,34 @@ async function Desk({ searchParams }: PageProps) {
         description={
           day.counts.expected === 0 && waiting === 0
             ? "A quiet start. Nothing is booked yet today."
-            : `${day.counts.arrived} of ${day.counts.expected} arrived · ${waiting} waiting across ${boards.filter((b) => b.online).length} doctors`
+            : `${day.counts.arrived} of ${day.counts.expected} arrived · ${waiting} waiting${
+                lines > 0 ? ` for ${lines} ${lines === 1 ? "doctor" : "doctors"}` : ""
+              }`
         }
         actions={
           <>
             <LiveRefresh signal={signal} />
-            <RegisterPatientDialog />
-            <BookAppointmentDialog doctors={doctors} />
-            <WalkInDialog doctors={doctors} />
+            {/* One accent action: the token, which the desk issues most. */}
+            <RegisterPatientDialog
+              openParam="register"
+              trigger={
+                <Button variant="outline">
+                  <UserPlus />
+                  Register
+                </Button>
+              }
+            />
+            <BookAppointmentDialog
+              doctors={doctors}
+              openParam="book"
+              trigger={
+                <Button variant="outline">
+                  <CalendarPlus />
+                  Book
+                </Button>
+              }
+            />
+            <WalkInDialog doctors={doctors} openParam="walk-in" />
           </>
         }
       />

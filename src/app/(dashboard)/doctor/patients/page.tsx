@@ -6,6 +6,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageBody, PageHeader } from "@/components/shell/page-header";
 import { PatientList } from "@/components/patients/patient-list";
 import { PatientSearch } from "@/components/patients/patient-search";
+import { RegisterPatientDialog } from "@/components/reception/register-dialog";
+import { Permission, hasPermission } from "@/lib/permissions";
 import { requireActor } from "@/server/context";
 import { searchPatients } from "@/server/services/patients";
 
@@ -17,6 +19,7 @@ export default async function PatientsPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q = "" } = await searchParams;
+  const actor = await requireActor();
 
   return (
     <PageBody>
@@ -24,9 +27,14 @@ export default async function PatientsPage({
         title="Patients"
         description="Search by name, mobile number or patient ID. Results appear as you type."
         actions={
-          <span className="hidden items-center gap-1.5 text-[12px] text-muted-foreground sm:flex">
-            Focus search <Kbd>/</Kbd>
-          </span>
+          <>
+            <span className="hidden items-center gap-1.5 text-[12px] text-muted-foreground sm:flex">
+              Focus search <Kbd>/</Kbd>
+            </span>
+            {hasPermission(actor, Permission.PATIENT_CREATE) && (
+              <RegisterPatientDialog openParam="register" />
+            )}
+          </>
         }
       />
 

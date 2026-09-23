@@ -11,7 +11,9 @@ import {
   Search,
   Stethoscope,
   Sun,
+  Ticket,
   UserPlus,
+  UserRound,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
@@ -28,14 +30,19 @@ import {
 import { flatNav, WORKSPACE_META } from "@/lib/nav";
 import { useSession } from "@/lib/session";
 import type { Workspace } from "@/types";
+import {
+  searchPatientsAction,
+  type PatientChoice,
+} from "@/app/(dashboard)/doctor/appointments/actions";
+import { callNextAction } from "@/app/(dashboard)/doctor/queue/actions";
 
 /**
  * Spec §19 + §41-H — the command palette.
  *
  * This is a signature interaction, so it is part of the shell rather than any
- * one screen: it is reachable from every route. Part 2 adds live patient search
- * results (spec §41-I) behind the same input; the groups below are the static
- * spine those results slot into.
+ * one screen: it is reachable from every route. Typing searches patients as
+ * well as screens (spec §41-I); the quick actions are the ones this
+ * workspace actually has, and each does the real thing.
  */
 export function CommandPalette({
   open,
@@ -60,62 +67,155 @@ export function CommandPalette({
     [onOpenChange],
   );
 
-  /** Actions that need data land in Part 2; until then they say so honestly. */
-  const pending = (feature: string) =>
-    toast(`${feature} arrives in the next build part`, {
-      description: "The shell route is wired — the workflow lands with the data layer.",
+  // Spec §41-I — universal patient search, in the palette. Debounced, and a
+  // slower earlier answer never replaces a newer one.
+  const [query, setQuery] = React.useState("");
+  const [found, setFound] = React.useState<{ query: string; rows: PatientChoice[] }>({
+    query: "",
+    rows: [],
+  });
+  const [searching, startSearch] = React.useTransition();
+  const term = query.trim();
+
+  React.useEffect(() => {
+    if (term.length < 2) return;
+    let stale = false;
+    const timer = setTimeout(() => {
+      startSearch(async () => {
+        const rows = await searchPatientsAction(term);
+        if (!stale) setFound({ query: term, rows });
+      });
+    }, 200);
+    return () => {
+      stale = true;
+      clearTimeout(timer);
+    };
+  }, [term]);
+
+  const patients = term.length >= 2 && found.query === term ? found.rows : [];
+  const patientBase = `/${workspace}/patients`;
+
+  /** Spec §41-B — the next patient, one keystroke from anywhere. */
+  const callNext = () =>
+    run(async () => {
+      const result = await callNextAction();
+      if (!result.ok) {
+        toast.error(result.message ?? "Could not call the next patient.", {
+          description: result.action,
+        });
+        return;
+      }
+      toast.success(result.message ?? "Called.");
+      if (result.redirectTo) router.push(result.redirectTo);
+      else router.refresh();
     });
+
+  const go = (href: string) => run(() => router.push(href));
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput
         placeholder={`Search patients, screens and actions…`}
         autoFocus
+        value={query}
+        onValueChange={setQuery}
       />
       <CommandList>
         <CommandEmpty>
-          <p className="font-medium text-foreground">No matches</p>
+          <p className="font-medium text-foreground">
+            {searching ? "Searching…" : "No matches"}
+          </p>
           <p className="mt-1 text-[13px]">
             Try a patient name, a mobile number or a patient ID.
           </p>
         </CommandEmpty>
 
+        {patients.length > 0 && (
+          <>
+            <CommandGroup heading="Patients">
+              {patients.map((patient) => (
+                <CommandItem
+                  key={patient.id}
+                  // The server already matched these; the query is in the
+                  // keywords so the palette's own filter keeps them.
+                  value={`patient-${patient.id}`}
+                  keywords={[term, patient.name, patient.mrn, patient.phone]}
+                  onSelect={() => go(`${patientBase}/${patient.id}`)}
+                >
+                  <UserRound className="text-muted-foreground" />
+                  <span className="truncate">{patient.name}</span>
+                  <span className="ml-auto font-mono text-[11px] text-muted-foreground">
+                    {patient.mrn}
+                  </span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+            <CommandSeparator />
+          </>
+        )}
+
         <CommandGroup heading="Quick actions">
+          {workspace === "doctor" && user.doctorId && (
+            <CommandItem
+              onSelect={callNext}
+              keywords={["next", "consultation", "start", "call"]}
+            >
+              <PlayCircle className="text-accent" />
+              <span>Call next patient</span>
+            </CommandItem>
+          )}
+          {workspace === "reception" && (
+            <CommandItem
+              onSelect={() => go("/reception?open=walk-in")}
+              keywords={["token", "walk in", "queue", "add"]}
+            >
+              <Ticket className="text-accent" />
+              <span>Walk-in token</span>
+            </CommandItem>
+          )}
           <CommandItem
-            onSelect={() => run(() => pending("Next patient"))}
-            keywords={["next", "consultation", "start", "call"]}
-          >
-            <PlayCircle className="text-accent" />
-            <span>Open next consultation</span>
-            <CommandShortcut>N</CommandShortcut>
-          </CommandItem>
-          <CommandItem
-            onSelect={() => run(() => pending("Patient registration"))}
+            onSelect={() =>
+              go(
+                workspace === "reception"
+                  ? "/reception?open=register"
+                  : `${patientBase}?open=register`,
+              )
+            }
             keywords={["register", "add", "new patient"]}
           >
             <UserPlus className="text-muted-foreground" />
-            <span>New patient</span>
+            <span>Register a patient</span>
           </CommandItem>
+          {workspace !== "admin" && (
+            <CommandItem
+              onSelect={() =>
+                go(
+                  workspace === "reception"
+                    ? "/reception?open=book"
+                    : "/doctor/appointments?open=book",
+                )
+              }
+              keywords={["book", "schedule", "slot", "appointment"]}
+            >
+              <CalendarPlus className="text-muted-foreground" />
+              <span>Book an appointment</span>
+            </CommandItem>
+          )}
+          {workspace === "doctor" && (
+            <CommandItem
+              onSelect={() => go("/doctor/messages")}
+              keywords={["whatsapp", "sms", "email", "send", "message"]}
+            >
+              <MessageSquarePlus className="text-muted-foreground" />
+              <span>Send a message</span>
+            </CommandItem>
+          )}
           <CommandItem
-            onSelect={() => run(() => pending("Appointment booking"))}
-            keywords={["book", "schedule", "slot"]}
-          >
-            <CalendarPlus className="text-muted-foreground" />
-            <span>New appointment</span>
-          </CommandItem>
-          <CommandItem
-            onSelect={() => run(() => pending("Message composer"))}
-            keywords={["whatsapp", "sms", "email", "send"]}
-          >
-            <MessageSquarePlus className="text-muted-foreground" />
-            <span>Send message</span>
-          </CommandItem>
-          <CommandItem
-            onSelect={() => run(() => router.push(`/${workspace}/patients`))}
+            onSelect={() => go(patientBase)}
             keywords={["find", "lookup", "mobile", "patient id"]}
           >
             <Search className="text-muted-foreground" />
-            <span>Search patients</span>
+            <span>All patients</span>
           </CommandItem>
         </CommandGroup>
 

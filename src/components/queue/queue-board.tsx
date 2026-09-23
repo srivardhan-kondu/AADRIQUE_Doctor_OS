@@ -24,11 +24,11 @@ import type { QueueBoard, QueueBoardEntry } from "@/server/services/queue";
 export function QueueBoardView({ board }: { board: QueueBoard }) {
   return (
     <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
-      <div className="space-y-5">
+      <div className="min-w-0 space-y-5">
         <ActiveCard board={board} />
         <WaitingList board={board} />
       </div>
-      <div className="space-y-5">
+      <div className="min-w-0 space-y-5">
         <PatientDisplayCard board={board} />
         <CompletedList entries={board.done} />
       </div>
@@ -176,7 +176,7 @@ function QueueEntryRow({
         {entry.token}
       </span>
 
-      <Avatar className="size-8 shrink-0">
+      <Avatar className="hidden size-8 shrink-0 sm:flex">
         <AvatarFallback>{initials(entry.patientName)}</AvatarFallback>
       </Avatar>
 
@@ -215,7 +215,7 @@ function QueueEntryRow({
       <StatusChip
         tone={entry.status === "VITALS" ? "vitals" : "waiting"}
         label={entry.status === "VITALS" ? "Vitals" : "Waiting"}
-        className="shrink-0"
+        className="hidden shrink-0 sm:inline-flex"
       />
 
       <span

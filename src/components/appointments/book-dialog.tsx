@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useDialogState } from "@/hooks/use-dialog-state";
 import {
   bookAppointmentAction,
   searchPatientsAction,
@@ -60,10 +61,13 @@ export function BookAppointmentDialog({
   defaultPatient,
   doctors,
   defaultDoctorId,
+  openParam,
 }: {
   trigger?: React.ReactNode;
   defaultDate?: string;
   defaultPatient?: PatientChoice;
+  /** Opens when the URL carries `?open=<openParam>` (see useDialogState). */
+  openParam?: string;
   /**
    * The front desk books for any doctor and chooses here. Left out, the
    * booking is for the signed-in doctor.
@@ -71,7 +75,7 @@ export function BookAppointmentDialog({
   doctors?: DoctorChoice[];
   defaultDoctorId?: string;
 }) {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useDialogState(openParam);
 
   return (
     <>

@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { AuthError } from "next-auth";
 import { z } from "zod";
 import { signIn } from "@/lib/auth";
+import { homeForEmail } from "@/lib/auth/home";
 import {
   SIGN_IN_ACCOUNT_LIMIT,
   SIGN_IN_ADDRESS_LIMIT,
@@ -15,7 +16,9 @@ import {
 const schema = z.object({
   email: z.string().trim().min(1, "Enter your email").email("Enter a valid email"),
   password: z.string().min(1, "Enter your password"),
-  next: z.string().optional(),
+  // `formData.get` returns null for a field the form did not send — a
+  // sign-in opened directly, with no page to return to.
+  next: z.string().nullish(),
 });
 
 export interface SignInState {
@@ -42,12 +45,14 @@ export async function signInAction(
 
   if (!parsed.success) {
     const flat = z.flattenError(parsed.error);
-    return {
-      fieldErrors: {
-        email: flat.fieldErrors.email?.[0],
-        password: flat.fieldErrors.password?.[0],
-      },
-    };
+    const email = flat.fieldErrors.email?.[0];
+    const password = flat.fieldErrors.password?.[0];
+    // A failure on a field the form does not show must still say something;
+    // a sign-in that silently does nothing is the worst outcome.
+    if (!email && !password) {
+      return { error: "The sign-in form was not valid. Reload the page and try again." };
+    }
+    return { fieldErrors: { email, password } };
   }
 
   const { email, password, next } = parsed.data;
@@ -77,9 +82,11 @@ export async function signInAction(
   }
 
   // Only same-origin paths — a `next` of "https://elsewhere" must not redirect.
-  // With none, "/" sends the person to their role's own workspace.
+  // With none, the person lands in their own role's workspace.
   const redirectTo =
-    next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
+    next && next.startsWith("/") && !next.startsWith("//")
+      ? next
+      : await homeForEmail(email);
 
   try {
     await signIn("credentials", { email, password, redirectTo });

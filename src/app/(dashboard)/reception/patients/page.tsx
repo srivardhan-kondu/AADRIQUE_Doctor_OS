@@ -43,7 +43,7 @@ export default async function ReceptionPatientsPage({
               Focus search <Kbd>/</Kbd>
             </span>
             {hasPermission(actor, Permission.PATIENT_CREATE) && (
-              <RegisterPatientDialog />
+              <RegisterPatientDialog openParam="register" />
             )}
           </>
         }

@@ -4,6 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, LoaderCircle, UserPlus } from "lucide-react";
 import { toast } from "sonner";
+import { useDialogState } from "@/hooks/use-dialog-state";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -56,12 +57,15 @@ const LANGUAGES = [
 export function RegisterPatientDialog({
   trigger,
   onRegistered,
+  openParam,
 }: {
   trigger?: React.ReactNode;
   /** Continue with the new patient — give them a token, or book them. */
   onRegistered?: (patient: RegisteredPatient) => void;
+  /** Opens when the URL carries `?open=<openParam>` (see useDialogState). */
+  openParam?: string;
 }) {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useDialogState(openParam);
 
   return (
     <>
