@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import type { ConsultationStatus } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/db";
 import {
   Permission,
@@ -429,4 +430,108 @@ export async function signConsultation(
   if (visit.status !== "COMPLETED") {
     await fireTrigger(actor, "APPOINTMENT_COMPLETED", { type: "Visit", id: visitId });
   }
+}
+
+/* -------------------------------------------------------------------------
+ * Spec §6 + §26 — the doctor's consultations, as a worklist.
+ * ---------------------------------------------------------------------- */
+
+export interface ConsultationListRow {
+  visitId: string;
+  status: ConsultationStatus;
+  startedAt: Date;
+  signedAt: Date | null;
+  patientId: string;
+  patientName: string;
+  patientMrn: string;
+  chiefComplaint: string | null;
+  assessment: string | null;
+  /** Unsigned and from before today: a note that was never finished. */
+  overdue: boolean;
+}
+
+export interface ConsultationList {
+  rows: ConsultationListRow[];
+  counts: { unsigned: number; overdue: number; signed30d: number };
+}
+
+/**
+ * Drafts first — a draft is unfinished clinical work — then the most recent
+ * signed notes. Bounded: this is a worklist, not an archive; the full history
+ * lives on each patient's timeline.
+ */
+export async function listConsultations(
+  actor: RequestActor,
+  doctorId: string,
+  options: { show?: "unsigned" | "signed"; query?: string } = {},
+): Promise<ConsultationList> {
+  assertPermission(actor, Permission.CONSULTATION_READ);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const since = new Date(today);
+  since.setDate(since.getDate() - 30);
+
+  const query = options.query?.trim();
+  const scope = { doctorId, ...tenantScope(actor) };
+  const UNSIGNED: ConsultationStatus[] = ["DRAFT", "REVIEWED"];
+
+  const [rows, unsigned, overdue, signed30d] = await Promise.all([
+    prisma.consultation.findMany({
+      where: {
+        ...scope,
+        ...(options.show === "unsigned"
+          ? { status: { in: UNSIGNED } }
+          : options.show === "signed"
+            ? { status: "SIGNED" as const }
+            : {}),
+        ...(query
+          ? {
+              patient: {
+                OR: [
+                  { firstName: { contains: query, mode: "insensitive" } },
+                  { lastName: { contains: query, mode: "insensitive" } },
+                  { mrn: { contains: query, mode: "insensitive" } },
+                  { phone: { contains: query } },
+                ],
+              },
+            }
+          : {}),
+      },
+      orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+      take: 60,
+      select: {
+        status: true,
+        signedAt: true,
+        chiefComplaint: true,
+        assessment: true,
+        createdAt: true,
+        visit: { select: { id: true, startedAt: true } },
+        patient: { select: { id: true, firstName: true, lastName: true, mrn: true } },
+      },
+    }),
+    prisma.consultation.count({ where: { ...scope, status: { in: UNSIGNED } } }),
+    prisma.consultation.count({
+      where: { ...scope, status: { in: UNSIGNED }, createdAt: { lt: today } },
+    }),
+    prisma.consultation.count({
+      where: { ...scope, status: "SIGNED", signedAt: { gte: since } },
+    }),
+  ]);
+
+  return {
+    rows: rows.map((c) => ({
+      visitId: c.visit.id,
+      status: c.status,
+      startedAt: c.visit.startedAt,
+      signedAt: c.signedAt,
+      patientId: c.patient.id,
+      patientName: `${c.patient.firstName} ${c.patient.lastName ?? ""}`.trim(),
+      patientMrn: c.patient.mrn,
+      chiefComplaint: c.chiefComplaint,
+      assessment: c.assessment,
+      overdue: c.status !== "SIGNED" && c.createdAt < today,
+    })),
+    counts: { unsigned, overdue, signed30d },
+  };
 }

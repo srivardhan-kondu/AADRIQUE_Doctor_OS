@@ -1,17 +1,20 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Stethoscope } from "lucide-react";
+import Link from "next/link";
+import { Settings2, Stethoscope } from "lucide-react";
 import { cn, initials } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageBody, PageHeader } from "@/components/shell/page-header";
 import { NoAccess } from "@/components/shell/no-access";
+import { AddDoctorDialog } from "@/components/doctors/add-doctor-dialog";
 import { Permission, hasPermission } from "@/lib/permissions";
 import { requireActor } from "@/server/context";
-import { listDoctors } from "@/server/services/admin";
+import { listDepartments, listDoctors } from "@/server/services/admin";
 
 export const metadata: Metadata = { title: "Doctors" };
 
@@ -41,7 +44,10 @@ async function DoctorsScreen() {
     );
   }
 
-  const doctors = await listDoctors(actor);
+  const [doctors, departments] = await Promise.all([
+    listDoctors(actor),
+    listDepartments(actor),
+  ]);
   const online = doctors.filter((d) => d.online).length;
 
   return (
@@ -49,6 +55,13 @@ async function DoctorsScreen() {
       <PageHeader
         title="Doctors"
         description={`${doctors.length} practising here · ${online} online now`}
+        actions={
+          <AddDoctorDialog
+            departments={departments
+              .filter((d) => d.active)
+              .map((d) => ({ id: d.id, name: d.name }))}
+          />
+        }
       />
 
       {doctors.length === 0 ? (
@@ -56,7 +69,7 @@ async function DoctorsScreen() {
           <EmptyState
             icon={Stethoscope}
             title="No doctors yet"
-            description="A doctor appears here once their profile is attached to a facility."
+            description="Add the first doctor, then set their clinic hours so patients can be booked."
           />
         </Card>
       ) : (
@@ -96,6 +109,12 @@ async function DoctorsScreen() {
                 <Badge variant="muted" className="shrink-0 font-mono">
                   {doctor.tokenPrefix}
                 </Badge>
+                <Button asChild variant="ghost" size="sm" className="shrink-0">
+                  <Link href={`/admin/doctors/${doctor.id}`}>
+                    <Settings2 />
+                    Manage
+                  </Link>
+                </Button>
               </CardHeader>
 
               <div className="space-y-3 px-5 py-4">

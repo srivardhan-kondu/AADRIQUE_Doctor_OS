@@ -20,10 +20,12 @@ const RUN = randomUUID().slice(0, 8);
 export interface Tenant {
   organizationId: string;
   facilityId: string;
+  departmentId: string;
   doctorId: string;
   patientId: string;
   reception: RequestActor;
   doctor: RequestActor;
+  admin: RequestActor;
   userIds: string[];
 }
 
@@ -66,6 +68,7 @@ export async function createTenant(label: string): Promise<Tenant> {
 
   const doctorUser = await user("DOCTOR", "Dr. Test Rao");
   const receptionUser = await user("RECEPTIONIST", "Test Front Desk");
+  const adminUser = await user("HOSPITAL_ADMIN", "Test Admin");
 
   const doctor = await prisma.doctorProfile.create({
     data: {
@@ -151,17 +154,27 @@ export async function createTenant(label: string): Promise<Tenant> {
   return {
     organizationId: organization.id,
     facilityId: facility.id,
+    departmentId: department.id,
     doctorId: doctor.id,
     patientId: patient.id,
     reception: actor(receptionUser, "RECEPTIONIST", null),
     doctor: actor(doctorUser, "DOCTOR", doctor.id),
-    userIds: [doctorUser.id, receptionUser.id],
+    admin: actor(adminUser, "HOSPITAL_ADMIN", null),
+    userIds: [doctorUser.id, receptionUser.id, adminUser.id],
   };
 }
 
 export async function removeTenant(tenant: Tenant | undefined) {
   if (!tenant) return;
-  await prisma.user.deleteMany({ where: { id: { in: tenant.userIds } } });
+  // Everyone with a membership here, including users a test created.
+  await prisma.user.deleteMany({
+    where: {
+      OR: [
+        { id: { in: tenant.userIds } },
+        { memberships: { some: { organizationId: tenant.organizationId } } },
+      ],
+    },
+  });
   await prisma.organization.deleteMany({ where: { id: tenant.organizationId } });
 }
 

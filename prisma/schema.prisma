@@ -270,6 +270,8 @@ enum AuditAction {
   MESSAGE_SENT
   INTEGRATION_CHANGED
   PERMISSION_CHANGED
+  /// Spec §30 — data leaving the system, such as a directory export.
+  DATA_EXPORTED
 }
 
 /// Spec §9 — what the Copilot is allowed to do.

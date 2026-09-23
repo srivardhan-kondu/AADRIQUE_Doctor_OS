@@ -1,5 +1,6 @@
 import {
   Blocks,
+  Download,
   FilePlus2,
   FileSignature,
   KeyRound,
@@ -48,6 +49,7 @@ const ACTION_ICON: Record<string, LucideIcon> = {
   MESSAGE_SENT: Send,
   INTEGRATION_CHANGED: Blocks,
   PERMISSION_CHANGED: KeyRound,
+  DATA_EXPORTED: Download,
 };
 
 /** The few actions that deserve to stand out in a wall of rows. */
@@ -55,6 +57,7 @@ const ACTION_TONE: Record<string, string> = {
   CONSULTATION_SIGNED: "bg-success-soft text-success",
   PRESCRIPTION_CREATED: "bg-accent-soft text-brand-700",
   PERMISSION_CHANGED: "bg-warning-soft text-warning",
+  DATA_EXPORTED: "bg-warning-soft text-warning",
   RECORD_DELETED: "bg-destructive-soft text-destructive",
   AI_OUTPUT_GENERATED: "bg-ai-soft text-ai",
   AI_OUTPUT_ACCEPTED: "bg-ai-soft text-ai",

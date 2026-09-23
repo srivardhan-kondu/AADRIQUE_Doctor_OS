@@ -259,4 +259,5 @@ export const AUDIT_ACTION_LABEL: Record<AuditAction, string> = {
   MESSAGE_SENT: "Message sent",
   INTEGRATION_CHANGED: "Integration changed",
   PERMISSION_CHANGED: "Permission changed",
+  DATA_EXPORTED: "Data exported",
 };

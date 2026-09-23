@@ -597,3 +597,104 @@ async function resolveFacility(actor: RequestActor): Promise<string> {
   if (!facility) throw notFound("Facility");
   return facility.id;
 }
+
+/* -------------------------------------------------------------------------
+ * Spec §30 — the patient directory, exported under audit.
+ * ---------------------------------------------------------------------- */
+
+/** Enough for a large facility's directory; beyond this, export by filter. */
+const EXPORT_LIMIT = 10_000;
+
+export interface DirectoryExport {
+  header: string[];
+  rows: Array<Array<string | number | Date | null>>;
+  truncated: boolean;
+}
+
+/**
+ * The directory only — identity, contact and consent — never clinical
+ * content. Every export is written to the audit log with how many records
+ * left the system, before the file is handed over.
+ */
+export async function exportPatientDirectory(
+  actor: RequestActor,
+): Promise<DirectoryExport> {
+  assertPermission(actor, Permission.ADMIN_MANAGE);
+  assertPermission(actor, Permission.PATIENT_READ);
+
+  const patients = await prisma.patient.findMany({
+    where: { ...tenantScope(actor), active: true },
+    orderBy: { mrn: "asc" },
+    take: EXPORT_LIMIT + 1,
+    select: {
+      mrn: true,
+      firstName: true,
+      lastName: true,
+      gender: true,
+      dateOfBirth: true,
+      approximateAge: true,
+      phone: true,
+      email: true,
+      city: true,
+      preferredLanguage: true,
+      whatsappOptIn: true,
+      smsOptIn: true,
+      emailOptIn: true,
+      createdAt: true,
+      lastVisitAt: true,
+    },
+  });
+
+  const truncated = patients.length > EXPORT_LIMIT;
+  const exported = patients.slice(0, EXPORT_LIMIT);
+
+  await prisma.$transaction(async (tx) => {
+    await writeAudit(tx, actor, {
+      action: "DATA_EXPORTED",
+      entityType: "Patient",
+      summary: `Exported the patient directory · ${exported.length} records`,
+      metadata: { records: exported.length, truncated },
+    });
+  }, TX_OPTIONS);
+
+  const consent = (p: (typeof exported)[number]) =>
+    [
+      p.whatsappOptIn && "WhatsApp",
+      p.smsOptIn && "SMS",
+      p.emailOptIn && "Email",
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+  return {
+    header: [
+      "Patient ID",
+      "First name",
+      "Last name",
+      "Sex",
+      "Age",
+      "Mobile",
+      "Email",
+      "City",
+      "Language",
+      "May message on",
+      "Registered",
+      "Last visit",
+    ],
+    rows: exported.map((p) => [
+      p.mrn,
+      p.firstName,
+      p.lastName,
+      p.gender.toLowerCase(),
+      ageOf(p.dateOfBirth, p.approximateAge),
+      p.phone,
+      p.email,
+      p.city,
+      p.preferredLanguage,
+      consent(p),
+      p.createdAt,
+      p.lastVisitAt,
+    ]),
+    truncated,
+  };
+}
