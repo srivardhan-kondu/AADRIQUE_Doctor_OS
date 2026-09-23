@@ -126,6 +126,21 @@ async function createTenant(label: string): Promise<Tenant> {
     },
   });
 
+  // The feedback request waits after a completed visit; the run parks on
+  // the WAIT, which is enough to prove the trigger reached it.
+  await prisma.workflow.create({
+    data: {
+      organizationId: organization.id,
+      name: "Feedback request",
+      trigger: "APPOINTMENT_COMPLETED",
+      enabled: true,
+      steps: [
+        { type: "WAIT", duration: { hours: 2 } },
+        { type: "ACTION", action: "CREATE_FEEDBACK_RECORD" },
+      ],
+    },
+  });
+
   const actor = (
     u: { id: string; email: string; name: string },
     role: Role,
@@ -262,9 +277,6 @@ describe("OPD journey", { skip: !configured && "DATABASE_URL is not set" }, () =
     assert.equal(visit.chiefComplaint, "Follow-up of blood pressure");
     assert.equal(visit.appointment?.status, "IN_CONSULTATION");
     assert.equal(visit.consultation?.status, "DRAFT");
-
-    // Nobody else is waiting, so the next press is a no-op, not an error.
-    assert.equal(await callNext(t.doctor, t.doctorId), null);
   });
 
   it("saves a draft, and signs only once there is an assessment", async () => {
@@ -301,6 +313,24 @@ describe("OPD journey", { skip: !configured && "DATABASE_URL is not set" }, () =
     assert.equal(visit.appointment?.status, "COMPLETED");
     assert.equal(visit.consultation?.status, "SIGNED");
     assert.equal(visit.consultation?.signedByName, "Dr. Test Rao");
+
+    // Signing completes the visit, so the feedback automation starts — the
+    // doctor never has to press the queue's Complete button as well.
+    const runs = await prisma.workflowRun.findMany({
+      where: { subjectType: "Visit", subjectId: visitId, workflow: { name: "Feedback request" } },
+      select: { status: true },
+    });
+    assert.deepEqual(runs.map((r) => r.status), ["WAITING"]);
+
+    // Nobody else is waiting and the visit is already closed, so the next
+    // press is a no-op — not an error, and not a second feedback request.
+    assert.equal(await callNext(t.doctor, t.doctorId), null);
+    assert.equal(
+      await prisma.workflowRun.count({
+        where: { subjectType: "Visit", subjectId: visitId, workflow: { name: "Feedback request" } },
+      }),
+      1,
+    );
   });
 
   it("keeps a signed consultation immutable", async () => {

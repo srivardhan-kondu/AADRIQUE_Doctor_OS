@@ -371,7 +371,7 @@ export async function signConsultation(
 
   const visit = await prisma.visit.findUniqueOrThrow({
     where: { id: visitId },
-    select: { queueEntryId: true, appointmentId: true },
+    select: { queueEntryId: true, appointmentId: true, status: true },
   });
 
   await prisma.$transaction(async (tx) => {
@@ -421,4 +421,12 @@ export async function signConsultation(
   // Spec §28 — signing is a trigger. Fired after the transaction, so an
   // automation can never undo a signature.
   await fireTrigger(actor, "CONSULTATION_SIGNED", { type: "Visit", id: visitId });
+
+  // Signing also completes the visit, so whatever listens for a completed
+  // visit (the feedback request) hears about it — unless the queue already
+  // closed it and fired that trigger, when a second would ask the patient
+  // for feedback twice.
+  if (visit.status !== "COMPLETED") {
+    await fireTrigger(actor, "APPOINTMENT_COMPLETED", { type: "Visit", id: visitId });
+  }
 }

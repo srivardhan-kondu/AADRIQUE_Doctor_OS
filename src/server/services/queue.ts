@@ -123,7 +123,11 @@ export async function callNext(
 
   const queueId = await ensureTodayQueue(actor, doctorId);
 
-  return prisma.$transaction(async (tx) => {
+  // The visit closed out on the way, if there was one, so its completion
+  // trigger can fire after the transaction commits.
+  let closedVisitId: string | null = null;
+
+  const result = await prisma.$transaction(async (tx) => {
     const queue = await tx.queue.findUniqueOrThrow({
       where: { id: queueId },
       select: {
@@ -159,6 +163,7 @@ export async function callNext(
           where: { id: active.visit.id },
           data: { stage: "COMPLETED", status: "COMPLETED", completedAt: now },
         });
+        closedVisitId = active.visit.id;
       }
     }
 
@@ -259,6 +264,17 @@ export async function callNext(
       token: next.token,
     };
   }, TX_OPTIONS);
+
+  // Closing out a visit by calling the next patient completes it just as the
+  // Complete button does, so the same automations hear about it.
+  if (closedVisitId) {
+    await fireTrigger(actor, "APPOINTMENT_COMPLETED", {
+      type: "Visit",
+      id: closedVisitId,
+    });
+  }
+
+  return result;
 }
 
 /** Marks the current consultation complete without calling anyone new. */
