@@ -29,7 +29,8 @@ before implementing a feature.
 | 5 | Workflow engine, integrations, admin, security review | Done |
 | 6a | Testing: rule modules, unit + integration tests (build order 24) | Done |
 | 6b | Performance (build order 25) | Done |
-| 6c | Production polish (build order 27) | Not started |
+| 6c | Live queue, Front Desk, patient-facing queue, doctor & admin screens | Done |
+| 6d | Production polish (build order 27) and E2E journeys | Done |
 
 ## Architecture rules
 
@@ -57,6 +58,27 @@ before implementing a feature.
 - Decisions with no I/O — slot generation, status transitions, token
   formats — live in `src/server/rules/` as pure functions the services call,
   so they are unit tested against the same code that runs.
+
+## Things that have bitten this codebase
+
+- After `prisma migrate dev`, run `npx prisma generate` — Prisma 7 does not
+  regenerate the client, and exhaustive `Record<Enum, …>` maps only catch a
+  new enum value once it has.
+- "Today" is the server's local day. `Queue.date` is a date column holding
+  the UTC calendar date of local midnight; compare it the way it was written
+  (see `getTokenStatus`), and deploy with `TZ` set to the clinic's zone.
+- `formData.get` returns `null`, not `undefined`, for a field the form did
+  not send — `z.string().optional()` rejects it. Use `.nullish()`.
+- A screen showing live queue state renders `getQueueSignal` and
+  `<LiveRefresh signal=…>`; that is how it updates without a refresh.
+- A dialog the command palette can open takes `openParam` (see
+  `useDialogState`) — on the page header's instance only, never on every row.
+- Grid and flex children that hold a non-wrapping row need `min-w-0`, and
+  header action rows (including skeletons) need `flex-wrap`, or a phone
+  scrolls sideways. The E2E suite checks this.
+- Public surfaces (`/display`, `/q/…`) show token numbers only. Clinical
+  content is withheld by the service for anyone without CONSULTATION_READ —
+  never only hidden in the UI.
 
 ## Automation rules (spec §28)
 
@@ -146,13 +168,18 @@ before implementing a feature.
 npm run typecheck
 npx eslint .
 npm test
+npm run test:integration
 npm run build
+npm run test:e2e        # when a screen changed
 ```
 
-`npm run test:integration` walks Appointment → Queue → Consultation →
-Follow-up through the real services against `DATABASE_URL` (spec §53). It
-builds two throwaway organizations and deletes them afterwards; run it when a
-change touches a service. It takes about a minute against the hosted database.
+`npm run test:integration` runs the services against `DATABASE_URL` on
+throwaway organizations (see `src/server/__tests__/tenant-fixture.ts`) and
+deletes them afterwards; run it when a change touches a service.
+
+`npm run test:e2e` runs the spec §53 journeys in a browser against a
+production build. It **reseeds the demo organisation** first, and refuses to
+unless `DATABASE_URL` is local. Run it when a change touches a screen.
 
 ## Database
 

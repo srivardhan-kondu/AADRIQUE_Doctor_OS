@@ -113,7 +113,7 @@ function DepartmentsSkeleton() {
     <>
       <div className="pb-6">
         <Skeleton className="h-8 w-40" />
-        <Skeleton className="mt-2 h-4 w-96" />
+        <Skeleton className="mt-2 h-4 w-full max-w-96" />
       </div>
       <Skeleton className="h-96 rounded-xl" />
     </>

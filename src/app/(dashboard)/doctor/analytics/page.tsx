@@ -184,7 +184,7 @@ function shortHour(hour: number): string {
 function AnalyticsSkeleton() {
   return (
     <>
-      <div className="flex items-start justify-between pb-6">
+      <div className="flex flex-wrap items-start justify-between gap-4 pb-6">
         <div>
           <Skeleton className="h-8 w-36" />
           <Skeleton className="mt-2 h-4 w-80" />

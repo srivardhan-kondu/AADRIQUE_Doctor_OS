@@ -57,9 +57,11 @@ export function Topbar({
       <div className="min-w-0 flex-1">
         {now ? (
           <>
-            <h1 className="truncate font-display text-[17px] font-semibold leading-tight tracking-tight">
+            {/* A greeting, not the page's title: the screen's own heading is its
+                one h1 (spec §51), so screen readers land on what the page is. */}
+            <p className="truncate font-display text-[17px] font-semibold leading-tight tracking-tight">
               {greeting(now)}, {user.name.replace(/^Dr\.\s*/, "Dr. ")}
-            </h1>
+            </p>
             <p className="mt-0.5 hidden items-center gap-2 text-[12px] text-muted-foreground sm:flex">
               {user.department && (
                 <>

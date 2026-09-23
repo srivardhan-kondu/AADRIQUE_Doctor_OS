@@ -163,7 +163,7 @@ function DeskSkeleton() {
           <Skeleton className="h-8 w-40" />
           <Skeleton className="mt-2 h-4 w-72" />
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Skeleton className="h-9 w-36 rounded-lg" />
           <Skeleton className="h-9 w-40 rounded-lg" />
           <Skeleton className="h-9 w-36 rounded-lg" />

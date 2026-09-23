@@ -311,10 +311,10 @@ function RunStatus({ status }: { status: string }) {
 function CommunicationsSkeleton() {
   return (
     <>
-      <div className="flex items-start justify-between pb-6">
+      <div className="flex flex-wrap items-start justify-between gap-4 pb-6">
         <div>
           <Skeleton className="h-8 w-48" />
-          <Skeleton className="mt-2 h-4 w-96" />
+          <Skeleton className="mt-2 h-4 w-full max-w-96" />
         </div>
         <Skeleton className="h-9 w-36 rounded-lg" />
       </div>
