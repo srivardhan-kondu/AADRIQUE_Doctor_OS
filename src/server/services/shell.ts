@@ -88,6 +88,7 @@ export async function getShellData(actor: RequestActor): Promise<{
       body: n.body,
       at: relativeTime(n.createdAt),
       read: n.readAt !== null,
+      href: n.linkHref,
     })),
     online: doctor?.online ?? true,
   };

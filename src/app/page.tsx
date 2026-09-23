@@ -1,10 +1,9 @@
 import { redirect } from "next/navigation";
+import { homeFor } from "@/lib/nav";
+import { getActor } from "@/server/context";
 
-/**
- * Part 1 sends the root straight into the doctor workspace. The public demo
- * entry described in spec §40 is built once there is seeded data to walk
- * through.
- */
-export default function Home() {
-  redirect("/doctor");
+/** The root sends each person to their own workspace (spec §3). */
+export default async function Home() {
+  const actor = await getActor();
+  redirect(actor ? homeFor(actor.role) : "/sign-in");
 }

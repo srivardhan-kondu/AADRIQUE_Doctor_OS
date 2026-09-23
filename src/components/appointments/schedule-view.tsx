@@ -19,7 +19,25 @@ import {
 } from "@/components/ui/status";
 import type { AppointmentRow, DayColumn, ScheduleView } from "@/server/services/appointments";
 import { AppointmentMenu, CheckInButton } from "./appointment-actions";
+import type { DoctorChoice } from "@/server/services/front-desk";
 import { BookAppointmentDialog } from "./book-dialog";
+
+/**
+ * Where the board's links lead. The doctor's workspace opens the clinical
+ * record; the front desk opens its own patient page and has no consultation
+ * to open.
+ */
+export interface ScheduleLinks {
+  patientBase: string;
+  showConsultations: boolean;
+  /** Set on the front desk: booking from the board picks this doctor. */
+  doctors?: DoctorChoice[];
+}
+
+const DOCTOR_LINKS: ScheduleLinks = {
+  patientBase: "/doctor/patients",
+  showConsultations: true,
+};
 
 /**
  * Spec §11 — the doctor's schedule.
@@ -37,11 +55,17 @@ const TYPE_LABEL: Record<string, string> = {
   TELECONSULTATION: "Teleconsult",
 };
 
-export function ScheduleBoard({ schedule }: { schedule: ScheduleView }) {
+export function ScheduleBoard({
+  schedule,
+  links = DOCTOR_LINKS,
+}: {
+  schedule: ScheduleView;
+  links?: ScheduleLinks;
+}) {
   return schedule.view === "week" ? (
-    <WeekGrid schedule={schedule} />
+    <WeekGrid schedule={schedule} links={links} />
   ) : (
-    <DayList day={schedule.days[0]} schedule={schedule} />
+    <DayList day={schedule.days[0]} schedule={schedule} links={links} />
   );
 }
 
@@ -50,9 +74,11 @@ export function ScheduleBoard({ schedule }: { schedule: ScheduleView }) {
 function DayList({
   day,
   schedule,
+  links,
 }: {
   day: DayColumn;
   schedule: ScheduleView;
+  links: ScheduleLinks;
 }) {
   if (day.windows.length === 0 && day.appointments.length === 0) {
     return (
@@ -115,6 +141,8 @@ function DayList({
               </p>
               <BookAppointmentDialog
                 defaultDate={isoOf(day.date)}
+                doctors={links.doctors}
+                defaultDoctorId={schedule.doctor.id}
                 trigger={
                   <button
                     type="button"
@@ -131,6 +159,8 @@ function DayList({
                 <AppointmentRowView
                   key={appointment.id}
                   appointment={appointment}
+                  links={links}
+                  doctorId={schedule.doctor.id}
                 />
               ))}
             </ul>
@@ -151,6 +181,8 @@ function DayList({
               <AppointmentRowView
                 key={appointment.id}
                 appointment={appointment}
+                links={links}
+                doctorId={schedule.doctor.id}
               />
             ))}
           </ul>
@@ -194,8 +226,12 @@ function SessionLoad({
 
 function AppointmentRowView({
   appointment,
+  links,
+  doctorId,
 }: {
   appointment: AppointmentRow;
+  links: ScheduleLinks;
+  doctorId: string;
 }) {
   const scheduledFor = `${formatTime(appointment.start)} on ${dayName(appointment.start)}`;
 
@@ -219,7 +255,7 @@ function AppointmentRowView({
       <div className="min-w-0 flex-1">
         <p className="flex items-center gap-2">
           <Link
-            href={`/doctor/patients/${appointment.patientId}`}
+            href={`${links.patientBase}/${appointment.patientId}`}
             className="truncate text-[14px] font-semibold hover:text-accent hover:underline"
           >
             {appointment.patientName}
@@ -274,7 +310,7 @@ function AppointmentRowView({
       />
 
       <div className="flex shrink-0 items-center gap-1.5">
-        {appointment.visitId && (
+        {links.showConsultations && appointment.visitId && (
           <Link
             href={`/doctor/consultations/${appointment.visitId}`}
             className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-accent hover:underline"
@@ -295,6 +331,7 @@ function AppointmentRowView({
           appointmentId={appointment.id}
           patientName={appointment.patientName}
           scheduledFor={scheduledFor}
+          doctorId={doctorId}
           canReschedule={appointment.status === "SCHEDULED"}
           canCancel={
             appointment.status === "SCHEDULED" ||
@@ -312,17 +349,23 @@ function AppointmentRowView({
 
 /* ------------------------------- week view ------------------------------ */
 
-function WeekGrid({ schedule }: { schedule: ScheduleView }) {
+function WeekGrid({
+  schedule,
+  links,
+}: {
+  schedule: ScheduleView;
+  links: ScheduleLinks;
+}) {
   return (
     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-7">
       {schedule.days.map((day) => (
-        <WeekColumn key={day.date.toISOString()} day={day} />
+        <WeekColumn key={day.date.toISOString()} day={day} links={links} />
       ))}
     </div>
   );
 }
 
-function WeekColumn({ day }: { day: DayColumn }) {
+function WeekColumn({ day, links }: { day: DayColumn; links: ScheduleLinks }) {
   const closed = day.windows.length === 0;
 
   return (
@@ -370,7 +413,7 @@ function WeekColumn({ day }: { day: DayColumn }) {
           {day.appointments.map((appointment) => (
             <li key={appointment.id}>
               <Link
-                href={`/doctor/patients/${appointment.patientId}`}
+                href={`${links.patientBase}/${appointment.patientId}`}
                 className={cn(
                   "block rounded-md border-l-2 bg-muted/60 px-2 py-1.5 transition-colors hover:bg-muted",
                   borderForStatus(appointment.status),

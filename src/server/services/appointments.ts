@@ -29,7 +29,7 @@ import {
   startOfDay,
   startOfWeek,
 } from "@/server/rules/appointments";
-import { formatToken } from "@/server/rules/queue";
+import { issueToken } from "./queue";
 
 /**
  * Spec §11 — appointment management.
@@ -724,60 +724,25 @@ export async function checkInAppointment(
   const day = startOfDay(appointment.scheduledStart);
 
   const result = await prisma.$transaction(async (tx) => {
-    const queue = await tx.queue.upsert({
-      where: { doctorId_date: { doctorId: appointment.doctorId, date: day } },
-      create: {
-        organizationId: actor.organizationId,
-        facilityId: appointment.facilityId,
-        departmentId: appointment.departmentId,
-        doctorId: appointment.doctorId,
-        date: day,
-        tokenPrefix: appointment.doctor.tokenPrefix,
-      },
-      update: {},
-      select: { id: true, tokenPrefix: true },
-    });
-
-    // Next token and next position, read inside the transaction. The unique
-    // index on (queueId, token) is the real guard; this is the fast path.
-    const last = await tx.queueEntry.findFirst({
-      where: { queueId: queue.id },
-      orderBy: { tokenSeq: "desc" },
-      select: { tokenSeq: true, position: true },
-    });
-
-    const tokenSeq = (last?.tokenSeq ?? 0) + 1;
-    const token = formatToken(queue.tokenPrefix, tokenSeq);
     const now = new Date();
 
-    const entry = await tx.queueEntry.create({
-      select: { id: true },
-      data: {
-        queueId: queue.id,
-        patientId: appointment.patientId,
-        appointmentId: appointment.id,
-        token,
-        tokenSeq,
-        status: "WAITING",
-        priority: "NORMAL",
-        position: (last?.position ?? 0) + 1,
-        joinedAt: now,
-      },
+    const issued = await issueToken(tx, {
+      organizationId: actor.organizationId,
+      facilityId: appointment.facilityId,
+      departmentId: appointment.departmentId,
+      doctorId: appointment.doctorId,
+      tokenPrefix: appointment.doctor.tokenPrefix,
+      patientId: appointment.patientId,
+      appointmentId: appointment.id,
+      priority: "NORMAL",
+      day,
+      at: now,
     });
+    const token = issued.token;
 
     await tx.appointment.update({
       where: { id: appointment.id },
       data: { status: "CHECKED_IN", checkedInAt: now },
-    });
-
-    const ahead = await tx.queueEntry.count({
-      where: { queueId: queue.id, status: { in: ["WAITING", "VITALS"] } },
-    });
-
-    // What a patient-facing display would be showing right now (spec §12).
-    const current = await tx.queueEntry.findFirst({
-      where: { queueId: queue.id, status: { in: ["CALLED", "IN_CONSULTATION"] } },
-      select: { token: true },
     });
 
     await writeAudit(tx, actor, {
@@ -790,9 +755,8 @@ export async function checkInAppointment(
 
     return {
       token,
-      position: ahead,
-      currentToken: current?.token ?? null,
-      queueEntryId: entry.id,
+      position: issued.waiting,
+      queueEntryId: issued.queueEntryId,
     };
   }, TX_OPTIONS);
 

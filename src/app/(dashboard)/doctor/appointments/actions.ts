@@ -83,6 +83,11 @@ function refresh() {
 
 const bookSchema = z.object({
   patientId: idSchema,
+  /**
+   * The front desk books for any doctor; a doctor books for themselves when
+   * this is left out. Validated against the tenant by the service either way.
+   */
+  doctorId: idSchema.optional(),
   start: dateSchema,
   durationMinutes: z.number().int().min(5).max(240).optional(),
   type: z
@@ -103,8 +108,8 @@ export async function bookAppointmentAction(
 ): Promise<ActionResult> {
   try {
     const actor = await requireActor();
-    const doctorId = await requireDoctorId(actor);
     const parsed = bookSchema.parse(input);
+    const doctorId = parsed.doctorId ?? (await requireDoctorId(actor));
 
     const result = await bookAppointment(actor, {
       patientId: parsed.patientId,
@@ -222,9 +227,14 @@ export interface SlotChoice {
 }
 
 /** Slots for a day, fetched as the booking dialog's date changes. */
-export async function loadSlotsAction(date: string): Promise<SlotChoice[]> {
+export async function loadSlotsAction(
+  date: string,
+  forDoctorId?: string,
+): Promise<SlotChoice[]> {
   const actor = await requireActor();
-  const doctorId = await requireDoctorId(actor);
+  const doctorId = forDoctorId
+    ? idSchema.parse(forDoctorId)
+    : await requireDoctorId(actor);
   const slots = await getAvailableSlots(actor, doctorId, dateSchema.parse(date));
 
   return slots.map((slot) => ({

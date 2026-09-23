@@ -4,12 +4,14 @@ import { PauseCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageBody, PageHeader } from "@/components/shell/page-header";
+import { LiveRefresh } from "@/components/shell/live-refresh";
 import {
   CallNextButton,
   QueueStatusToggle,
 } from "@/components/queue/queue-actions";
 import { QueueBoardView } from "@/components/queue/queue-board";
 import { requireActor, requireDoctorId } from "@/server/context";
+import { getQueueSignal } from "@/server/services/live";
 import { getQueueBoard } from "@/server/services/queue";
 
 export const metadata: Metadata = { title: "My Queue" };
@@ -29,7 +31,10 @@ export default function QueuePage() {
 async function QueueScreen() {
   const actor = await requireActor();
   const doctorId = await requireDoctorId(actor);
-  const board = await getQueueBoard(actor, doctorId);
+  const [board, signal] = await Promise.all([
+    getQueueBoard(actor, doctorId),
+    getQueueSignal(actor, doctorId),
+  ]);
 
   return (
     <>
@@ -40,6 +45,7 @@ async function QueueScreen() {
           .join(" · ")}
         actions={
           <>
+            <LiveRefresh signal={signal} doctorId={doctorId} />
             <QueueStatusToggle paused={board.paused} />
             <CallNextButton
               waitingCount={board.waiting.length}

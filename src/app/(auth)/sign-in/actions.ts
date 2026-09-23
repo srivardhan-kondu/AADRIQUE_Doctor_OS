@@ -77,8 +77,9 @@ export async function signInAction(
   }
 
   // Only same-origin paths — a `next` of "https://elsewhere" must not redirect.
+  // With none, "/" sends the person to their role's own workspace.
   const redirectTo =
-    next && next.startsWith("/") && !next.startsWith("//") ? next : "/doctor";
+    next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
 
   try {
     await signIn("credentials", { email, password, redirectTo });

@@ -15,7 +15,7 @@ import { PageBody, PageHeader } from "@/components/shell/page-header";
 export function NoAccess({
   title,
   what,
-  backHref = "/doctor",
+  backHref = "/",
   backLabel = "Back to your workspace",
 }: {
   title: string;

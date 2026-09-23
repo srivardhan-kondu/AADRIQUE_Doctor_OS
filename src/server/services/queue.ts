@@ -1,9 +1,16 @@
 import "server-only";
+import type { Prisma } from "@/generated/prisma/client";
+import type { QueuePriority } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/db";
-import { Permission, assertPermission } from "@/lib/permissions";
+import {
+  Permission,
+  assertPermission,
+  hasPermission,
+  tenantScope,
+} from "@/lib/permissions";
 import type { RequestActor } from "@/server/context";
 import { writeAudit } from "./audit";
-import { invalidState, notFound } from "./errors";
+import { ServiceError, invalidState, notFound } from "./errors";
 import {
   ACTIVE_STATUSES,
   SETTLED_STATUSES,
@@ -12,10 +19,12 @@ import {
   assertCanMoveToVitals,
   assertCanSkip,
   averageWait,
+  formatToken,
   visitNumber,
   waitMinutes,
 } from "@/server/rules/queue";
 import { fireTrigger } from "./workflows";
+import { startOfDay } from "@/server/rules/appointments";
 
 /**
  * Spec §12 — token and queue management.
@@ -70,6 +79,217 @@ export async function ensureTodayQueue(
     select: { id: true },
   });
   return created.id;
+}
+
+/**
+ * Issues the next token in a doctor's queue for the day, creating the queue on
+ * first use. Runs inside the caller's transaction, so the token and whatever
+ * it belongs to (a check-in, a walk-in) commit together or not at all.
+ *
+ * The next number is read inside the transaction; the unique index on
+ * (queueId, token) is the real guard against two desks issuing the same one.
+ */
+export async function issueToken(
+  tx: Prisma.TransactionClient,
+  input: {
+    organizationId: string;
+    facilityId: string;
+    departmentId: string | null;
+    doctorId: string;
+    tokenPrefix: string;
+    patientId: string;
+    appointmentId: string | null;
+    priority: QueuePriority;
+    day: Date;
+    at: Date;
+  },
+): Promise<{ queueEntryId: string; token: string; waiting: number }> {
+  const queue = await tx.queue.upsert({
+    where: { doctorId_date: { doctorId: input.doctorId, date: input.day } },
+    create: {
+      organizationId: input.organizationId,
+      facilityId: input.facilityId,
+      departmentId: input.departmentId,
+      doctorId: input.doctorId,
+      date: input.day,
+      tokenPrefix: input.tokenPrefix,
+    },
+    update: {},
+    select: { id: true, tokenPrefix: true },
+  });
+
+  const last = await tx.queueEntry.findFirst({
+    where: { queueId: queue.id },
+    orderBy: { tokenSeq: "desc" },
+    select: { tokenSeq: true, position: true },
+  });
+
+  const tokenSeq = (last?.tokenSeq ?? 0) + 1;
+  const token = formatToken(queue.tokenPrefix, tokenSeq);
+
+  const entry = await tx.queueEntry.create({
+    select: { id: true },
+    data: {
+      queueId: queue.id,
+      patientId: input.patientId,
+      appointmentId: input.appointmentId,
+      token,
+      tokenSeq,
+      status: "WAITING",
+      priority: input.priority,
+      position: (last?.position ?? 0) + 1,
+      joinedAt: input.at,
+    },
+  });
+
+  const waiting = await tx.queueEntry.count({
+    where: { queueId: queue.id, status: { in: [...WAITING_STATUSES] } },
+  });
+
+  return { queueEntryId: entry.id, token, waiting };
+}
+
+export interface WalkInInput {
+  patientId: string;
+  doctorId: string;
+  priority?: QueuePriority;
+  reason?: string | null;
+}
+
+export interface WalkInResult {
+  token: string;
+  patientName: string;
+  doctorName: string;
+  /** Patients in line including this one. */
+  waiting: number;
+  automations: number;
+}
+
+/**
+ * Spec §12 + §13 — a patient without an appointment joins today's queue.
+ *
+ * The walk-in is recorded as an appointment (type WALK_IN, already checked in)
+ * as well as a token, so the day's schedule, the patient's history and the
+ * analytics all see the visit the same way they see a booked one.
+ */
+export async function addWalkIn(
+  actor: RequestActor,
+  input: WalkInInput,
+): Promise<WalkInResult> {
+  assertPermission(actor, Permission.QUEUE_MANAGE);
+
+  const day = startOfDay(new Date());
+
+  const [patient, doctor] = await Promise.all([
+    prisma.patient.findFirst({
+      where: { id: input.patientId, ...tenantScope(actor), active: true },
+      select: { id: true, firstName: true, lastName: true, mrn: true },
+    }),
+    prisma.doctorProfile.findFirst({
+      where: {
+        id: input.doctorId,
+        facility: { organizationId: actor.organizationId },
+      },
+      select: {
+        id: true,
+        facilityId: true,
+        departmentId: true,
+        tokenPrefix: true,
+        consultationMinutes: true,
+        acceptsWalkIns: true,
+        user: { select: { name: true } },
+      },
+    }),
+  ]);
+
+  if (!patient) throw notFound("Patient");
+  if (!doctor) throw notFound("Doctor");
+
+  if (!doctor.acceptsWalkIns) {
+    throw invalidState(
+      `${doctor.user.name} is not taking walk-ins.`,
+      "Book the next available appointment instead.",
+    );
+  }
+
+  const alreadyQueued = await prisma.queueEntry.findFirst({
+    where: {
+      patientId: patient.id,
+      status: { in: [...WAITING_STATUSES, ...ACTIVE_STATUSES] },
+      queue: { doctorId: doctor.id, date: day },
+    },
+    select: { token: true },
+  });
+
+  if (alreadyQueued) {
+    throw new ServiceError(
+      "CONFLICT",
+      `${patient.firstName} is already in the queue as ${alreadyQueued.token}.`,
+    );
+  }
+
+  const now = new Date();
+
+  const result = await prisma.$transaction(async (tx) => {
+    const appointment = await tx.appointment.create({
+      data: {
+        organizationId: actor.organizationId,
+        facilityId: doctor.facilityId,
+        departmentId: doctor.departmentId,
+        patientId: patient.id,
+        doctorId: doctor.id,
+        scheduledStart: now,
+        scheduledEnd: new Date(now.getTime() + doctor.consultationMinutes * 60_000),
+        durationMinutes: doctor.consultationMinutes,
+        type: "WALK_IN",
+        status: "CHECKED_IN",
+        source: "WALK_IN",
+        checkedInAt: now,
+        reason: input.reason?.trim() || null,
+      },
+      select: { id: true },
+    });
+
+    const issued = await issueToken(tx, {
+      organizationId: actor.organizationId,
+      facilityId: doctor.facilityId,
+      departmentId: doctor.departmentId,
+      doctorId: doctor.id,
+      tokenPrefix: doctor.tokenPrefix,
+      patientId: patient.id,
+      appointmentId: appointment.id,
+      priority: input.priority ?? "NORMAL",
+      day,
+      at: now,
+    });
+
+    await writeAudit(tx, actor, {
+      action: "RECORD_CREATED",
+      entityType: "QueueEntry",
+      entityId: issued.queueEntryId,
+      summary: `Walk-in · token ${issued.token} · Patient ${patient.mrn}`,
+      metadata: {
+        token: issued.token,
+        patientMrn: patient.mrn,
+        priority: input.priority ?? "NORMAL",
+      },
+    });
+
+    return issued;
+  }, TX_OPTIONS);
+
+  const automations = await fireTrigger(actor, "TOKEN_GENERATED", {
+    type: "QueueEntry",
+    id: result.queueEntryId,
+  });
+
+  return {
+    token: result.token,
+    patientName: `${patient.firstName} ${patient.lastName ?? ""}`.trim(),
+    doctorName: doctor.user.name,
+    waiting: result.waiting,
+    automations,
+  };
 }
 
 /** Loads a queue entry and proves it belongs to the actor's organization. */
@@ -443,6 +663,11 @@ export interface QueueBoard {
   doctorId: string;
   doctorName: string;
   department: string | null;
+  /** The doctor's own on-duty switch (spec §12 — doctor status). */
+  online: boolean;
+  acceptsWalkIns: boolean;
+  /** For an estimated wait: patients ahead × this. */
+  consultationMinutes: number;
   room: string | null;
   counter: string | null;
   paused: boolean;
@@ -457,53 +682,90 @@ export interface QueueBoard {
 }
 
 /** The full queue for one doctor today, grouped the way the screen shows it. */
+const boardInclude = (date: Date) =>
+  ({
+    user: { select: { name: true } },
+    department: { select: { name: true, waitThresholdMinutes: true } },
+    queues: {
+      where: { date },
+      include: {
+        entries: {
+          include: {
+            patient: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                mrn: true,
+                phone: true,
+                dateOfBirth: true,
+                approximateAge: true,
+                _count: { select: { allergies: true } },
+              },
+            },
+            appointment: { select: { reason: true, type: true } },
+            visit: { select: { id: true } },
+          },
+          orderBy: [{ priority: "desc" }, { position: "asc" }],
+        },
+      },
+    },
+  }) satisfies Prisma.DoctorProfileInclude;
+
+type BoardDoctor = Prisma.DoctorProfileGetPayload<{
+  include: ReturnType<typeof boardInclude>;
+}>;
+
 export async function getQueueBoard(
   actor: RequestActor,
   doctorId: string,
 ): Promise<QueueBoard> {
   assertPermission(actor, Permission.QUEUE_READ);
 
-  const date = new Date();
-  date.setHours(0, 0, 0, 0);
-
   const doctor = await prisma.doctorProfile.findFirst({
     where: { id: doctorId, facility: { organizationId: actor.organizationId } },
-    include: {
-      user: { select: { name: true } },
-      department: { select: { name: true, waitThresholdMinutes: true } },
-      queues: {
-        where: { date },
-        include: {
-          entries: {
-            include: {
-              patient: {
-                select: {
-                  id: true,
-                  firstName: true,
-                  lastName: true,
-                  mrn: true,
-                  phone: true,
-                  dateOfBirth: true,
-                  approximateAge: true,
-                  _count: { select: { allergies: true } },
-                },
-              },
-              appointment: { select: { reason: true, type: true } },
-              visit: { select: { id: true } },
-            },
-            orderBy: [{ priority: "desc" }, { position: "asc" }],
-          },
-        },
-      },
-    },
+    include: boardInclude(startOfDay(new Date())),
   });
 
   if (!doctor) throw notFound("Doctor");
+  return toBoard(doctor, new Date(), canSeeAllergies(actor));
+}
 
-  const queue = doctor.queues[0] ?? null;
-  const entries = queue?.entries ?? [];
+/**
+ * Spec §13 — every doctor's queue for today, for the front desk.
+ *
+ * One query for the whole facility rather than one per doctor, ordered so
+ * doctors who are working come first.
+ */
+export async function getQueueBoards(actor: RequestActor): Promise<QueueBoard[]> {
+  assertPermission(actor, Permission.QUEUE_READ);
+
+  const doctors = await prisma.doctorProfile.findMany({
+    where: {
+      facility: { organizationId: actor.organizationId },
+      user: { active: true },
+    },
+    include: boardInclude(startOfDay(new Date())),
+    orderBy: [{ online: "desc" }, { user: { name: "asc" } }],
+  });
 
   const now = new Date();
+  const allergies = canSeeAllergies(actor);
+  return doctors.map((doctor) => toBoard(doctor, now, allergies));
+}
+
+/** Spec §21 — an allergy count is clinical record, not queue information. */
+function canSeeAllergies(actor: RequestActor): boolean {
+  return hasPermission(actor, Permission.CONSULTATION_READ);
+}
+
+function toBoard(
+  doctor: BoardDoctor,
+  now: Date,
+  showAllergies: boolean,
+): QueueBoard {
+  const queue = doctor.queues[0] ?? null;
+  const entries = queue?.entries ?? [];
 
   const toEntry = (e: (typeof entries)[number]): QueueBoardEntry => {
     const age =
@@ -529,7 +791,7 @@ export async function getQueueBoard(
       waitMinutes: waitMinutes(e.status, e.joinedAt, now),
       reason: e.appointment?.reason ?? null,
       isFollowUp: e.appointment?.type === "FOLLOW_UP",
-      allergyCount: e.patient._count.allergies,
+      allergyCount: showAllergies ? e.patient._count.allergies : 0,
       visitId: e.visit?.id ?? null,
     };
   };
@@ -543,6 +805,9 @@ export async function getQueueBoard(
     doctorId: doctor.id,
     doctorName: doctor.user.name,
     department: doctor.department?.name ?? null,
+    online: doctor.online,
+    acceptsWalkIns: doctor.acceptsWalkIns,
+    consultationMinutes: doctor.consultationMinutes,
     room: queue?.roomLabel ?? null,
     counter: queue?.counterLabel ?? null,
     paused: queue?.status === "PAUSED",

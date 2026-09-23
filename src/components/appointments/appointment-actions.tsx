@@ -105,10 +105,13 @@ export function AppointmentMenu({
   canReschedule,
   canCancel,
   canMarkNoShow,
+  doctorId,
 }: {
   appointmentId: string;
   patientName: string;
   scheduledFor: string;
+  /** Whose free slots to offer when moving it. Omitted: the signed-in doctor. */
+  doctorId?: string;
   canReschedule: boolean;
   canCancel: boolean;
   canMarkNoShow: boolean;
@@ -227,6 +230,7 @@ export function AppointmentMenu({
         appointmentId={appointmentId}
         patientName={patientName}
         scheduledFor={scheduledFor}
+        doctorId={doctorId}
         onDone={() => setDialog(null)}
       />
     </>
@@ -239,6 +243,7 @@ function RescheduleDialog({
   appointmentId,
   patientName,
   scheduledFor,
+  doctorId,
   onDone,
 }: {
   open: boolean;
@@ -246,11 +251,12 @@ function RescheduleDialog({
   appointmentId: string;
   patientName: string;
   scheduledFor: string;
+  doctorId?: string;
   onDone: () => void;
 }) {
   const { pending, run } = useAppointmentAction();
   const [date, setDate] = React.useState(() => isoDate(tomorrow()));
-  const { slots, selected, select, loading } = useDaySlots(date, open);
+  const { slots, selected, select, loading } = useDaySlots(date, open, doctorId);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

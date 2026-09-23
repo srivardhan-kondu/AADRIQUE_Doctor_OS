@@ -1,9 +1,17 @@
 import "server-only";
-import type { Prisma } from "@/generated/prisma/client";
+import { Prisma } from "@/generated/prisma/client";
+import type { Gender } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/db";
-import { Permission, assertPermission, tenantScope } from "@/lib/permissions";
+import {
+  Permission,
+  assertPermission,
+  hasPermission,
+  tenantScope,
+} from "@/lib/permissions";
 import type { RequestActor } from "@/server/context";
-import { notFound } from "./errors";
+import { writeAudit } from "./audit";
+import { ServiceError, notFound } from "./errors";
+import { fireTrigger } from "./workflows";
 
 /**
  * Patient search and Patient 360 (spec §7, §13).
@@ -94,6 +102,10 @@ export async function searchPatients(
     },
   });
 
+  // Spec §21 — the counts are clinical record; the front desk finds and books
+  // patients without them. Withheld here, not merely hidden in the UI.
+  const clinical = hasPermission(actor, Permission.CONSULTATION_READ);
+
   return patients.map((p) => ({
     id: p.id,
     mrn: p.mrn,
@@ -102,8 +114,8 @@ export async function searchPatients(
     gender: p.gender,
     phone: p.phone,
     lastVisitAt: p.lastVisitAt,
-    allergyCount: p._count.allergies,
-    conditionCount: p._count.conditions,
+    allergyCount: clinical ? p._count.allergies : 0,
+    conditionCount: clinical ? p._count.conditions : 0,
     flags: p.flags.map((f) => f.label),
   }));
 }
@@ -181,11 +193,12 @@ export async function getPatient360(
 
   if (!patient) throw notFound("Patient");
 
-  const canReadClinical =
-    actor.role === "DOCTOR" ||
-    actor.role === "NURSE" ||
-    actor.role === "HOSPITAL_ADMIN" ||
-    actor.role === "SUPER_ADMIN";
+  // Spec §21 — the front desk can find and book a patient without reading
+  // their clinical record. Decided by permission, not role name, so an
+  // organization's overrides apply here as everywhere else.
+  const canReadClinical = hasPermission(actor, Permission.CONSULTATION_READ);
+  const canReadPrescriptions = hasPermission(actor, Permission.PRESCRIPTION_READ);
+  const canReadLabs = hasPermission(actor, Permission.LAB_READ);
 
   const [visits, prescriptions, labs, messages, followUps, appointments] =
     await Promise.all([
@@ -204,7 +217,7 @@ export async function getPatient360(
             },
           })
         : [],
-      canReadClinical
+      canReadPrescriptions
         ? prisma.prescription.findMany({
             where: { patientId },
             orderBy: { createdAt: "desc" },
@@ -218,7 +231,7 @@ export async function getPatient360(
             },
           })
         : [],
-      canReadClinical
+      canReadLabs
         ? prisma.labReport.findMany({
             where: { patientId },
             orderBy: { orderedAt: "desc" },
@@ -384,13 +397,14 @@ export async function getPatient360(
           }
         : null,
     preferredLanguage: patient.preferredLanguage,
-    allergies: patient.allergies.map((a) => ({
+    allergies: (canReadClinical ? patient.allergies : []).map((a) => ({
       id: a.id,
       substance: a.substance,
       reaction: a.reaction,
       severity: a.severity,
     })),
-    conditions: patient.conditions.map((c) => ({
+    // A diagnosis list is clinical record, however short.
+    conditions: (canReadClinical ? patient.conditions : []).map((c) => ({
       id: c.id,
       name: c.name,
       code: c.code,
@@ -411,4 +425,175 @@ export async function getPatient360(
     },
     timeline,
   };
+}
+
+/* -------------------------------------------------------------------------
+ * Spec §13 — registration at the front desk.
+ * ---------------------------------------------------------------------- */
+
+const TX_OPTIONS = { timeout: 20_000, maxWait: 10_000 } as const;
+
+export interface RegisterPatientInput {
+  firstName: string;
+  lastName?: string | null;
+  gender: Gender;
+  /** One of the two. A walk-in often knows their age, not their birthday. */
+  dateOfBirth?: Date | null;
+  approximateAge?: number | null;
+  phone: string;
+  email?: string | null;
+  addressLine?: string | null;
+  city?: string | null;
+  emergencyContactName?: string | null;
+  emergencyContactPhone?: string | null;
+  /** Spec §14 — consent is asked at registration, per channel. */
+  whatsappOptIn: boolean;
+  smsOptIn: boolean;
+  emailOptIn: boolean;
+  preferredLanguage?: string;
+}
+
+export interface RegisterPatientResult {
+  id: string;
+  mrn: string;
+  name: string;
+}
+
+const MRN_PREFIX = "P-";
+const MRN_WIDTH = 6;
+
+/** `P-000123` → `P-000124`. Zero-padded, so the text order is the number order. */
+export function nextMrn(latest: string | null): string {
+  const current = latest ? Number(latest.slice(MRN_PREFIX.length)) : 0;
+  const next = Number.isFinite(current) ? current + 1 : 1;
+  return `${MRN_PREFIX}${String(next).padStart(MRN_WIDTH, "0")}`;
+}
+
+/**
+ * Registers a patient and gives them a patient ID.
+ *
+ * Only what the front desk needs to start a visit is required (spec §13:
+ * "avoid asking for unnecessary information"). The same mobile number with the
+ * same first name is refused as a likely duplicate — the person is almost
+ * always already registered, and a second record splits their history in two.
+ */
+export async function registerPatient(
+  actor: RequestActor,
+  input: RegisterPatientInput,
+): Promise<RegisterPatientResult> {
+  assertPermission(actor, Permission.PATIENT_CREATE);
+
+  const firstName = input.firstName.trim();
+  const lastName = input.lastName?.trim() || null;
+  const phone = input.phone.trim();
+
+  if (!input.dateOfBirth && input.approximateAge == null) {
+    throw new ServiceError(
+      "VALIDATION",
+      "Enter a date of birth or an approximate age.",
+    );
+  }
+
+  const existing = await prisma.patient.findFirst({
+    where: {
+      ...tenantScope(actor),
+      active: true,
+      phone,
+      firstName: { equals: firstName, mode: "insensitive" },
+    },
+    select: { mrn: true, firstName: true, lastName: true },
+  });
+
+  if (existing) {
+    throw new ServiceError(
+      "CONFLICT",
+      `${`${existing.firstName} ${existing.lastName ?? ""}`.trim()} is already registered as ${existing.mrn}.`,
+      "Search by their mobile number to open the existing record.",
+    );
+  }
+
+  const facilityId = await resolveFacility(actor);
+
+  // The next number is read inside the transaction; the unique index on
+  // (organizationId, mrn) is the real guard. Two desks registering at the same
+  // instant collide on it, and the loser simply takes the following number.
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      const created = await prisma.$transaction(async (tx) => {
+        const latest = await tx.patient.findFirst({
+          where: { ...tenantScope(actor), mrn: { startsWith: MRN_PREFIX } },
+          orderBy: { mrn: "desc" },
+          select: { mrn: true },
+        });
+
+        const patient = await tx.patient.create({
+          data: {
+            organizationId: actor.organizationId,
+            facilityId,
+            mrn: nextMrn(latest?.mrn ?? null),
+            firstName,
+            lastName,
+            gender: input.gender,
+            dateOfBirth: input.dateOfBirth ?? null,
+            approximateAge: input.dateOfBirth ? null : input.approximateAge,
+            phone,
+            email: input.email?.trim() || null,
+            addressLine: input.addressLine?.trim() || null,
+            city: input.city?.trim() || null,
+            emergencyContactName: input.emergencyContactName?.trim() || null,
+            emergencyContactPhone: input.emergencyContactPhone?.trim() || null,
+            whatsappOptIn: input.whatsappOptIn,
+            smsOptIn: input.smsOptIn,
+            emailOptIn: input.emailOptIn && Boolean(input.email?.trim()),
+            preferredLanguage: input.preferredLanguage ?? "en",
+            createdById: actor.userId,
+          },
+          select: { id: true, mrn: true },
+        });
+
+        await writeAudit(tx, actor, {
+          action: "RECORD_CREATED",
+          entityType: "Patient",
+          entityId: patient.id,
+          summary: `Registered patient ${patient.mrn}`,
+          metadata: { patientMrn: patient.mrn },
+        });
+
+        return patient;
+      }, TX_OPTIONS);
+
+      // Spec §28 — a welcome message, if a clinic wants one, is a workflow.
+      await fireTrigger(actor, "PATIENT_REGISTERED", {
+        type: "Patient",
+        id: created.id,
+      });
+
+      return {
+        id: created.id,
+        mrn: created.mrn,
+        name: `${firstName} ${lastName ?? ""}`.trim(),
+      };
+    } catch (error) {
+      const collided =
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002";
+      if (!collided || attempt >= 4) throw error;
+    }
+  }
+}
+
+/**
+ * The facility a new record belongs to: the actor's own, or the
+ * organization's first when their membership spans every facility.
+ */
+async function resolveFacility(actor: RequestActor): Promise<string> {
+  if (actor.facilityId) return actor.facilityId;
+
+  const facility = await prisma.facility.findFirst({
+    where: { organizationId: actor.organizationId, active: true },
+    orderBy: { createdAt: "asc" },
+    select: { id: true },
+  });
+  if (!facility) throw notFound("Facility");
+  return facility.id;
 }

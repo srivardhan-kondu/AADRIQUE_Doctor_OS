@@ -23,9 +23,15 @@ function relativeDay(date: Date | null): string {
 export function PatientList({
   patients,
   query,
+  hrefBase = "/doctor/patients",
+  showClinical = true,
 }: {
   patients: PatientSearchRow[];
   query: string;
+  /** Where a row opens — each workspace has its own patient page. */
+  hrefBase?: string;
+  /** Allergy and condition counts are clinical record (spec §21). */
+  showClinical?: boolean;
 }) {
   if (patients.length === 0) {
     return (
@@ -46,7 +52,7 @@ export function PatientList({
       {patients.map((patient) => (
         <li key={patient.id}>
           <Link
-            href={`/doctor/patients/${patient.id}`}
+            href={`${hrefBase}/${patient.id}`}
             className="flex items-center gap-3.5 px-5 py-3 transition-colors hover:bg-muted"
           >
             <Avatar className="size-10 shrink-0">
@@ -58,13 +64,13 @@ export function PatientList({
                 <span className="truncate text-[14px] font-medium">
                   {patient.name}
                 </span>
-                {patient.allergyCount > 0 && (
+                {showClinical && patient.allergyCount > 0 && (
                   <Badge variant="destructive">
                     <AlertTriangle />
                     {patient.allergyCount}
                   </Badge>
                 )}
-                {patient.conditionCount > 0 && (
+                {showClinical && patient.conditionCount > 0 && (
                   <Badge variant="muted">
                     <Activity />
                     {patient.conditionCount}

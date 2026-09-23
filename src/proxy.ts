@@ -31,7 +31,7 @@ export const proxy = auth((req) => {
 
   // Someone already signed in has no reason to see the sign-in page.
   if (pathname === "/sign-in" && req.auth) {
-    return NextResponse.redirect(new URL("/doctor", req.nextUrl.origin));
+    return NextResponse.redirect(new URL("/", req.nextUrl.origin));
   }
 
   return NextResponse.next();

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { Bell, CheckCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,10 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { NotificationLevel } from "@/types";
+import {
+  markAllNotificationsReadAction,
+  markNotificationReadAction,
+} from "@/app/(dashboard)/notification-actions";
 
 export interface ShellNotification {
   id: string;
@@ -20,6 +25,8 @@ export interface ShellNotification {
   body: string;
   at: string;
   read: boolean;
+  /** Where the notification leads, when it is about something specific. */
+  href: string | null;
 }
 
 /**
@@ -49,7 +56,18 @@ export function NotificationCenter({
 }: {
   notifications: ShellNotification[];
 }) {
-  const [items, setItems] = React.useState(notifications);
+  const router = useRouter();
+  const [open, setOpen] = React.useState(false);
+  // Reads made here show at once; the server copy catches up on the next
+  // render. Derived from props rather than copied, so notifications that
+  // arrive with a refresh are not hidden behind stale local state.
+  const [readHere, setReadHere] = React.useState<ReadonlySet<string>>(new Set());
+
+  const items = React.useMemo(
+    () =>
+      notifications.map((n) => (readHere.has(n.id) ? { ...n, read: true } : n)),
+    [notifications, readHere],
+  );
   const unread = items.filter((n) => !n.read).length;
 
   const sorted = React.useMemo(
@@ -57,11 +75,24 @@ export function NotificationCenter({
     [items],
   );
 
-  const markAllRead = () =>
-    setItems((prev) => prev.map((n) => ({ ...n, read: true })));
+  const markAllRead = () => {
+    setReadHere(new Set(items.map((n) => n.id)));
+    void markAllNotificationsReadAction().then(() => router.refresh());
+  };
+
+  const openItem = (n: ShellNotification) => {
+    if (!n.read) {
+      setReadHere((prev) => new Set(prev).add(n.id));
+      void markNotificationReadAction(n.id).then(() => router.refresh());
+    }
+    if (n.href) {
+      setOpen(false);
+      router.push(n.href);
+    }
+  };
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <Tooltip>
         <TooltipTrigger asChild>
           <PopoverTrigger asChild>
@@ -118,13 +149,7 @@ export function NotificationCenter({
                   <li key={n.id}>
                     <button
                       type="button"
-                      onClick={() =>
-                        setItems((prev) =>
-                          prev.map((x) =>
-                            x.id === n.id ? { ...x, read: true } : x,
-                          ),
-                        )
-                      }
+                      onClick={() => openItem(n)}
                       className={cn(
                         "relative flex w-full gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-muted",
                         !n.read && "bg-muted/50",

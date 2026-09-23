@@ -481,6 +481,19 @@ async function resolveContext(
     return { visit, patient: visit.patient };
   }
 
+  if (subjectType === "Patient") {
+    const patient = await prisma.patient.findUnique({
+      where: { id: subjectId },
+      select: {
+        ...patientFields,
+        mrn: true,
+        facility: { select: { name: true, phone: true } },
+      },
+    });
+    if (!patient) return {};
+    return { patient, facility: patient.facility };
+  }
+
   if (subjectType === "QueueEntry") {
     const entry = await prisma.queueEntry.findUnique({
       where: { id: subjectId },

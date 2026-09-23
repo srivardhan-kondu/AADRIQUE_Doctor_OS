@@ -35,6 +35,7 @@ import {
   searchPatientsAction,
   type PatientChoice,
 } from "@/app/(dashboard)/doctor/appointments/actions";
+import type { DoctorChoice } from "@/server/services/front-desk";
 import { isoDate, tomorrow, useAppointmentAction } from "./appointment-actions";
 import { SlotPicker } from "./slot-picker";
 import { useDaySlots } from "./use-day-slots";
@@ -57,10 +58,18 @@ export function BookAppointmentDialog({
   trigger,
   defaultDate,
   defaultPatient,
+  doctors,
+  defaultDoctorId,
 }: {
   trigger?: React.ReactNode;
   defaultDate?: string;
   defaultPatient?: PatientChoice;
+  /**
+   * The front desk books for any doctor and chooses here. Left out, the
+   * booking is for the signed-in doctor.
+   */
+  doctors?: DoctorChoice[];
+  defaultDoctorId?: string;
 }) {
   const [open, setOpen] = React.useState(false);
 
@@ -82,6 +91,8 @@ export function BookAppointmentDialog({
             <BookForm
               defaultDate={defaultDate}
               defaultPatient={defaultPatient}
+              doctors={doctors}
+              defaultDoctorId={defaultDoctorId}
               onDone={() => setOpen(false)}
             />
           )}
@@ -94,10 +105,14 @@ export function BookAppointmentDialog({
 function BookForm({
   defaultDate,
   defaultPatient,
+  doctors,
+  defaultDoctorId,
   onDone,
 }: {
   defaultDate?: string;
   defaultPatient?: PatientChoice;
+  doctors?: DoctorChoice[];
+  defaultDoctorId?: string;
   onDone: () => void;
 }) {
   const { pending, run } = useAppointmentAction();
@@ -108,14 +123,26 @@ function BookForm({
   const [date, setDate] = React.useState(defaultDate ?? isoDate(tomorrow()));
   const [type, setType] = React.useState<string>("NEW_CONSULTATION");
   const [reason, setReason] = React.useState("");
-  const { slots, selected: slot, select, loading: loadingSlots } = useDaySlots(date);
+  const [doctorId, setDoctorId] = React.useState<string | null>(
+    doctors ? (defaultDoctorId ?? doctors[0]?.id ?? null) : null,
+  );
+  // With a doctor list the slots wait for a choice; without one they are the
+  // signed-in doctor's.
+  const needsDoctor = Boolean(doctors);
+  const {
+    slots,
+    selected: slot,
+    select,
+    loading: loadingSlots,
+  } = useDaySlots(date, !needsDoctor || doctorId !== null, doctorId);
 
   return (
     <>
       <DialogHeader>
         <DialogTitle>Book an appointment</DialogTitle>
         <DialogDescription>
-          The patient gets a WhatsApp confirmation as soon as it is booked.
+          The patient hears about it as soon as it is booked, on the channels
+          they agreed to.
         </DialogDescription>
       </DialogHeader>
 
@@ -124,6 +151,33 @@ function BookForm({
           <SelectedPatient patient={patient} onClear={() => setPatient(null)} />
         ) : (
           <PatientPicker onSelect={setPatient} />
+        )}
+
+        {doctors && (
+          <div>
+            <label
+              htmlFor="book-doctor"
+              className="text-[12px] font-semibold text-muted-foreground"
+            >
+              Doctor
+            </label>
+            <Select
+              value={doctorId ?? undefined}
+              onValueChange={setDoctorId}
+            >
+              <SelectTrigger id="book-doctor" className="mt-1.5">
+                <SelectValue placeholder="Choose a doctor" />
+              </SelectTrigger>
+              <SelectContent>
+                {doctors.map((d) => (
+                  <SelectItem key={d.id} value={d.id}>
+                    {d.name}
+                    {d.department ? ` · ${d.department}` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         )}
 
         <div className="flex flex-wrap items-end gap-3">
@@ -197,7 +251,7 @@ function BookForm({
         </DialogClose>
         <Button
           variant="accent"
-          disabled={pending || !patient || !slot}
+          disabled={pending || !patient || !slot || (needsDoctor && !doctorId)}
           onClick={() =>
             patient &&
             slot &&
@@ -205,6 +259,7 @@ function BookForm({
               () =>
                 bookAppointmentAction({
                   patientId: patient.id,
+                  doctorId: doctorId ?? undefined,
                   start: slot,
                   type: type as (typeof TYPES)[number]["value"],
                   reason: reason || undefined,
@@ -221,7 +276,7 @@ function BookForm({
   );
 }
 
-function SelectedPatient({
+export function SelectedPatient({
   patient,
   onClear,
 }: {
@@ -260,10 +315,15 @@ function SelectedPatient({
 }
 
 /** Spec §13 — the same one-box search as everywhere else in the product. */
-function PatientPicker({
+export function PatientPicker({
   onSelect,
+  id = "book-patient",
+  noMatch,
 }: {
   onSelect: (patient: PatientChoice) => void;
+  id?: string;
+  /** What to offer when nobody matches — the front desk registers them. */
+  noMatch?: React.ReactNode;
 }) {
   const [term, setTerm] = React.useState("");
   const [results, setResults] = React.useState<PatientChoice[]>([]);
@@ -282,7 +342,7 @@ function PatientPicker({
   return (
     <div>
       <label
-        htmlFor="book-patient"
+        htmlFor={id}
         className="text-[12px] font-semibold text-muted-foreground"
       >
         Patient
@@ -291,7 +351,7 @@ function PatientPicker({
       <div className="relative mt-1.5">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          id="book-patient"
+          id={id}
           autoFocus
           value={term}
           onChange={(e) => setTerm(e.target.value)}
@@ -308,11 +368,14 @@ function PatientPicker({
             ))}
           </div>
         ) : results.length === 0 ? (
-          <p className="px-3 py-6 text-center text-[13px] text-muted-foreground">
-            {term
-              ? `Nobody matches “${term}”. Register them at the front desk first.`
-              : "Start typing to find a patient."}
-          </p>
+          <div className="px-3 py-6 text-center text-[13px] text-muted-foreground">
+            <p>
+              {term
+                ? `Nobody matches “${term}”.${noMatch ? "" : " Register them at the front desk first."}`
+                : "Start typing to find a patient."}
+            </p>
+            {term && noMatch && <div className="mt-3">{noMatch}</div>}
+          </div>
         ) : (
           <ul>
             {results.map((row) => (

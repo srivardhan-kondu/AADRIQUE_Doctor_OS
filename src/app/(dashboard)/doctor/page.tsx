@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { CallNextButton } from "@/components/queue/queue-actions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageBody, PageHeader } from "@/components/shell/page-header";
+import { LiveRefresh } from "@/components/shell/live-refresh";
 import { DailyBrief } from "@/components/dashboard/daily-brief";
 import { LiveQueue } from "@/components/dashboard/live-queue";
 import { MetricCard } from "@/components/dashboard/metric-card";
@@ -11,6 +12,7 @@ import { PatientFlow } from "@/components/dashboard/patient-flow";
 import { TodaySchedule } from "@/components/dashboard/today-schedule";
 import { requireActor, requireDoctorId } from "@/server/context";
 import { getDashboard } from "@/server/services/dashboard";
+import { getQueueSignal } from "@/server/services/live";
 
 export const metadata: Metadata = { title: "Command Center" };
 
@@ -30,7 +32,10 @@ export default function DoctorHomePage() {
 async function Dashboard() {
   const actor = await requireActor();
   const doctorId = await requireDoctorId(actor);
-  const data = await getDashboard(actor, doctorId);
+  const [data, signal] = await Promise.all([
+    getDashboard(actor, doctorId),
+    getQueueSignal(actor, doctorId),
+  ]);
 
   return (
     <>
@@ -41,6 +46,7 @@ async function Dashboard() {
         }${data.doctor.counter ? ` · ${data.doctor.counter}` : ""}`}
         actions={
           <>
+            <LiveRefresh signal={signal} doctorId={doctorId} />
             <Badge variant={data.doctor.online ? "success" : "muted"}>
               {data.doctor.online ? "On duty" : "Away"}
             </Badge>

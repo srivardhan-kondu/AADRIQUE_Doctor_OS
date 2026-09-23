@@ -17,6 +17,7 @@ import {
   Users,
   UsersRound,
 } from "lucide-react";
+import type { Role } from "@/generated/prisma/enums";
 import type { Workspace } from "@/types";
 
 export interface NavItem {
@@ -131,6 +132,23 @@ export const WORKSPACE_META: Record<
     description: "Organisation and platform control",
   },
 };
+
+/**
+ * Spec §3 — where each role starts its day. The front desk lands on the desk,
+ * not on a doctor's command center it has no use for.
+ */
+export function homeFor(role: Role): string {
+  switch (role) {
+    case "HOSPITAL_ADMIN":
+    case "SUPER_ADMIN":
+      return "/admin";
+    case "RECEPTIONIST":
+    case "STAFF":
+      return "/reception";
+    default:
+      return "/doctor";
+  }
+}
 
 /** Flattened nav, used by the command palette's navigation results. */
 export function flatNav(workspace: Workspace): NavItem[] {
