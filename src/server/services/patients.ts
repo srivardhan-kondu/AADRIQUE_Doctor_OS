@@ -2,6 +2,7 @@ import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import type { Gender } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/db";
+import { canonicalPhone } from "@/lib/phone";
 import {
   Permission,
   assertPermission,
@@ -55,6 +56,7 @@ export async function searchPatients(
   assertPermission(actor, Permission.PATIENT_READ);
 
   const query = term.trim();
+  const digits = query.replace(/\D/g, "");
 
   const where: Prisma.PatientWhereInput = {
     ...tenantScope(actor),
@@ -66,6 +68,8 @@ export async function searchPatients(
             { lastName: { contains: query, mode: "insensitive" } },
             { mrn: { contains: query, mode: "insensitive" } },
             { phone: { contains: query } },
+            // "98765 43210" finds "+919876543210": numbers match on digits.
+            ...(digits.length >= 4 ? [{ phone: { contains: digits } }] : []),
             { email: { contains: query, mode: "insensitive" } },
             { identifiers: { some: { value: { contains: query } } } },
             { appointments: { some: { id: query } } },
@@ -485,7 +489,9 @@ export async function registerPatient(
 
   const firstName = input.firstName.trim();
   const lastName = input.lastName?.trim() || null;
-  const phone = input.phone.trim();
+  // One stored form per number, so a patient is found — and a WhatsApp reply
+  // matched — however the number was typed.
+  const phone = canonicalPhone(input.phone);
 
   if (!input.dateOfBirth && input.approximateAge == null) {
     throw new ServiceError(

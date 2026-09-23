@@ -63,3 +63,25 @@ test("injected markup cannot run script", async ({ page }) => {
   });
   expect(ran).toBe(false);
 });
+
+test("delivery webhooks believe only the vendor's signature", async ({ request }) => {
+  const body = JSON.stringify({ entry: [] });
+
+  const unsigned = await request.post("/api/webhooks/whatsapp", {
+    data: body,
+    headers: { "content-type": "application/json" },
+  });
+  expect(unsigned.status()).toBe(401);
+
+  const { createHmac } = await import("node:crypto");
+  const signature = `sha256=${createHmac("sha256", "e2e-app-secret").update(body).digest("hex")}`;
+  const signed = await request.post("/api/webhooks/whatsapp", {
+    data: body,
+    headers: { "content-type": "application/json", "x-hub-signature-256": signature },
+  });
+  expect(signed.status()).toBe(200);
+
+  // Resend has no secret configured in this run: it refuses rather than runs open.
+  const resend = await request.post("/api/webhooks/resend", { data: "{}" });
+  expect(resend.status()).toBe(503);
+});

@@ -1,5 +1,6 @@
 import "server-only";
 import type { IntegrationCategory } from "@/generated/prisma/enums";
+import { resolveSecret } from "@/lib/secrets";
 
 /**
  * Spec §29 — the integration layer.
@@ -83,6 +84,11 @@ abstract class BaseAdapter implements IntegrationProvider {
       return "No credential has been stored for this integration.";
     }
 
+    // A reference that resolves to nothing is not a credential (spec §31).
+    if (this.requiresCredential && !resolveSecret(context.credentialRef)) {
+      return `The credential reference ${context.credentialRef} does not resolve. Store it as env://VARIABLE_NAME and set that variable on the server.`;
+    }
+
     return null;
   }
 
@@ -113,10 +119,49 @@ abstract class BaseAdapter implements IntegrationProvider {
   }
 }
 
+/** A read-only call to the vendor, to prove the credential is accepted. */
+async function probe(
+  url: string,
+  headers: Record<string, string>,
+  vendor: string,
+): Promise<HealthResult> {
+  const started = Date.now();
+  try {
+    const response = await fetch(url, {
+      headers,
+      signal: AbortSignal.timeout(8_000),
+    });
+    const latencyMs = Date.now() - started;
+    if (response.ok) {
+      return { healthy: true, detail: `${vendor} accepted the credential.`, latencyMs };
+    }
+    return {
+      healthy: false,
+      detail:
+        response.status === 401 || response.status === 403
+          ? `${vendor} rejected the credential (${response.status}).`
+          : `${vendor} answered ${response.status}.`,
+      latencyMs,
+    };
+  } catch {
+    return { healthy: false, detail: `${vendor} could not be reached.` };
+  }
+}
+
 class WhatsAppAdapter extends BaseAdapter {
   readonly category = "WHATSAPP" as const;
   readonly provider = "meta-cloud-api";
   readonly requiredConfig = ["phoneNumberId", "wabaId"] as const;
+
+  async healthCheck(context: IntegrationContext): Promise<HealthResult> {
+    const missing = this.missingRequirements(context);
+    if (missing) return { healthy: false, detail: missing };
+    return probe(
+      `https://graph.facebook.com/v21.0/${encodeURIComponent(String(context.config.phoneNumberId))}?fields=display_phone_number`,
+      { Authorization: `Bearer ${resolveSecret(context.credentialRef)}` },
+      "Meta",
+    );
+  }
 }
 
 class SmsAdapter extends BaseAdapter {
@@ -129,6 +174,16 @@ class EmailAdapter extends BaseAdapter {
   readonly category = "EMAIL" as const;
   readonly provider = "resend";
   readonly requiredConfig = ["fromAddress"] as const;
+
+  async healthCheck(context: IntegrationContext): Promise<HealthResult> {
+    const missing = this.missingRequirements(context);
+    if (missing) return { healthy: false, detail: missing };
+    return probe(
+      "https://api.resend.com/domains",
+      { Authorization: `Bearer ${resolveSecret(context.credentialRef)}` },
+      "Resend",
+    );
+  }
 }
 
 class LabAdapter extends BaseAdapter {

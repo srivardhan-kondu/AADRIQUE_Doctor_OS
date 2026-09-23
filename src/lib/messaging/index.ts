@@ -1,4 +1,5 @@
 import type { MessageChannel } from "@/generated/prisma/enums";
+import { Msg91Provider, ResendProvider, WhatsAppCloudProvider } from "./gateways";
 
 /**
  * Spec §14 + §29 — the communication engine.
@@ -10,11 +11,11 @@ import type { MessageChannel } from "@/generated/prisma/enums";
  * The same rule as the AI layer (AGENTS.md): no provider SDK is imported from
  * a component, a route handler or a service. They talk to `dispatch`.
  *
- * No real transport is connected yet: every channel resolves to the simulated
- * provider, which behaves like a gateway without contacting one. A real one
- * (Meta Cloud API, MSG91, Resend) implements `MessagingProvider` and replaces
- * its entry in `PROVIDERS`, with its credentials read from the secret store
- * named by the channel's `Integration` record — nothing else changes.
+ * Which gateway carries a message is decided by the organization's
+ * `Integration` for the channel: when it is connected and its credential
+ * resolves, the real provider (./gateways.ts) sends it. Otherwise the
+ * simulated provider does — and names itself "simulated", so nobody reading
+ * the message history mistakes a rehearsal for a real SMS.
  */
 
 export interface OutboundMessage {
@@ -23,8 +24,25 @@ export interface OutboundMessage {
   to: string;
   subject: string | null;
   body: string;
-  /** Required by WhatsApp for templated sends outside the 24h window. */
+  /**
+   * The vendor's id for the approved template: WhatsApp needs one outside
+   * the 24h window, and Indian SMS (DLT) always does.
+   */
   providerTemplateId?: string | null;
+  /** The template's variables, in the order the template declares them. */
+  templateParameters?: { name: string; value: string }[];
+  /** Language code for a WhatsApp template. */
+  language?: string;
+}
+
+/**
+ * A connected gateway for one organization and channel: the non-secret
+ * settings from its `Integration` row and the resolved credential.
+ */
+export interface GatewayRoute {
+  provider: string;
+  config: Record<string, unknown>;
+  credential: string;
 }
 
 export interface DeliveryReceipt {
@@ -83,22 +101,45 @@ class SimulatedProvider implements MessagingProvider {
   }
 }
 
-/** The vendor each channel would use in production, named honestly. */
-const PROVIDERS: Record<MessageChannel, MessagingProvider> = {
-  WHATSAPP: new SimulatedProvider("WHATSAPP", "meta-cloud-api"),
-  SMS: new SimulatedProvider("SMS", "msg91"),
-  EMAIL: new SimulatedProvider("EMAIL", "resend"),
+const SIMULATED: Record<MessageChannel, MessagingProvider> = {
+  WHATSAPP: new SimulatedProvider("WHATSAPP", "simulated"),
+  SMS: new SimulatedProvider("SMS", "simulated"),
+  EMAIL: new SimulatedProvider("EMAIL", "simulated"),
 };
 
-export function providerFor(channel: MessageChannel): MessagingProvider {
-  return PROVIDERS[channel];
+function setting(config: Record<string, unknown>, key: string): string | null {
+  const value = config[key];
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+/**
+ * The provider for a channel: the real gateway when a route is connected and
+ * complete, the simulated one otherwise.
+ */
+export function providerFor(
+  channel: MessageChannel,
+  route?: GatewayRoute | null,
+): MessagingProvider {
+  if (route) {
+    if (channel === "WHATSAPP") {
+      const phoneNumberId = setting(route.config, "phoneNumberId");
+      if (phoneNumberId) return new WhatsAppCloudProvider(phoneNumberId, route.credential);
+    }
+    if (channel === "SMS") return new Msg91Provider(route.credential);
+    if (channel === "EMAIL") {
+      const from = setting(route.config, "fromAddress");
+      if (from) return new ResendProvider(route.credential, from);
+    }
+  }
+  return SIMULATED[channel];
 }
 
 /** Hands the message to the channel's provider. */
 export async function dispatch(
   message: OutboundMessage,
+  route?: GatewayRoute | null,
 ): Promise<DeliveryReceipt> {
-  return providerFor(message.channel).send(message);
+  return providerFor(message.channel, route).send(message);
 }
 
 /** Returns a reason the address cannot be used, or null when it is fine. */

@@ -40,6 +40,10 @@ export default defineConfig({
     // Never reuse the developer's own server: the suite reseeds its data.
     reuseExistingServer: false,
     timeout: 240_000,
-    env: { AUTH_TRUST_HOST: "true" },
+    env: {
+      AUTH_TRUST_HOST: "true",
+      // Lets the webhook test sign a request; never a real secret.
+      WHATSAPP_APP_SECRET: "e2e-app-secret",
+    },
   },
 });

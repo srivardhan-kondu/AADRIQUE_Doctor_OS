@@ -8,6 +8,7 @@ import type {
 import { prisma } from "@/lib/db";
 import {
   CHANNEL_LABEL,
+  type GatewayRoute,
   dispatch,
   hasConsent,
   placeholdersIn,
@@ -15,6 +16,7 @@ import {
   validateAddress,
 } from "@/lib/messaging";
 import { Permission, assertPermission, tenantScope } from "@/lib/permissions";
+import { resolveSecret } from "@/lib/secrets";
 import type { RequestActor } from "@/server/context";
 import { writeAudit } from "./audit";
 import { ServiceError, invalidState, notFound } from "./errors";
@@ -429,6 +431,32 @@ export interface SendResult {
 }
 
 /**
+ * The organization's connected gateway for a channel (spec §29), or null to
+ * use the simulated one. Connected means the integration is marked so *and*
+ * its credential reference resolves in the secret store — a row that only
+ * looks connected never sends.
+ */
+async function gatewayRoute(
+  organizationId: string,
+  channel: MessageChannel,
+): Promise<GatewayRoute | null> {
+  const integration = await prisma.integration.findFirst({
+    where: { organizationId, category: channel, status: "CONNECTED" },
+    select: { provider: true, config: true, credentialRef: true },
+  });
+  if (!integration) return null;
+
+  const credential = resolveSecret(integration.credentialRef);
+  if (!credential) return null;
+
+  return {
+    provider: integration.provider,
+    config: (integration.config ?? {}) as Record<string, unknown>,
+    credential,
+  };
+}
+
+/**
  * Spec §14 — send one message to one patient.
  *
  * Consent is checked before anything is written. A patient who has not opted
@@ -481,6 +509,8 @@ export async function sendMessage(
           category: true,
           subject: true,
           body: true,
+          language: true,
+          variables: true,
           providerTemplateId: true,
         },
       })
@@ -564,13 +594,26 @@ export async function sendMessage(
   });
 
   // Step 2 — outside any transaction.
-  const receipt = await dispatch({
-    channel: input.channel,
-    to: toAddress,
-    subject: subject || null,
-    body,
-    providerTemplateId: template?.providerTemplateId ?? null,
-  });
+  const declared = Array.isArray(template?.variables)
+    ? (template.variables as unknown[]).filter((v): v is string => typeof v === "string")
+    : [];
+  const receipt = await dispatch(
+    {
+      channel: input.channel,
+      to: toAddress,
+      subject: subject || null,
+      body,
+      providerTemplateId: template?.providerTemplateId ?? null,
+      // In the order the template declares them — how WhatsApp and DLT SMS
+      // templates number their placeholders.
+      templateParameters: declared.map((name) => ({
+        name,
+        value: (variables as Record<string, string | undefined>)[name] ?? "",
+      })),
+      language: template?.language ?? undefined,
+    },
+    await gatewayRoute(actor.organizationId, input.channel),
+  );
 
   // Step 3 — write back what the gateway said, with the audit entry.
   const now = new Date();
@@ -700,13 +743,19 @@ export async function retryMessage(
     );
   }
 
-  const receipt = await dispatch({
-    channel: message.channel,
-    to: message.toAddress,
-    subject: message.subject,
-    body: message.body,
-    providerTemplateId: message.template?.providerTemplateId ?? null,
-  });
+  // A retry has the rendered text but not the variables it was made from,
+  // so a WhatsApp retry goes as text — accepted inside the 24h window.
+  const receipt = await dispatch(
+    {
+      channel: message.channel,
+      to: message.toAddress,
+      subject: message.subject,
+      body: message.body,
+      providerTemplateId:
+        message.channel === "SMS" ? (message.template?.providerTemplateId ?? null) : null,
+    },
+    await gatewayRoute(actor.organizationId, message.channel),
+  );
 
   const now = new Date();
 
