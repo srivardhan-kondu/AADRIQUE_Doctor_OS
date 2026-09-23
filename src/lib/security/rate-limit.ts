@@ -1,71 +1,84 @@
 import "server-only";
+import { prisma } from "@/lib/db";
+import {
+  type RateLimitOptions,
+  type RateLimitStore,
+  createMemoryStore,
+  peeked,
+  result,
+} from "./rate-limit-window";
+
+export { callerAddress } from "./rate-limit-window";
+export type { RateLimitResult } from "./rate-limit-window";
 
 /**
  * Spec §31 — rate limiting.
  *
- * An in-process fixed-window limiter. It is deliberately simple and its
- * limitation is deliberately documented: the counters live in this process,
- * so behind several instances each one enforces the limit separately. For the
- * thing that matters most — slowing credential guessing against a single
- * origin — that is a real obstacle, and the interface is the one a shared
- * store would implement, so moving to Redis is a swap here rather than a
- * change at every call site.
+ * A fixed-window limiter behind a small store interface. In production the
+ * counters live in Postgres, so the limit holds across every instance of the
+ * app and survives a restart; tests use an in-memory store with the same
+ * contract.
  *
  * It fails closed on the identifier, not on the limiter: an unknown caller is
  * bucketed under a shared key rather than waved through.
  */
 
-interface Window {
-  count: number;
-  resetAt: number;
-}
-
-const windows = new Map<string, Window>();
-
-/** Drops expired windows so a long-lived process does not grow unbounded. */
-function sweep(now: number): void {
-  if (windows.size < 5_000) return;
-  for (const [key, window] of windows) {
-    if (window.resetAt <= now) windows.delete(key);
-  }
-}
-
-export interface RateLimitResult {
-  allowed: boolean;
-  remaining: number;
-  /** Seconds until the window resets. */
-  retryAfter: number;
-}
-
-export function rateLimit(
-  key: string,
-  options: { limit: number; windowMs: number },
-): RateLimitResult {
-  const now = Date.now();
-  sweep(now);
-
-  const existing = windows.get(key);
-
-  if (!existing || existing.resetAt <= now) {
-    windows.set(key, { count: 1, resetAt: now + options.windowMs });
-    return { allowed: true, remaining: options.limit - 1, retryAfter: 0 };
-  }
-
-  existing.count += 1;
-
-  if (existing.count > options.limit) {
-    return {
-      allowed: false,
-      remaining: 0,
-      retryAfter: Math.max(1, Math.ceil((existing.resetAt - now) / 1000)),
-    };
-  }
+/**
+ * Counters in Postgres, shared by every instance of the app.
+ *
+ * One statement per attempt: the upsert either starts a fresh window or
+ * counts into the current one, atomically, so two instances counting the
+ * same key at the same moment cannot both slip under the limit.
+ */
+export function createDatabaseStore(): RateLimitStore {
+  let hits = 0;
 
   return {
-    allowed: true,
-    remaining: options.limit - existing.count,
-    retryAfter: 0,
+    async hit(key, options) {
+      const rows = await prisma.$queryRaw<{ count: number; resetAt: Date }[]>`
+        INSERT INTO "RateLimit" ("key", "count", "resetAt")
+        VALUES (${key}, 1, now() + make_interval(secs => ${options.windowMs / 1000}))
+        ON CONFLICT ("key") DO UPDATE SET
+          "count" = CASE WHEN "RateLimit"."resetAt" <= now() THEN 1
+                         ELSE "RateLimit"."count" + 1 END,
+          "resetAt" = CASE WHEN "RateLimit"."resetAt" <= now() THEN EXCLUDED."resetAt"
+                           ELSE "RateLimit"."resetAt" END
+        RETURNING "count", "resetAt"`;
+
+      // Now and then, clear windows long expired so the table stays small.
+      hits += 1;
+      if (hits % 200 === 0) {
+        await prisma.$executeRaw`DELETE FROM "RateLimit" WHERE "resetAt" < now() - interval '1 hour'`;
+      }
+
+      const row = rows[0];
+      return result(Number(row.count), row.resetAt.getTime(), options, Date.now());
+    },
+    async peek(key, options) {
+      const row = await prisma.rateLimit.findUnique({ where: { key } });
+      const now = Date.now();
+      if (!row || row.resetAt.getTime() <= now) {
+        return { allowed: true, remaining: options.limit, retryAfter: 0 };
+      }
+      return peeked(row.count, row.resetAt.getTime(), options, now);
+    },
+    async reset(key) {
+      await prisma.rateLimit.deleteMany({ where: { key } });
+    },
   };
+}
+
+/**
+ * The store in use: Postgres, so the limit holds across every instance, or
+ * process memory when RATE_LIMIT_STORE=memory (tests, a single instance).
+ */
+const store: RateLimitStore =
+  process.env.RATE_LIMIT_STORE === "memory"
+    ? createMemoryStore()
+    : createDatabaseStore();
+
+export function rateLimit(key: string, options: RateLimitOptions) {
+  return store.hit(key, options);
 }
 
 /**
@@ -75,27 +88,8 @@ export function rateLimit(
  * attempts" rather than "wrong password") check the same counter the
  * authoritative layer enforces, without counting the attempt twice.
  */
-export function peekRateLimit(
-  key: string,
-  options: { limit: number; windowMs: number },
-): RateLimitResult {
-  const now = Date.now();
-  const existing = windows.get(key);
-
-  if (!existing || existing.resetAt <= now) {
-    return { allowed: true, remaining: options.limit, retryAfter: 0 };
-  }
-
-  const remaining = Math.max(0, options.limit - existing.count);
-
-  return {
-    allowed: existing.count < options.limit,
-    remaining,
-    retryAfter:
-      existing.count < options.limit
-        ? 0
-        : Math.max(1, Math.ceil((existing.resetAt - now) / 1000)),
-  };
+export function peekRateLimit(key: string, options: RateLimitOptions) {
+  return store.peek(key, options);
 }
 
 /** The two buckets that guard sign-in (spec §31). */
@@ -110,27 +104,7 @@ export function signInKeys(address: string, email: string) {
 }
 
 /** Clears a key after a success, so one good sign-in resets the counter. */
-export function resetRateLimit(key: string): void {
-  windows.delete(key);
+export function resetRateLimit(key: string): Promise<void> {
+  return store.reset(key);
 }
 
-/**
- * The caller's address, from the proxy headers a deployment sets.
- *
- * Returns null when no header is trustworthy rather than guessing — the
- * caller decides what to do with an unidentifiable client, and every one of
- * them shares a bucket rather than bypassing the limit.
- */
-export function callerAddress(headers: Headers): string | null {
-  const forwarded = headers.get("x-forwarded-for");
-  if (forwarded) {
-    const first = forwarded.split(",")[0]?.trim();
-    if (first) return first;
-  }
-  return headers.get("x-real-ip")?.trim() || null;
-}
-
-/** Test seam. */
-export function clearAllRateLimits(): void {
-  windows.clear();
-}

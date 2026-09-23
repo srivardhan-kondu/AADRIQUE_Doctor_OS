@@ -1,60 +1,75 @@
 import assert from "node:assert/strict";
-import { describe, it, beforeEach } from "node:test";
-import {
-  callerAddress,
-  clearAllRateLimits,
-  rateLimit,
-  resetRateLimit,
-} from "@/lib/security/rate-limit";
+import { beforeEach, describe, it } from "node:test";
+import { callerAddress, createMemoryStore } from "@/lib/security/rate-limit-window";
 
-/** Spec §31 — rate limiting. */
+/**
+ * Spec §31 — rate limiting. The window logic, against the in-memory store;
+ * the Postgres store keeps the same contract and is tested against a real
+ * database in src/server/__tests__/rate-limit.integration.ts.
+ */
 
-describe("rateLimit", () => {
-  beforeEach(() => clearAllRateLimits());
+describe("rate limit window", () => {
+  let store = createMemoryStore();
+  beforeEach(() => {
+    store = createMemoryStore();
+  });
 
-  it("allows up to the limit and then refuses", () => {
+  it("allows up to the limit and then refuses", async () => {
     const options = { limit: 3, windowMs: 60_000 };
 
     for (let i = 0; i < 3; i += 1) {
-      assert.equal(rateLimit("k", options).allowed, true, `attempt ${i + 1}`);
+      assert.equal((await store.hit("k", options)).allowed, true, `attempt ${i + 1}`);
     }
 
-    const blocked = rateLimit("k", options);
+    const blocked = await store.hit("k", options);
     assert.equal(blocked.allowed, false);
     assert.ok(blocked.retryAfter > 0, "a refusal says when to come back");
   });
 
-  it("counts each key separately", () => {
+  it("counts each key separately", async () => {
     const options = { limit: 1, windowMs: 60_000 };
-    assert.equal(rateLimit("a", options).allowed, true);
-    assert.equal(rateLimit("b", options).allowed, true);
-    assert.equal(rateLimit("a", options).allowed, false);
+    assert.equal((await store.hit("a", options)).allowed, true);
+    assert.equal((await store.hit("b", options)).allowed, true);
+    assert.equal((await store.hit("a", options)).allowed, false);
   });
 
-  it("reports how many attempts remain", () => {
+  it("reports how many attempts remain", async () => {
     const options = { limit: 3, windowMs: 60_000 };
-    assert.equal(rateLimit("k", options).remaining, 2);
-    assert.equal(rateLimit("k", options).remaining, 1);
-    assert.equal(rateLimit("k", options).remaining, 0);
+    assert.equal((await store.hit("k", options)).remaining, 2);
+    assert.equal((await store.hit("k", options)).remaining, 1);
+    assert.equal((await store.hit("k", options)).remaining, 0);
+  });
+
+  it("peeks without spending an attempt", async () => {
+    const options = { limit: 2, windowMs: 60_000 };
+    assert.deepEqual(await store.peek("k", options), {
+      allowed: true,
+      remaining: 2,
+      retryAfter: 0,
+    });
+    await store.hit("k", options);
+    await store.hit("k", options);
+    const peek = await store.peek("k", options);
+    assert.equal(peek.allowed, false);
+    assert.equal((await store.peek("k", options)).remaining, 0, "peeking is free");
   });
 
   it("starts a new window once the old one expires", async () => {
     const options = { limit: 1, windowMs: 20 };
-    assert.equal(rateLimit("k", options).allowed, true);
-    assert.equal(rateLimit("k", options).allowed, false);
-
+    assert.equal((await store.hit("k", options)).allowed, true);
+    assert.equal((await store.hit("k", options)).allowed, false);
     await new Promise((resolve) => setTimeout(resolve, 30));
-    assert.equal(rateLimit("k", options).allowed, true);
+    assert.equal((await store.hit("k", options)).allowed, true);
   });
 
-  it("clears a key on success", () => {
+  it("clears a key on success", async () => {
     const options = { limit: 2, windowMs: 60_000 };
-    rateLimit("k", options);
-    rateLimit("k", options);
-    assert.equal(rateLimit("k", options).allowed, false);
+    await store.hit("k", options);
+    await store.hit("k", options);
+    assert.equal((await store.hit("k", options)).allowed, false);
 
-    resetRateLimit("k");
-    assert.equal(rateLimit("k", options).allowed, true);
+    await store.reset("k");
+    assert.equal((await store.hit("k", options)).allowed, true);
   });
 });
 

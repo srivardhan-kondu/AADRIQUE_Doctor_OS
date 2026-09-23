@@ -1552,3 +1552,13 @@ model Integration {
   @@unique([organizationId, category, provider])
   @@index([organizationId, status])
 }
+
+/// Spec §31 — rate-limit windows, shared by every app instance. One row per
+/// key (e.g. a sign-in address); counted and reset atomically in SQL.
+model RateLimit {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+
+  @@index([resetAt])
+}

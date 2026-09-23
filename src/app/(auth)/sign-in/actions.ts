@@ -67,8 +67,10 @@ export async function signInAction(
   const address = callerAddress(requestHeaders) ?? "unknown";
   const keys = signInKeys(address, email);
 
-  const byAddress = peekRateLimit(keys.address, SIGN_IN_ADDRESS_LIMIT);
-  const byAccount = peekRateLimit(keys.account, SIGN_IN_ACCOUNT_LIMIT);
+  const [byAddress, byAccount] = await Promise.all([
+    peekRateLimit(keys.address, SIGN_IN_ADDRESS_LIMIT),
+    peekRateLimit(keys.account, SIGN_IN_ACCOUNT_LIMIT),
+  ]);
 
   if (!byAddress.allowed || !byAccount.allowed) {
     const retryAfter = Math.max(byAddress.retryAfter, byAccount.retryAfter);

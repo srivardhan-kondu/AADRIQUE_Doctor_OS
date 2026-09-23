@@ -53,8 +53,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           callerAddress(request?.headers ?? new Headers()) ?? "unknown";
         const keys = signInKeys(address, email);
 
-        const byAddress = rateLimit(keys.address, SIGN_IN_ADDRESS_LIMIT);
-        const byAccount = rateLimit(keys.account, SIGN_IN_ACCOUNT_LIMIT);
+        const [byAddress, byAccount] = await Promise.all([
+          rateLimit(keys.address, SIGN_IN_ADDRESS_LIMIT),
+          rateLimit(keys.account, SIGN_IN_ACCOUNT_LIMIT),
+        ]);
 
         if (!byAddress.allowed || !byAccount.allowed) {
           // Refused exactly like a wrong password, so the limiter cannot be
@@ -93,8 +95,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         // A genuine sign-in clears the counters, so a user is never held back
         // by their own earlier typos.
-        resetRateLimit(keys.address);
-        resetRateLimit(keys.account);
+        await Promise.all([
+          resetRateLimit(keys.address),
+          resetRateLimit(keys.account),
+        ]);
 
         await prisma.user.update({
           where: { id: user.id },
