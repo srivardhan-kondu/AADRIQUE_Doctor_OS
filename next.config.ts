@@ -5,11 +5,10 @@ import type { NextConfig } from "next";
  *
  * Applied at the edge to every response, so a route cannot forget them.
  *
- * There is no Content-Security-Policy here on purpose: Next injects inline
- * bootstrap scripts, so a useful CSP needs per-request nonces threaded through
- * the proxy, and a `unsafe-inline` policy would be theatre — it would look
- * like a defence while permitting exactly the injection it claims to stop.
- * That belongs with the nonce work, not with a header table.
+ * The full Content-Security-Policy is set per request by the proxy, with a
+ * fresh script nonce (src/lib/security/csp.ts). The `frame-ancestors` rule
+ * here also covers what the proxy does not see — API routes and static files.
+ * Browsers enforce both headers, so they only ever narrow each other.
  */
 const securityHeaders = [
   // Clickjacking: this product is never meant to be framed.

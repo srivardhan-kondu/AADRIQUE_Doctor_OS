@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 import { authConfig } from "@/lib/auth/config";
+import { contentSecurityPolicy, createNonce } from "@/lib/security/csp";
 
 /**
  * Route protection (Next 16's `proxy` convention, formerly `middleware`).
@@ -41,7 +42,25 @@ export const proxy = auth((req) => {
     return NextResponse.redirect(new URL("/", req.nextUrl.origin));
   }
 
-  return NextResponse.next();
+  // Spec §31 — a fresh nonce per request. Next.js reads it from the request's
+  // CSP header and stamps it on its own scripts; the layout passes it on to
+  // the one inline script it adds (the theme).
+  const nonce = createNonce();
+  const https =
+    req.nextUrl.protocol === "https:" ||
+    req.headers.get("x-forwarded-proto") === "https";
+  const csp = contentSecurityPolicy(nonce, {
+    dev: process.env.NODE_ENV === "development",
+    https,
+  });
+
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("Content-Security-Policy", csp);
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  response.headers.set("Content-Security-Policy", csp);
+  return response;
 });
 
 export const config = {

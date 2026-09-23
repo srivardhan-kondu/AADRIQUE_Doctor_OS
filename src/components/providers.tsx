@@ -5,13 +5,21 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({
+  children,
+  nonce,
+}: {
+  children: React.ReactNode;
+  /** For the theme's inline script, under the CSP (spec §31). */
+  nonce?: string;
+}) {
   return (
     <ThemeProvider
       attribute="class"
       defaultTheme="light"
       enableSystem
       disableTransitionOnChange
+      nonce={nonce}
     >
       <TooltipProvider>
         {children}
