@@ -10,7 +10,7 @@ export default function Page() {
       icon={Activity}
       title={"Operations"}
       description={"Live operational state across every queue and doctor."}
-      part={"Part 3"}
+      part={"Part 5"}
       capabilities={[
     "Live queue depth per department",
     "Wait time trend over the last hours",

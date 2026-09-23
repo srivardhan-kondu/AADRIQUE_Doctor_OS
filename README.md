@@ -30,6 +30,29 @@ Open <http://localhost:3000>. The root redirects into the doctor workspace.
 
 ## Build status
 
+**Part 3 — appointments, follow-ups, communication, analytics, audit. Complete.**
+
+- **Appointments** (§11) — the doctor's schedule as a day or a week, booking
+  against live availability, reschedule that keeps the original on the record,
+  cancellation, no-show tracking, and check-in that turns an appointment into a
+  queue token in one transaction.
+- **Follow-ups** (§42) — overdue, due today and upcoming, with one-tap
+  reminders, booking the return visit, and a reactivation list of patients who
+  were promised a follow-up and never rebooked.
+- **Communication centre** (§14) — one inbox across WhatsApp, SMS and email,
+  grouped by patient, with delivery state on every message, template-driven
+  composing, consent enforced before anything is written, and retry on failure.
+  Gateways sit behind `src/lib/messaging/`; the simulated provider exercises the
+  full queued → sent → delivered → read pipeline without a vendor account.
+- **Analytics** (§16) — one primary trend chart and compact metric cards, for
+  the doctor at [`/doctor/analytics`](http://localhost:3000/doctor/analytics)
+  and the hospital at [`/admin/reports`](http://localhost:3000/admin/reports).
+  Every rate carries its denominator and says so when there is nothing to
+  measure.
+- **Audit log** (§30) — who did what, to which record, and when, at
+  [`/admin/audit`](http://localhost:3000/admin/audit), filterable by action,
+  person and date. Nothing clinical is ever written into it.
+
 **Part 2c — patients, Patient 360, queue actions, consultation workspace. Complete.**
 
 The MVP journey from spec §40 now runs end to end: sign in → dashboard → queue
@@ -95,8 +118,8 @@ the notification tray are the only placeholder data, and they are isolated in
 
 ### Next
 
-Part 3: the appointment module, follow-up queue, communication centre with the
-WhatsApp/SMS/email abstraction, analytics, and the audit log UI.
+Part 4: the AI abstraction, the pre-consultation brief, the documentation
+copilot and history retrieval.
 
 ---
 
@@ -124,10 +147,13 @@ src/
     (auth)/             sign-in
   server/
     context.ts          builds the authorized actor from the session
-    services/           all database access lives behind these
+    services/           all database access lives behind these —
+                        appointments, follow-ups, communication, analytics,
+                        audit, queue, consultation, patients, dashboard
   lib/
     auth/               Auth.js config, password hashing
     db/                 Prisma client singleton
+    messaging/          WhatsApp / SMS / email provider abstraction
     permissions/        role matrix, tenant + permission assertions
   proxy.ts              redirects unauthenticated users to sign-in
 prisma/

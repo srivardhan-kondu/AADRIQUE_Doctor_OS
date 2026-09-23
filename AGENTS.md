@@ -24,9 +24,8 @@ before implementing a feature.
 | 2a | Prisma schema, RBAC, tenancy, demo seed | Done |
 | 2b | Auth.js sign-in, service layer, Doctor Command Center | Done |
 | 2c | Patients + Patient 360, queue actions, consultation workspace | Done |
-| 3 | Appointments module, follow-ups, communication centre, analytics, audit UI | Next |
-| 3 | Patient 360, follow-ups, communication, analytics, audit logs | Planned |
-| 4 | AI abstraction, pre-consultation brief, documentation copilot, history retrieval | Planned |
+| 3 | Appointments, follow-ups, communication centre, analytics, audit UI | Done |
+| 4 | AI abstraction, pre-consultation brief, documentation copilot, history retrieval | Next |
 | 5 | Workflow engine, integrations, admin, testing, performance, security review | Planned |
 
 ## Architecture rules
@@ -43,6 +42,27 @@ before implementing a feature.
   database is far enough away that Prisma's default 5s interactive-transaction
   timeout aborts normal work.
 - No `any` without a comment explaining why.
+
+## Communication rules (spec §14)
+
+- Provider calls go through `src/lib/messaging/`. Never import a gateway SDK
+  from a component, a route handler or a service.
+- Check consent before writing anything. A patient who has not opted into a
+  channel is not messaged on it, and the error names the channels they did
+  agree to.
+- A send is deliberately not one transaction: write the row, call the gateway
+  outside any transaction, then write the receipt back. A network call must
+  never hold a transaction open, and a crash mid-send must leave a retryable
+  record rather than a silent loss.
+- A message that still contains a `{{placeholder}}` is never sent.
+
+## Analytics rules (spec §16)
+
+- Every rate has an explicit denominator and returns `null` when it is zero.
+  "0%" and "nothing happened yet" are different facts.
+- One primary trend chart per screen, then compact metric cards. Charts are
+  single-series or single-hue; status colour is reserved for status and always
+  ships with a label, never colour alone.
 
 ## AI rules (spec §10)
 

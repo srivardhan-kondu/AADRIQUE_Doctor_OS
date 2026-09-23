@@ -1,12 +1,5 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import {
-  CheckCircle2,
-  Hourglass,
-  Repeat2,
-  Stethoscope,
-  Users,
-} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CallNextButton } from "@/components/queue/queue-actions";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -70,12 +63,12 @@ async function Dashboard() {
           <MetricCard
             label="Patients today"
             value={data.metrics.total}
-            icon={Users}
+            icon="patients"
           />
           <MetricCard
             label="Waiting"
             value={data.metrics.waiting}
-            icon={Hourglass}
+            icon="waiting"
             tone="waiting"
             emphasis={data.pulse.state === "ATTENTION"}
             hint={
@@ -87,19 +80,19 @@ async function Dashboard() {
           <MetricCard
             label="In consultation"
             value={data.metrics.inConsultation}
-            icon={Stethoscope}
+            icon="consulting"
             tone="active"
           />
           <MetricCard
             label="Completed"
             value={data.metrics.completed}
-            icon={CheckCircle2}
+            icon="completed"
             tone="done"
           />
           <MetricCard
             label="Follow-ups due"
             value={data.metrics.followUpsDue}
-            icon={Repeat2}
+            icon="followup"
             tone="followup"
           />
         </div>

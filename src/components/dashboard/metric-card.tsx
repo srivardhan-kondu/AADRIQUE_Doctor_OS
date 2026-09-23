@@ -1,8 +1,34 @@
 "use client";
 
 import * as React from "react";
-import type { LucideIcon } from "lucide-react";
+import {
+  CheckCircle2,
+  Hourglass,
+  Repeat2,
+  Stethoscope,
+  UserPlus,
+  Users,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+
+/**
+ * The icons this card can show, chosen by name.
+ *
+ * A lucide icon is a function, and a function cannot cross the server/client
+ * boundary — passing one as a prop from a Server Component is a runtime error.
+ * So the server names the icon and the mapping happens here, on the client
+ * side of the boundary, where the component itself lives.
+ */
+const ICONS = {
+  patients: Users,
+  waiting: Hourglass,
+  consulting: Stethoscope,
+  completed: CheckCircle2,
+  followup: Repeat2,
+  new: UserPlus,
+} as const;
+
+export type MetricIcon = keyof typeof ICONS;
 
 /**
  * Spec §5.1 — a top metric, with the subtle count-up used when data changes.
@@ -15,18 +41,19 @@ import { cn } from "@/lib/utils";
 export function MetricCard({
   label,
   value,
-  icon: Icon,
+  icon,
   tone = "default",
   hint,
   emphasis,
 }: {
   label: string;
   value: number;
-  icon: LucideIcon;
+  icon: MetricIcon;
   tone?: "default" | "waiting" | "active" | "done" | "followup";
   hint?: string;
   emphasis?: boolean;
 }) {
+  const Icon = ICONS[icon];
   const numberRef = useCountUp(value);
 
   const toneClass = {

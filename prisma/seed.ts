@@ -89,6 +89,32 @@ const TODAY = (() => {
 
 /** Counts from spec §39. */
 const PATIENT_COUNT = 100;
+/**
+ * The recurring clinic windows, mirroring the `doctorAvailability` rows
+ * seeded below: 9:30–13:30 and 17:00–20:00, Monday to Saturday.
+ */
+const CLINIC_WINDOWS = [
+  { start: 9 * 60 + 30, end: 13 * 60 + 30 },
+  { start: 17 * 60, end: 20 * 60 },
+] as const;
+
+/**
+ * A quarter-hour slot inside a clinic window.
+ *
+ * The schedule screen shows anything outside these windows in its own
+ * "outside clinic hours" section — a real state, for walk-ins and hours that
+ * have since changed, but not one the seed should manufacture by accident.
+ */
+function clinicSlot(day: Date): Date {
+  const window = random.chance(0.6) ? CLINIC_WINDOWS[0] : CLINIC_WINDOWS[1];
+  const slots = Math.floor((window.end - window.start) / 15);
+  const minute = window.start + random.int(0, slots - 1) * 15;
+  return at(day, Math.floor(minute / 60), minute % 60);
+}
+
+/** Appointments that never became a consultation (spec §11, §16). */
+const UNATTENDED_APPOINTMENT_COUNT = 70;
+
 const HISTORICAL_VISIT_COUNT = 250;
 const APPOINTMENT_COUNT = 50;
 const FOLLOW_UP_COUNT = 20;
@@ -679,6 +705,7 @@ async function seedHistory({
   const consultations: Prisma.ConsultationCreateManyInput[] = [];
   const vitals: Prisma.VitalCreateManyInput[] = [];
   const diagnoses: Prisma.DiagnosisCreateManyInput[] = [];
+  const pastAppointments: Prisma.AppointmentCreateManyInput[] = [];
 
   const records: Array<{
     visitId: string;
@@ -699,12 +726,45 @@ async function seedHistory({
     // Spread across the last year, weighted towards recent months.
     const daysAgo = Math.round(Math.pow(random.next(), 1.6) * 330) + 2;
     const day = dayOffset(TODAY, -daysAgo);
-    const startedAt = at(day, random.int(9, 19), random.pick([0, 15, 30, 45]));
+    const startedAt = clinicSlot(day);
     const completedAt = minutesAfter(startedAt, doctor.consultationMinutes + random.int(-3, 8));
 
     const visitId = id("vis");
     const consultationId = id("cons");
     const complaint = random.pick(COMPLAINTS[doctor.department]);
+
+    // Spec §11 — most visits begin as a booked appointment. Walk-ins are the
+    // rest, and they have no appointment at all rather than a synthetic one.
+    const walkIn = random.chance(0.22);
+    const appointmentId = walkIn ? null : id("apt");
+
+    if (appointmentId) {
+      pastAppointments.push({
+        id: appointmentId,
+        organizationId,
+        facilityId,
+        departmentId: department.id,
+        patientId: patient.id,
+        doctorId: doctor.doctorId,
+        scheduledStart: startedAt,
+        scheduledEnd: minutesAfter(startedAt, doctor.consultationMinutes),
+        durationMinutes: doctor.consultationMinutes,
+        type: random.chance(0.35)
+          ? AppointmentType.FOLLOW_UP
+          : AppointmentType.NEW_CONSULTATION,
+        status: AppointmentStatus.COMPLETED,
+        source: random.pick([
+          BookingSource.ONLINE,
+          BookingSource.FRONT_DESK,
+          BookingSource.PHONE,
+        ]),
+        reason: complaint,
+        checkedInAt: minutesAfter(startedAt, -random.int(5, 25)),
+        startedAt,
+        completedAt,
+        createdAt: dayOffset(day, -random.int(1, 14)),
+      });
+    }
 
     visits.push({
       id: visitId,
@@ -713,6 +773,7 @@ async function seedHistory({
       departmentId: department.id,
       patientId: patient.id,
       doctorId: doctor.doctorId,
+      appointmentId,
       visitNumber: sequenceNo("V", i + 1),
       stage: PatientFlowStage.COMPLETED,
       status: VisitStatus.COMPLETED,
@@ -801,6 +862,98 @@ async function seedHistory({
     });
   }
 
+  /**
+   * Spec §11 + §16 — the appointments that did not end in a consultation.
+   *
+   * Without these the lifecycle has no Cancelled, No Show or Rescheduled in
+   * it, and the no-show and cancellation rates on the analytics screens have
+   * nothing to measure. The mix is roughly what a real OPD sees.
+   */
+  for (let i = 0; i < UNATTENDED_APPOINTMENT_COUNT; i += 1) {
+    const patient = random.pick(patients);
+    const doctor = random.pick(doctors);
+    const department = byCode.get(doctor.department)!;
+
+    const daysAgo = Math.round(Math.pow(random.next(), 1.4) * 80) + 1;
+    const day = dayOffset(TODAY, -daysAgo);
+    const scheduledStart = clinicSlot(day);
+    const bookedAt = dayOffset(day, -random.int(1, 21));
+
+    const base = {
+      organizationId,
+      facilityId,
+      departmentId: department.id,
+      patientId: patient.id,
+      doctorId: doctor.doctorId,
+      durationMinutes: doctor.consultationMinutes,
+      type: random.chance(0.4)
+        ? AppointmentType.FOLLOW_UP
+        : AppointmentType.NEW_CONSULTATION,
+      source: random.pick([
+        BookingSource.ONLINE,
+        BookingSource.FRONT_DESK,
+        BookingSource.PHONE,
+      ]),
+      reason: random.pick(COMPLAINTS[doctor.department]),
+      createdAt: bookedAt,
+    };
+
+    const roll = random.next();
+
+    if (roll < 0.42) {
+      pastAppointments.push({
+        ...base,
+        id: id("apt"),
+        scheduledStart,
+        scheduledEnd: minutesAfter(scheduledStart, doctor.consultationMinutes),
+        status: AppointmentStatus.NO_SHOW,
+      });
+    } else if (roll < 0.8) {
+      pastAppointments.push({
+        ...base,
+        id: id("apt"),
+        scheduledStart,
+        scheduledEnd: minutesAfter(scheduledStart, doctor.consultationMinutes),
+        status: AppointmentStatus.CANCELLED,
+        cancelledAt: minutesAfter(scheduledStart, -random.int(60, 4320)),
+        cancellationReason: random.pick([
+          "Patient requested cancellation",
+          "Doctor unavailable",
+          "Patient rebooked by phone",
+          "Duplicate booking",
+        ]),
+      });
+    } else {
+      // A move is two rows: the replacement, then the original pointing at
+      // it. The replacement is pushed first so the self-referencing foreign
+      // key resolves inside the same insert.
+      const replacementId = id("apt");
+      const movedTo = clinicSlot(dayOffset(day, random.int(2, 10)));
+
+      pastAppointments.push({
+        ...base,
+        id: replacementId,
+        scheduledStart: movedTo,
+        scheduledEnd: minutesAfter(movedTo, doctor.consultationMinutes),
+        status:
+          movedTo < new Date()
+            ? AppointmentStatus.COMPLETED
+            : AppointmentStatus.SCHEDULED,
+      });
+
+      pastAppointments.push({
+        ...base,
+        id: id("apt"),
+        scheduledStart,
+        scheduledEnd: minutesAfter(scheduledStart, doctor.consultationMinutes),
+        status: AppointmentStatus.RESCHEDULED,
+        rescheduledToId: replacementId,
+      });
+    }
+  }
+
+  // Appointments go in before the visits that reference them.
+  await prisma.appointment.createMany({ data: pastAppointments });
   await prisma.visit.createMany({ data: visits });
   await prisma.consultation.createMany({ data: consultations });
   await prisma.vital.createMany({ data: vitals });
@@ -816,7 +969,10 @@ async function seedHistory({
   await seedPrescriptions(records, medications);
   await seedLabReports(records);
 
-  console.log(`  ${visits.length} historical visits with signed consultations`);
+  console.log(
+    `  ${visits.length} historical visits with signed consultations, ` +
+      `${pastAppointments.length} past appointments`,
+  );
   return records;
 }
 
@@ -1136,7 +1292,7 @@ async function seedToday({
     const department = byCode.get(doctor.department)!;
     const patient = random.pick(patients);
     const dayShift = random.int(1, 6);
-    const scheduledStart = at(dayOffset(TODAY, dayShift), random.int(9, 19), random.pick([0, 15, 30, 45]));
+    const scheduledStart = clinicSlot(dayOffset(TODAY, dayShift));
 
     appointments.push({
       id: id("apt"),

@@ -10,7 +10,7 @@ export default function Page() {
       icon={Bell}
       title={"Notifications"}
       description={"Every message the front desk has sent, and what happened to it."}
-      part={"Part 3"}
+      part={"Part 5"}
       capabilities={[
     "Appointment and token notifications",
     "Delivery status per channel",

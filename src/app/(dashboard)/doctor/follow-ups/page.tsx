@@ -1,23 +1,124 @@
 import type { Metadata } from "next";
-import { Repeat2 } from "lucide-react";
-import { ModulePlaceholder } from "@/components/shell/module-placeholder";
+import { Suspense } from "react";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PageBody, PageHeader } from "@/components/shell/page-header";
+import { FollowUpBoardView } from "@/components/follow-ups/follow-up-board";
+import { requireActor, requireDoctorId } from "@/server/context";
+import { getFollowUpBoard } from "@/server/services/follow-ups";
 
 export const metadata: Metadata = { title: "Follow-ups" };
 
-export default function Page() {
+export const dynamic = "force-dynamic";
+
+export default function FollowUpsPage() {
   return (
-    <ModulePlaceholder
-      icon={Repeat2}
-      title={"Follow-ups"}
-      description={"Every patient who owes you a return visit, sorted by what is overdue."}
-      part={"Part 3"}
-      capabilities={[
-    "Overdue, due today and upcoming grouping",
-    "Follow-up creation from a completed consultation",
-    "Patient reactivation for missed follow-ups",
-    "One-tap follow-up message drafting",
-    "Completion tracking",
-      ]}
-    />
+    <PageBody>
+      <Suspense fallback={<FollowUpSkeleton />}>
+        <FollowUpScreen />
+      </Suspense>
+    </PageBody>
+  );
+}
+
+async function FollowUpScreen() {
+  const actor = await requireActor();
+  const doctorId = await requireDoctorId(actor);
+  const board = await getFollowUpBoard(actor, doctorId);
+
+  const { counts } = board;
+
+  return (
+    <>
+      <PageHeader
+        title="Follow-ups"
+        description={
+          counts.open === 0
+            ? "Nobody is waiting on a return visit."
+            : `${counts.open} open · ${counts.overdue} overdue · ${counts.dueToday} due today`
+        }
+      />
+
+      {/* Spec §42 — the three numbers, before the list of names. */}
+      <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Stat
+          label="Overdue"
+          value={counts.overdue}
+          tone={counts.overdue > 0 ? "alert" : "calm"}
+          hint={
+            counts.overdue > 0 ? "Chase these first" : "Nothing has slipped"
+          }
+        />
+        <Stat label="Due today" value={counts.dueToday} tone="warn" />
+        <Stat label="Upcoming" value={counts.upcoming} tone="calm" />
+        <Stat
+          label="Kept this month"
+          value={counts.completedThisMonth}
+          tone="good"
+          hint={
+            counts.completionRate > 0
+              ? `${counts.completionRate}% completion rate`
+              : undefined
+          }
+        />
+      </div>
+
+      <FollowUpBoardView board={board} />
+    </>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  tone,
+  hint,
+}: {
+  label: string;
+  value: number;
+  tone: "alert" | "warn" | "calm" | "good";
+  hint?: string;
+}) {
+  const valueClass = {
+    alert: value > 0 ? "text-destructive" : "",
+    warn: value > 0 ? "text-warning" : "",
+    calm: "",
+    good: value > 0 ? "text-success" : "",
+  }[tone];
+
+  return (
+    <Card className="px-4 py-3.5">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <p
+        className={`mt-1 font-display text-2xl font-bold tabular ${valueClass}`}
+      >
+        {value}
+      </p>
+      {hint && (
+        <p className="mt-0.5 text-[12px] text-muted-foreground">{hint}</p>
+      )}
+    </Card>
+  );
+}
+
+function FollowUpSkeleton() {
+  return (
+    <>
+      <div className="pb-6">
+        <Skeleton className="h-8 w-40" />
+        <Skeleton className="mt-2 h-4 w-64" />
+      </div>
+      <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }, (_, i) => (
+          <Skeleton key={i} className="h-[88px] rounded-xl" />
+        ))}
+      </div>
+      <div className="space-y-5">
+        <Skeleton className="h-52 rounded-xl" />
+        <Skeleton className="h-40 rounded-xl" />
+      </div>
+    </>
   );
 }

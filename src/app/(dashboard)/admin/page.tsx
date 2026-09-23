@@ -10,7 +10,7 @@ export default function Page() {
       icon={LayoutDashboard}
       title={"Organisation Overview"}
       description={"Operations across the facility — volume, utilisation and where the day is slipping."}
-      part={"Part 3"}
+      part={"Part 5"}
       capabilities={[
     "Total OPD volume and department volume",
     "Doctor utilisation",

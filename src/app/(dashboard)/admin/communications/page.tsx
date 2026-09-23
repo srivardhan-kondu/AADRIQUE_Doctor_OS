@@ -10,7 +10,7 @@ export default function Page() {
       icon={MessageSquare}
       title={"Communications"}
       description={"Templates, campaigns and the automation workflows behind them."}
-      part={"Part 3"}
+      part={"Part 5"}
       capabilities={[
     "Editable message templates per channel",
     "Transactional and engagement message types",
