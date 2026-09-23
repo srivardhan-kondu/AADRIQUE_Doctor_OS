@@ -382,16 +382,22 @@ export interface TemplateRow {
   subject: string | null;
   body: string;
   variables: string[];
+  active: boolean;
 }
 
 export async function listTemplates(
   actor: RequestActor,
   channel?: MessageChannel,
+  options: { includeInactive?: boolean } = {},
 ): Promise<TemplateRow[]> {
   assertPermission(actor, Permission.COMMUNICATION_READ);
 
   const templates = await prisma.messageTemplate.findMany({
-    where: { ...tenantScope(actor), active: true, ...(channel ? { channel } : {}) },
+    where: {
+      ...tenantScope(actor),
+      ...(options.includeInactive ? {} : { active: true }),
+      ...(channel ? { channel } : {}),
+    },
     orderBy: [{ category: "asc" }, { name: "asc" }],
     select: {
       id: true,
@@ -402,6 +408,7 @@ export async function listTemplates(
       subject: true,
       body: true,
       variables: true,
+      active: true,
     },
   });
 
@@ -674,6 +681,11 @@ export async function sendTemplatedMessage(
     variables?: Record<string, string>;
     appointmentId?: string | null;
   },
+  /**
+   * An automation passes `rethrow` so a message it could not send fails the
+   * run with the reason, visible in the run history, instead of vanishing.
+   */
+  options: { rethrow?: boolean } = {},
 ): Promise<SendResult | null> {
   const template = await prisma.messageTemplate.findFirst({
     where: {
@@ -685,7 +697,15 @@ export async function sendTemplatedMessage(
     select: { id: true },
   });
 
-  if (!template) return null;
+  if (!template) {
+    if (options.rethrow) {
+      throw new ServiceError(
+        "NOT_FOUND",
+        `There is no active ${CHANNEL_LABEL[input.channel]} template called ${input.templateKey}.`,
+      );
+    }
+    return null;
+  }
 
   try {
     return await sendMessage(actor, {
@@ -696,6 +716,7 @@ export async function sendTemplatedMessage(
       appointmentId: input.appointmentId ?? null,
     });
   } catch (error) {
+    if (options.rethrow) throw error;
     // The booking is the transaction that mattered; the notification is not.
     // It is logged rather than surfaced, and the message row records the state.
     console.error(

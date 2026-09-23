@@ -14,6 +14,7 @@ import {
   type WorkflowStep,
 } from "@/lib/workflow/steps";
 import type { RequestActor } from "@/server/context";
+import { storedWorkflowProblem } from "./automation-editor";
 import { writeAudit } from "./audit";
 import { sendTemplatedMessage } from "./communication";
 import { invalidState, notFound } from "./errors";
@@ -479,10 +480,19 @@ async function resolveContext(
         stage: true,
         completedAt: true,
         patient: { select: patientFields },
+        doctor: { select: { user: { select: { name: true } } } },
+        facility: { select: { name: true, phone: true } },
       },
     });
     if (!visit) return {};
-    return { visit, patient: visit.patient };
+    // The feedback request thanks the patient for visiting {{doctorName}}:
+    // without the doctor here it could never be sent.
+    return {
+      visit,
+      patient: visit.patient,
+      doctor: { name: visit.doctor.user.name },
+      facility: visit.facility,
+    };
   }
 
   if (subjectType === "Patient") {
@@ -565,7 +575,16 @@ async function runAction(
   subjectId: string,
 ): Promise<void> {
   const context = await resolveContext(subjectType, subjectId);
-  const patient = context.patient as { id: string; firstName: string } | undefined;
+  // resolveContext selects these for every subject (patientFields).
+  const patient = context.patient as
+    | {
+        id: string;
+        firstName: string;
+        whatsappOptIn: boolean;
+        smsOptIn: boolean;
+        emailOptIn: boolean;
+      }
+    | undefined;
 
   switch (step.action) {
     case "SEND_MESSAGE": {
@@ -574,16 +593,31 @@ async function runAction(
         throw new Error("the step names no template or channel");
       }
 
-      // Goes through the communication service, so consent, address checks,
-      // delivery tracking and the audit entry all behave exactly as they do
-      // for a message a person sent by hand.
-      await sendTemplatedMessage(actor, {
-        patientId: patient.id,
-        templateKey: step.templateKey,
-        channel: step.channel,
-        appointmentId: subjectType === "Appointment" ? subjectId : null,
-        variables: templateVariables(context),
-      });
+      // A patient who has not agreed to this channel is skipped — that is the
+      // automation working, not failing (spec §14).
+      const consent = {
+        WHATSAPP: patient.whatsappOptIn,
+        SMS: patient.smsOptIn,
+        EMAIL: patient.emailOptIn,
+      }[step.channel];
+      if (!consent) return;
+
+      // Goes through the communication service, so address checks, delivery
+      // tracking and the audit entry all behave exactly as they do for a
+      // message a person sent by hand. Anything else that stops the message
+      // — a detail the template needs and this run lacks, an unusable
+      // address — fails the run with the reason.
+      await sendTemplatedMessage(
+        actor,
+        {
+          patientId: patient.id,
+          templateKey: step.templateKey,
+          channel: step.channel,
+          appointmentId: subjectType === "Appointment" ? subjectId : null,
+          variables: templateVariables(context),
+        },
+        { rethrow: true },
+      );
       return;
     }
 
@@ -834,17 +868,20 @@ export async function setWorkflowEnabled(
 
   const workflow = await prisma.workflow.findFirst({
     where: { id: workflowId, ...tenantScope(actor) },
-    select: { id: true, name: true, steps: true, enabled: true },
+    select: { id: true, name: true, steps: true, enabled: true, trigger: true },
   });
 
   if (!workflow) throw notFound("Workflow");
 
   if (enabled) {
     const parsed = parseSteps(workflow.steps);
-    if (!parsed.ok) {
+    const problem = parsed.ok
+      ? await storedWorkflowProblem(actor.organizationId, workflow.trigger, parsed.steps)
+      : parsed.error;
+    if (problem) {
       throw invalidState(
-        `This workflow cannot be enabled: ${parsed.error}`,
-        "Fix the step list before turning it on.",
+        `This workflow cannot be enabled: ${problem}`,
+        "Edit it so it can run, then turn it on.",
       );
     }
   }

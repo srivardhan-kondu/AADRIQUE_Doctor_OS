@@ -495,6 +495,19 @@ export async function callNext(
     });
   }
 
+  // Spec §14 — "token approaching": whoever is now first in line is told
+  // they are next, if an automation is listening.
+  if (result) {
+    const upNext = await prisma.queueEntry.findFirst({
+      where: { queueId, status: { in: [...WAITING_STATUSES] } },
+      orderBy: [{ priority: "desc" }, { position: "asc" }],
+      select: { id: true },
+    });
+    if (upNext) {
+      await fireTrigger(actor, "TOKEN_APPROACHING", { type: "QueueEntry", id: upNext.id });
+    }
+  }
+
   return result;
 }
 

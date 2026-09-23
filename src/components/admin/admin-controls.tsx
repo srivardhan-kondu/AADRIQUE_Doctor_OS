@@ -50,10 +50,13 @@ function useAdminAction() {
 /** Spec §28 — turning an automation on or off is the whole point of the engine. */
 export function WorkflowToggle({
   workflowId,
+  name,
   enabled,
   disabledReason,
 }: {
   workflowId: string;
+  /** Named in the switch's label, so each one is distinguishable. */
+  name: string;
   enabled: boolean;
   disabledReason?: string | null;
 }) {
@@ -64,7 +67,7 @@ export function WorkflowToggle({
       type="button"
       role="switch"
       aria-checked={enabled}
-      aria-label={enabled ? "Turn this automation off" : "Turn this automation on"}
+      aria-label={enabled ? `Turn ${name} off` : `Turn ${name} on`}
       disabled={pending || Boolean(disabledReason)}
       title={disabledReason ?? undefined}
       onClick={() => run(() => toggleWorkflowAction(workflowId, !enabled))}

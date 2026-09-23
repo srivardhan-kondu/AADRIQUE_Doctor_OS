@@ -8,7 +8,10 @@ import {
   Workflow as WorkflowIcon,
   Zap,
 } from "lucide-react";
+import Link from "next/link";
+import { Pencil, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -59,7 +62,7 @@ async function CommunicationsScreen() {
 
   const [workflows, templates, runs] = await Promise.all([
     listWorkflows(actor),
-    listTemplates(actor),
+    listTemplates(actor, undefined, { includeInactive: true }),
     listRecentRuns(actor, 12),
   ]);
 
@@ -70,7 +73,17 @@ async function CommunicationsScreen() {
       <PageHeader
         title="Communications"
         description="Automations as data, not as branches in the code. Change when a patient hears from you without a deploy."
-        actions={<RunDueWorkflowsButton />}
+        actions={
+          <>
+            <RunDueWorkflowsButton />
+            <Button asChild variant="outline">
+              <Link href="/admin/communications/templates/new"><Plus />New template</Link>
+            </Button>
+            <Button asChild variant="accent">
+              <Link href="/admin/communications/workflows/new"><Plus />New workflow</Link>
+            </Button>
+          </>
+        }
       />
 
       <div className="grid gap-5 xl:grid-cols-[1.35fr_1fr]">
@@ -127,11 +140,20 @@ async function CommunicationsScreen() {
                         )}
                       </div>
 
-                      <WorkflowToggle
-                        workflowId={workflow.id}
-                        enabled={workflow.enabled}
-                        disabledReason={workflow.problem}
-                      />
+                      <span className="flex items-center gap-1">
+                        <Button asChild variant="ghost" size="sm">
+                          <Link href={`/admin/communications/workflows/${workflow.id}`} aria-label={`Edit ${workflow.name}`}>
+                            <Pencil />
+                            Edit
+                          </Link>
+                        </Button>
+                        <WorkflowToggle
+                          workflowId={workflow.id}
+                          name={workflow.name}
+                          enabled={workflow.enabled}
+                          disabledReason={workflow.problem}
+                        />
+                      </span>
                     </div>
 
                     {workflow.problem ? (
@@ -237,6 +259,14 @@ async function CommunicationsScreen() {
                   {template.category === "ENGAGEMENT" && (
                     <Badge variant="muted">Engagement</Badge>
                   )}
+                  {!template.active && <Badge variant="outline">Not in use</Badge>}
+                  <Link
+                    href={`/admin/communications/templates/${template.id}`}
+                    className="ml-auto text-[12px] font-semibold text-accent hover:underline"
+                    aria-label={`Edit ${template.name}`}
+                  >
+                    Edit
+                  </Link>
                 </p>
 
                 {template.subject && (

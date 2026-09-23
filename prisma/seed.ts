@@ -567,6 +567,18 @@ async function seedTemplatesAndIntegrations(organizationId: string) {
       {
         id: id("wf"),
         organizationId,
+        name: "You're next",
+        description: "Tell the patient at the front of the line to make their way to the room.",
+        trigger: WorkflowTriggerType.TOKEN_APPROACHING,
+        enabled: true,
+        steps: [
+          { type: "CONDITION", field: "patient.smsOptIn", operator: "EQUALS", value: true },
+          { type: "ACTION", action: "SEND_MESSAGE", templateKey: "token_approaching", channel: "SMS" },
+        ],
+      },
+      {
+        id: id("wf"),
+        organizationId,
         name: "Cancellation notice",
         description: "Tell the patient when their appointment is cancelled, and how to rebook.",
         trigger: WorkflowTriggerType.APPOINTMENT_CANCELLED,
@@ -579,7 +591,7 @@ async function seedTemplatesAndIntegrations(organizationId: string) {
     ],
   });
 
-  console.log(`  ${templates.length} message templates, 6 integrations, 5 workflows`);
+  console.log(`  ${templates.length} message templates, 6 integrations, 6 workflows`);
 }
 
 /**
