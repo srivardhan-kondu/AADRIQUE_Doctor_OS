@@ -6,6 +6,7 @@ import {
   LogOut,
   Monitor,
   Moon,
+  KeyRound,
   Settings,
   Sun,
   UserCog,
@@ -91,13 +92,23 @@ export function UserMenu() {
 
         <DropdownMenuSeparator />
 
-        <DropdownMenuItem onSelect={() => router.push("/doctor/profile")}>
-          <UserCog />
-          Profile & availability
-        </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => router.push("/admin/settings")}>
-          <Settings />
-          Settings
+        {/* Only the destinations this person has — the server refuses the
+            rest anyway, but a menu should not offer what it will refuse. */}
+        {user.doctorId && (
+          <DropdownMenuItem onSelect={() => router.push("/doctor/profile")}>
+            <UserCog />
+            Profile & availability
+          </DropdownMenuItem>
+        )}
+        {(user.role === "HOSPITAL_ADMIN" || user.role === "SUPER_ADMIN") && (
+          <DropdownMenuItem onSelect={() => router.push("/admin/settings")}>
+            <Settings />
+            Settings
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem onSelect={() => router.push("/account/password")}>
+          <KeyRound />
+          Change password
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />

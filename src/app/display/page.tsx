@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { PauseCircle } from "lucide-react";
 import { Logo } from "@/components/shell/logo";
 import { LiveRefresh } from "@/components/shell/live-refresh";
@@ -21,6 +22,7 @@ export const dynamic = "force-dynamic";
  */
 export default async function WaitingRoomPage() {
   const actor = await requireActor();
+  if (actor.mustChangePassword) redirect("/account/password");
 
   if (!hasPermission(actor, Permission.QUEUE_READ)) {
     return (

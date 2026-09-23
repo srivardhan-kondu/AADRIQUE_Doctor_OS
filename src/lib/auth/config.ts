@@ -24,13 +24,15 @@ export interface SessionUser {
   department: string | null;
   facilityName: string;
   organizationName: string;
+  /** When this session was issued (seconds), to refuse it after a password change. */
+  issuedAt: number;
 }
 
 declare module "next-auth" {
   interface Session {
     user: SessionUser;
   }
-  interface User extends Omit<SessionUser, "id"> {
+  interface User extends Omit<SessionUser, "id" | "issuedAt"> {
     id?: string;
   }
 }
@@ -102,6 +104,7 @@ export const authConfig = {
         department: token.department,
         facilityName: token.facilityName,
         organizationName: token.organizationName,
+        issuedAt: typeof token.iat === "number" ? token.iat : 0,
       };
       return session;
     },

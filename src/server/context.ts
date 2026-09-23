@@ -26,40 +26,103 @@ export interface RequestActor extends Actor {
   department: string | null;
   facilityName: string;
   organizationName: string;
+  /** An administrator issued a temporary password; choose a new one first. */
+  mustChangePassword: boolean;
 }
 
-export const getActor = cache(async (): Promise<RequestActor | null> => {
+type Resolved =
+  | { state: "none" }
+  /** A signed session the account no longer honours. */
+  | { state: "ended" }
+  | { state: "ok"; actor: RequestActor };
+
+/**
+ * The session, checked against the account on every request.
+ *
+ * The JWT alone would keep a session alive for its whole 12 hours after the
+ * account was deactivated, removed from the organization or had its password
+ * changed. One indexed read — made in parallel with the permission overrides,
+ * so it costs no extra round trip — closes that window: the session is ended
+ * the next time it is used.
+ */
+const resolve = cache(async (): Promise<Resolved> => {
   const session = await auth();
-  if (!session?.user) return null;
+  if (!session?.user) return { state: "none" };
 
   const user: SessionUser = session.user;
 
-  // Per-organization permission overrides, loaded once per request.
-  const overrides: PermissionOverride[] = await prisma.rolePermission.findMany({
-    where: { organizationId: user.organizationId, role: user.role },
-    select: { role: true, permission: true, granted: true },
-  });
+  const [overrides, account] = await Promise.all([
+    prisma.rolePermission.findMany({
+      where: { organizationId: user.organizationId, role: user.role },
+      select: { role: true, permission: true, granted: true },
+    }) as Promise<PermissionOverride[]>,
+    prisma.user.findUnique({
+      where: { id: user.id },
+      select: {
+        active: true,
+        mustChangePassword: true,
+        passwordChangedAt: true,
+        memberships: {
+          where: {
+            organizationId: user.organizationId,
+            role: user.role,
+            active: true,
+            organization: { active: true },
+          },
+          select: { id: true },
+          take: 1,
+        },
+      },
+    }),
+  ]);
+
+  if (!account || !account.active || account.memberships.length === 0) {
+    return { state: "ended" };
+  }
+
+  // A second of grace: the session issued by a password change is stamped in
+  // the same second the change is recorded.
+  if (
+    account.passwordChangedAt &&
+    user.issuedAt * 1000 < account.passwordChangedAt.getTime() - 1000
+  ) {
+    return { state: "ended" };
+  }
 
   return {
-    userId: user.id,
-    organizationId: user.organizationId,
-    facilityId: user.facilityId,
-    role: user.role,
-    overrides,
-    name: user.name,
-    email: user.email,
-    doctorId: user.doctorId,
-    department: user.department,
-    facilityName: user.facilityName,
-    organizationName: user.organizationName,
+    state: "ok",
+    actor: {
+      userId: user.id,
+      organizationId: user.organizationId,
+      facilityId: user.facilityId,
+      role: user.role,
+      overrides,
+      name: user.name,
+      email: user.email,
+      doctorId: user.doctorId,
+      department: user.department,
+      facilityName: user.facilityName,
+      organizationName: user.organizationName,
+      mustChangePassword: account.mustChangePassword,
+    },
   };
 });
 
-/** Redirects to sign-in when there is no session. */
+export const getActor = cache(async (): Promise<RequestActor | null> => {
+  const resolved = await resolve();
+  return resolved.state === "ok" ? resolved.actor : null;
+});
+
+/**
+ * Redirects to sign-in when there is no session. A session the account no
+ * longer honours is ended properly first — its cookie cleared — or the
+ * sign-in page would bounce the still-valid-looking cookie straight back.
+ */
 export async function requireActor(): Promise<RequestActor> {
-  const actor = await getActor();
-  if (!actor) redirect("/sign-in");
-  return actor;
+  const resolved = await resolve();
+  if (resolved.state === "ended") redirect("/api/session/end");
+  if (resolved.state === "none") redirect("/sign-in");
+  return resolved.actor;
 }
 
 /** Requires a session *and* a specific permission. */

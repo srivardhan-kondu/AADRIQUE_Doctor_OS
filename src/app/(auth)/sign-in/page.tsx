@@ -7,9 +7,9 @@ export const metadata: Metadata = { title: "Sign in" };
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; ended?: string }>;
 }) {
-  const { next } = await searchParams;
+  const { next, ended } = await searchParams;
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1fr_minmax(420px,44%)]">
@@ -81,6 +81,18 @@ export default async function SignInPage({
           <p className="mt-1.5 text-[14px] text-muted-foreground">
             Use your AADRIQUE Medical Center account.
           </p>
+
+          {ended && (
+            // Said plainly, so a person signed out by a password reset or a
+            // change to their access knows it was deliberate, not a fault.
+            <p
+              role="status"
+              className="mt-4 rounded-lg border border-warning/30 bg-warning-soft px-3 py-2 text-[13px] text-warning"
+            >
+              You were signed out because your password or your access changed.
+              Sign in again to continue.
+            </p>
+          )}
 
           <SignInForm next={next} />
         </div>

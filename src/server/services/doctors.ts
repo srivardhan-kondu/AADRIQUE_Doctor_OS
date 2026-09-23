@@ -1,7 +1,7 @@
 import "server-only";
-import { randomBytes } from "node:crypto";
 import { Prisma } from "@/generated/prisma/client";
 import { hashPassword } from "@/lib/auth/password";
+import { temporaryPassword } from "@/lib/auth/temporary-password";
 import { prisma } from "@/lib/db";
 import { Permission, assertPermission, hasPermission } from "@/lib/permissions";
 import type { RequestActor } from "@/server/context";
@@ -251,16 +251,10 @@ export interface CreateDoctorResult {
   email: string;
   /**
    * Shown once to the administrator to hand over in person. Only its hash is
-   * stored, and it is never sent anywhere by the system.
+   * stored, it is never sent anywhere, and the doctor must replace it at
+   * their first sign-in.
    */
   temporaryPassword: string;
-}
-
-/** A readable one-time password: no 0/O or 1/l to misread over the phone. */
-function temporaryPassword(): string {
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
-  const bytes = randomBytes(12);
-  return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
 }
 
 /**
@@ -320,6 +314,7 @@ export async function createDoctor(
           email,
           name,
           passwordHash,
+          mustChangePassword: true,
           memberships: {
             create: {
               organizationId: actor.organizationId,

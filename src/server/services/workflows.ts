@@ -354,6 +354,9 @@ async function systemActor(
     facilityId: resolved.facilityId,
     role: resolved.role,
     overrides: [],
+    // An automation acting for someone is not a sign-in; it has no password
+    // to change.
+    mustChangePassword: false,
     name: resolved.user.name,
     email: resolved.user.email,
     doctorId: null,

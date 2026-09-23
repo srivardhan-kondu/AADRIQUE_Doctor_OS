@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/shell/app-shell";
 import { SessionProvider } from "@/lib/session";
-import { getActor } from "@/server/context";
+import { requireActor } from "@/server/context";
 import { getShellData } from "@/server/services/shell";
 
 /**
@@ -14,8 +14,9 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const actor = await getActor();
-  if (!actor) redirect("/sign-in");
+  const actor = await requireActor();
+  // A temporary password is replaced before anything else is reachable.
+  if (actor.mustChangePassword) redirect("/account/password");
 
   const { counters, notifications, online } = await getShellData(actor);
 

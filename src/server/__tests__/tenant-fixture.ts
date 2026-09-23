@@ -143,6 +143,7 @@ export async function createTenant(label: string): Promise<Tenant> {
     facilityId: facility.id,
     role,
     overrides: [],
+    mustChangePassword: false,
     name: u.name,
     email: u.email,
     doctorId,

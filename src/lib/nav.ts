@@ -8,6 +8,7 @@ import {
   CalendarDays,
   ClipboardList,
   Gauge,
+  IdCard,
   LayoutDashboard,
   MessageSquare,
   Repeat2,
@@ -87,6 +88,7 @@ export const NAV: Record<Workspace, NavSection[]> = {
         { label: "Doctors", href: "/admin/doctors", icon: Stethoscope },
         { label: "Departments", href: "/admin/departments", icon: Building2 },
         { label: "Patients", href: "/admin/patients", icon: UsersRound, shortcut: "p" },
+        { label: "Staff", href: "/admin/staff", icon: IdCard },
       ],
     },
     {

@@ -433,6 +433,12 @@ model User {
   phone         String?
   avatarUrl     String?
   /// Spec §23 — optional MFA, required for administrators by policy.
+  /// Set when an administrator issues a temporary password: the next sign-in
+  /// must choose a new one before anything else.
+  mustChangePassword Boolean @default(false)
+  /// Sessions issued before this are refused — a reset or change signs every
+  /// other device out.
+  passwordChangedAt  DateTime?
   mfaEnabled    Boolean   @default(false)
   mfaSecret     String?
   active        Boolean   @default(true)
