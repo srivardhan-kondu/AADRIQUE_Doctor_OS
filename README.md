@@ -30,6 +30,30 @@ Open <http://localhost:3000>. The root redirects into the doctor workspace.
 
 ## Build status
 
+**Part 4 — AI abstraction, pre-consultation brief, documentation copilot. Complete.**
+
+The AI layer is built so that the safety rules in spec §10 are structural
+rather than promised. Retrieval happens *before* any model call, the retrieved
+records travel with the request, and a citation to a record that was not
+supplied is dropped before a doctor sees it.
+
+- **Works with no model configured.** Without `ANTHROPIC_API_KEY`, the grounded
+  provider composes the same answers deterministically from the patient's own
+  records — nothing is generated, so nothing can be invented. With a key,
+  Claude writes them and the citations are validated against the record. The UI
+  always says which one answered.
+- **Pre-consultation brief** (§8) — ready on every open consultation, with the
+  record rows it was built from linked beside each section. Generated once per
+  visit, then read back, and streamed so the workspace never waits on it.
+- **Documentation copilot** (§9) — dictate or paste, and it comes back laid out
+  under clinical headings. It adds nothing and drops nothing; "Insert into
+  note" is the explicit step, and it appends rather than overwrites.
+- **Retrieval** (§9) — natural-language search over one patient's record, and a
+  hospital knowledge assistant that quotes approved SOPs and policies only.
+- **Review lifecycle** (§10, §30) — every output is an `AIAction` awaiting a
+  doctor's decision, never a chart entry. Generated, accepted and rejected are
+  all audited, and [`/admin/ai`](http://localhost:3000/admin/ai) shows the lot.
+
 **Part 3 — appointments, follow-ups, communication, analytics, audit. Complete.**
 
 - **Appointments** (§11) — the doctor's schedule as a day or a week, booking
@@ -118,8 +142,8 @@ the notification tray are the only placeholder data, and they are isolated in
 
 ### Next
 
-Part 4: the AI abstraction, the pre-consultation brief, the documentation
-copilot and history retrieval.
+Part 5: the workflow engine, the integration layer, hospital administration,
+and the performance and security review.
 
 ---
 
@@ -151,6 +175,8 @@ src/
                         appointments, follow-ups, communication, analytics,
                         audit, queue, consultation, patients, dashboard
   lib/
+    ai/                 provider abstraction — Claude, and the grounded
+                        fallback that needs no credentials
     auth/               Auth.js config, password hashing
     db/                 Prisma client singleton
     messaging/          WhatsApp / SMS / email provider abstraction

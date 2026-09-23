@@ -13,6 +13,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 /**
@@ -21,46 +22,55 @@ import { ScrollArea } from "@/components/ui/scroll-area";
  * The panel is part of the shell so it keeps its context as the doctor moves
  * between screens. Every action here is a *drafting* action: the Copilot
  * summarises, retrieves and prepares, and a doctor approves anything that
- * reaches the clinical record (spec §10). The actions are inert until the AI
- * layer lands in a later part — the dock ships now so the three-panel geometry
- * of the consultation workspace is real from the start.
+ * reaches the clinical record (spec §10).
+ *
+ * The dock is the way in, not the workspace. Each action opens the Copilot
+ * screen, where the answer arrives with the records it was built from — a
+ * 340px rail is the wrong place to read a cited brief.
  */
 
 interface CopilotAction {
   label: string;
   description: string;
   icon: LucideIcon;
+  href: string;
 }
 
 const ACTIONS: CopilotAction[] = [
   {
     label: "Summarize history",
+    href: "/doctor/copilot",
     description: "Condense this patient's recorded visits into a short read.",
     icon: History,
   },
   {
     label: "Pre-consultation brief",
-    description: "Prepare context from existing records before you open the visit.",
+    href: "/doctor/queue",
+    description: "Ready on every open consultation, with its sources attached.",
     icon: Stethoscope,
   },
   {
     label: "Draft consultation note",
-    description: "Turn your structured or dictated input into a formatted draft.",
+    href: "/doctor/queue",
+    description: "Dictate, and have it laid out under clinical headings.",
     icon: FileText,
   },
   {
     label: "Prepare follow-up message",
+    href: "/doctor/follow-ups",
     description: "Write a patient-friendly message for your approval.",
     icon: MessageSquareQuote,
   },
   {
     label: "Find in history",
+    href: "/doctor/copilot",
     description: "Ask in plain language — “last migraine-related visit”.",
     icon: Search,
   },
   {
     label: "Show missing documentation",
-    description: "Highlight what this record is missing before you sign.",
+    href: "/doctor/queue",
+    description: "See what this note is missing before you sign it.",
     icon: TriangleAlert,
   },
 ];
@@ -109,10 +119,10 @@ export function CopilotDock({ onClose }: { onClose: () => void }) {
             <ul className="space-y-1.5">
               {ACTIONS.map((action) => (
                 <li key={action.label}>
-                  <button
-                    type="button"
-                    disabled
-                    className="flex w-full items-start gap-3 rounded-lg border border-border bg-background px-3 py-2.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                  <Link
+                    href={action.href}
+                    onClick={onClose}
+                    className="flex w-full items-start gap-3 rounded-lg border border-border bg-background px-3 py-2.5 text-left transition-colors hover:border-ai-border hover:bg-ai-soft/40"
                   >
                     <action.icon className="mt-0.5 size-4 shrink-0 text-ai" />
                     <span className="min-w-0">
@@ -123,15 +133,15 @@ export function CopilotDock({ onClose }: { onClose: () => void }) {
                         {action.description}
                       </span>
                     </span>
-                  </button>
+                  </Link>
                 </li>
               ))}
             </ul>
           </div>
 
           <p className="rounded-lg bg-muted px-3 py-2.5 text-[12px] leading-relaxed text-muted-foreground">
-            These actions activate once the clinical data layer and AI service
-            are connected in a later build part.
+            A brief and the note copilot live inside the consultation itself.
+            Open a patient from your queue to use them there.
           </p>
         </div>
       </ScrollArea>

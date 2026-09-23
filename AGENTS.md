@@ -25,8 +25,8 @@ before implementing a feature.
 | 2b | Auth.js sign-in, service layer, Doctor Command Center | Done |
 | 2c | Patients + Patient 360, queue actions, consultation workspace | Done |
 | 3 | Appointments, follow-ups, communication centre, analytics, audit UI | Done |
-| 4 | AI abstraction, pre-consultation brief, documentation copilot, history retrieval | Next |
-| 5 | Workflow engine, integrations, admin, testing, performance, security review | Planned |
+| 4 | AI abstraction, pre-consultation brief, documentation copilot, retrieval | Done |
+| 5 | Workflow engine, integrations, admin, testing, performance, security review | Next |
 
 ## Architecture rules
 
@@ -70,9 +70,22 @@ before implementing a feature.
   writes to a finalized clinical record and never sends a medical instruction
   without explicit doctor approval.
 - Every AI-generated surface is visually marked — use `<Badge variant="ai">`
-  and the `.ai-surface` class.
+  and the `.ai-surface` class, or render through `<AIOutputView>`, which does
+  both and attaches the citations.
 - Provider calls go through the abstraction in `src/lib/ai/`. Never call a
   provider SDK from a component or a route handler directly.
+- **Retrieve before you generate.** `src/server/services/ai/retrieval.ts` is
+  the only place an AI feature reads the record, and it runs before any
+  provider call. The retrieved facts travel with the request as `sources`, so
+  a provider can phrase them but cannot exceed them.
+- **Every generated claim is traceable.** A citation to a source that was not
+  supplied is dropped before the doctor sees it — a plausible reference to a
+  record that does not exist is the failure spec §10 forbids.
+- Generated output is stored as an `AIAction` awaiting review, never written
+  into the record. Only an explicit doctor action moves it anywhere near one.
+- The product works with no model configured: the grounded provider composes
+  the same answers from the records themselves. Say which one answered rather
+  than hiding it behind one generic AI label.
 
 ## Design system
 

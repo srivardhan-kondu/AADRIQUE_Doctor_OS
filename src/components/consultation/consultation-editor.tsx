@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { NoteCopilot, type NoteField } from "@/components/ai/note-copilot";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -126,6 +127,28 @@ export function ConsultationEditor({
     [],
   );
 
+  /**
+   * Spec §10 — a generated draft only ever lands in the editor, never in the
+   * record. It appends rather than replaces: a doctor who already typed an
+   * assessment does not lose it to a draft.
+   */
+  const insertFromCopilot = React.useCallback(
+    (values: Partial<Record<NoteField, string>>) => {
+      setDraft((prev) => {
+        const next = { ...prev };
+        for (const [key, value] of Object.entries(values)) {
+          if (!value) continue;
+          const field = key as NoteField;
+          const existing = (next[field] ?? "").trim();
+          next[field] = existing ? `${existing}\n${value}` : value;
+        }
+        return next;
+      });
+      setSaveState({ kind: "dirty" });
+    },
+    [],
+  );
+
   // Autosave: 1.2s after typing stops. The effect re-arms on every keystroke
   // because `draft` is a dependency, which is exactly the debounce we want —
   // long enough not to save mid-word, short enough that nothing meaningful is
@@ -231,6 +254,13 @@ export function ConsultationEditor({
           </Button>
         )}
       </div>
+
+      {/* Spec §9 — the documentation copilot sits with the note it drafts. */}
+      <NoteCopilot
+        visitId={visitId}
+        readOnly={readOnly}
+        onInsert={insertFromCopilot}
+      />
 
       {SECTIONS.map((section) => (
         <div key={section.key}>

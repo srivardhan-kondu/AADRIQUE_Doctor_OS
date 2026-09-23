@@ -10,6 +10,7 @@ import {
   BloodGroup,
   BookingSource,
   ConsultationStatus,
+  DocumentStatus,
   FollowUpStatus,
   Gender,
   IntegrationCategory,
@@ -131,6 +132,7 @@ async function main() {
   const { doctors, staff } = await seedPeople(organizationId, facilityId, departments);
   const medications = await seedFormulary();
   await seedTemplatesAndIntegrations(organizationId);
+  await seedHospitalDocuments(organizationId, staff);
 
   const patients = await seedPatients(organizationId, facilityId);
 
@@ -563,6 +565,99 @@ async function seedTemplatesAndIntegrations(organizationId: string) {
   });
 
   console.log(`  ${templates.length} message templates, 6 integrations, 4 workflows`);
+}
+
+/**
+ * Spec §42 — the approved hospital documents the knowledge assistant answers
+ * from. Each is split into the passages the retriever searches, which is what
+ * lets an answer cite a specific paragraph rather than a whole policy.
+ */
+async function seedHospitalDocuments(organizationId: string, staff: Staff[]) {
+  const author = staff.find((s) => s.role === Role.HOSPITAL_ADMIN) ?? staff[0];
+
+  const documents = [
+    {
+      title: "OPD Patient Flow SOP",
+      category: "Standard Operating Procedure",
+      passages: [
+        "Patients arriving without an appointment are registered at the front desk and issued a walk-in token. Walk-in tokens are interleaved with booked appointments at a ratio of one walk-in for every three booked patients, so a booked appointment is never delayed by more than one walk-in.",
+        "Vitals are recorded by the nursing station before the patient is called. A patient may be called without vitals only when the doctor marks the visit urgent. Height and weight are required for every paediatric patient.",
+        "The queue is paused by the doctor, never by the front desk. While a queue is paused no new token is called, but registration continues and waiting patients keep their position.",
+        "A patient who does not respond when their token is called is marked as a no show after two calls, five minutes apart. A no-show patient who returns the same day is re-registered and keeps their original appointment reference.",
+      ],
+    },
+    {
+      title: "Discharge and Follow-up Workflow",
+      category: "Standard Operating Procedure",
+      passages: [
+        "The discharge workflow begins when the doctor signs the consultation. A signed consultation is immutable; any correction is recorded as a new entry rather than an edit to the original.",
+        "Where the doctor has requested a review, a follow-up is created with a due date before the patient leaves the building. The front desk offers to book the return appointment immediately; if the patient declines, the follow-up stays pending and a reminder goes out two days before it falls due.",
+        "A follow-up that passes its due date without a booked appointment is marked missed. Missed follow-ups are reviewed weekly by the department lead, and patients on that list are contacted once before the follow-up is closed.",
+        "Discharge instructions are sent to the patient on WhatsApp where they have opted in, and on SMS otherwise. Instructions are never sent to a patient who has opted out of both.",
+      ],
+    },
+    {
+      title: "Patient Communication Policy",
+      category: "Policy",
+      passages: [
+        "Every patient records a contact preference at registration. The hospital contacts a patient only on a channel they have agreed to, and a patient may withdraw consent for any channel at any time by replying STOP.",
+        "Transactional messages cover appointment confirmations, reminders, token notifications, cancellations and follow-up reminders. Engagement messages cover health campaigns, camp announcements and feedback requests, and are sent only between 9 AM and 8 PM.",
+        "No clinical result, diagnosis or medication instruction is sent over WhatsApp or SMS. Reports are released through the patient portal or collected in person.",
+        "A message that fails delivery is retried at most three times. After the third failure the patient's contact details are flagged for the front desk to verify at their next visit.",
+      ],
+    },
+    {
+      title: "Clinical Records and Access Policy",
+      category: "Policy",
+      passages: [
+        "Access to a patient record is limited to the staff involved in that patient's care, within the facility that holds the record. Every read of a clinical record by a user who is not the treating doctor is written to the audit log.",
+        "Prescriptions are issued only by a registered doctor. Nursing and front-desk staff may view a prescription but never create or amend one.",
+        "AI-assisted features may summarise, draft, retrieve and organise information already in the record. They do not diagnose, do not alter a clinical record, and no AI-generated content reaches a patient or a signed note without a doctor accepting it first.",
+        "Audit entries are retained for seven years and record who acted, what changed, and when. Audit entries never contain clinical free text.",
+      ],
+    },
+  ];
+
+  const documentRows: Prisma.HospitalDocumentCreateManyInput[] = [];
+  const chunkRows: Prisma.DocumentChunkCreateManyInput[] = [];
+
+  for (const doc of documents) {
+    const documentId = id("doc");
+    const body = doc.passages.join("\n\n");
+
+    documentRows.push({
+      id: documentId,
+      organizationId,
+      title: doc.title,
+      category: doc.category,
+      storageKey: `hospital-documents/${documentId}.txt`,
+      contentType: "text/plain",
+      sizeBytes: body.length,
+      status: DocumentStatus.INDEXED,
+      approved: true,
+      version: 1,
+      uploadedById: author?.userId ?? null,
+      indexedAt: minutesAfter(TODAY, -random.int(60, 20_000)),
+    });
+
+    doc.passages.forEach((content, chunkIndex) => {
+      chunkRows.push({
+        id: id("chk"),
+        documentId,
+        chunkIndex,
+        content,
+        tokenCount: Math.ceil(content.length / 4),
+        metadata: { title: doc.title, category: doc.category },
+      });
+    });
+  }
+
+  await prisma.hospitalDocument.createMany({ data: documentRows });
+  await prisma.documentChunk.createMany({ data: chunkRows });
+
+  console.log(
+    `  ${documentRows.length} approved hospital documents, ${chunkRows.length} indexed passages`,
+  );
 }
 
 async function seedPatients(organizationId: string, facilityId: string) {

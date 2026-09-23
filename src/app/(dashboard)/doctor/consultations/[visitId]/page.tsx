@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageBody } from "@/components/shell/page-header";
 import { ConsultationEditor } from "@/components/consultation/consultation-editor";
 import { PatientSnapshot } from "@/components/consultation/patient-snapshot";
+import { PreConsultationBrief } from "@/components/ai/pre-consultation-brief";
 import { requireActor } from "@/server/context";
 import { getConsultationWorkspace } from "@/server/services/consultation";
 import { ServiceError } from "@/server/services/errors";
@@ -124,7 +125,10 @@ export default async function ConsultationPage({
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="note">
+            <TabsContent value="note" className="space-y-5">
+              {/* Spec §8 — the brief before the blank note. */}
+              <PreConsultationBrief visitId={ws.visitId} />
+
               <ConsultationEditor
                 visitId={ws.visitId}
                 initial={ws.draft}
