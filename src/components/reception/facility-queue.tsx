@@ -10,6 +10,7 @@ import {
   MoveToVitalsButton,
   SkipButton,
 } from "@/components/queue/queue-actions";
+import { CopyTokenLink } from "@/components/reception/copy-link";
 import { WalkInDialog } from "@/components/reception/walk-in-dialog";
 import type { DoctorChoice } from "@/server/services/front-desk";
 import type { QueueBoard } from "@/server/services/queue";
@@ -160,6 +161,9 @@ function DoctorQueue({
                   {formatWait(entry.waitMinutes)}
                 </span>
                 <span className="flex shrink-0 items-center">
+                  {entry.statusPath && (
+                    <CopyTokenLink path={entry.statusPath} token={entry.token} />
+                  )}
                   {entry.status === "WAITING" && (
                     <MoveToVitalsButton queueEntryId={entry.id} />
                   )}

@@ -15,7 +15,7 @@ import { authConfig } from "@/lib/auth/config";
  */
 const { auth } = NextAuth(authConfig);
 
-const PROTECTED_PREFIXES = ["/doctor", "/reception", "/admin", "/design"];
+const PROTECTED_PREFIXES = ["/doctor", "/reception", "/admin", "/design", "/display"];
 
 export const proxy = auth((req) => {
   const { pathname } = req.nextUrl;

@@ -2,6 +2,8 @@ import "dotenv/config";
 import assert from "node:assert/strict";
 import { after, before, describe, it } from "node:test";
 import { prisma } from "@/lib/db";
+import { verifySignedId } from "@/lib/security/signed-link";
+import { getTokenStatus, getWaitingRoomDisplay } from "@/server/services/display";
 import { getFrontDeskDay } from "@/server/services/front-desk";
 import { getQueueSignal } from "@/server/services/live";
 import {
@@ -148,6 +150,38 @@ describe("Front desk", { skip: !configured && "DATABASE_URL is not set" }, () =>
 
     const called = await callNext(t.doctor, t.doctorId);
     assert.equal(called?.token, "T002");
+  });
+
+  it("tells the waiting room and the patient where the line is, without names", async () => {
+    const t = clinic!;
+
+    const display = await getWaitingRoomDisplay(t.reception);
+    const [panel] = display.panels;
+    assert.equal(panel.nowServing, "T002");
+    assert.deepEqual(panel.next, ["T001"]);
+    assert.ok(
+      !JSON.stringify(display).includes("Meera") &&
+        !JSON.stringify(display).includes("Ravi"),
+      "no patient name may reach a public screen",
+    );
+
+    // The desk's board carries a signed link to the patient's own page.
+    const [board] = await getQueueBoards(t.reception);
+    const path = board.waiting[0].statusPath!;
+    const entryId = verifySignedId(decodeURIComponent(path.slice("/q/".length)));
+    assert.equal(entryId, board.waiting[0].id);
+
+    const status = await getTokenStatus(entryId!);
+    assert.deepEqual(
+      {
+        token: status?.token,
+        state: status?.state,
+        nowServing: status?.nowServing,
+        ahead: status?.ahead,
+      },
+      { token: "T001", state: "waiting", nowServing: "T002", ahead: 0 },
+    );
+    assert.ok(!JSON.stringify(status).includes("Meera"));
   });
 
   it("will not queue the same patient twice for one doctor", async () => {

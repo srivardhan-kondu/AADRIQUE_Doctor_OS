@@ -2,6 +2,7 @@ import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import type { QueuePriority } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/db";
+import { tokenStatusPath } from "@/lib/security/signed-link";
 import {
   Permission,
   assertPermission,
@@ -656,6 +657,8 @@ export interface QueueBoardEntry {
   isFollowUp: boolean;
   allergyCount: number;
   visitId: string | null;
+  /** The patient's own token page (spec §12), for the desk to share. */
+  statusPath: string | null;
 }
 
 export interface QueueBoard {
@@ -793,6 +796,7 @@ function toBoard(
       isFollowUp: e.appointment?.type === "FOLLOW_UP",
       allergyCount: showAllergies ? e.patient._count.allergies : 0,
       visitId: e.visit?.id ?? null,
+      statusPath: tokenStatusPath(e.id),
     };
   };
 

@@ -2,6 +2,7 @@ import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import type { WorkflowTriggerType } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/db";
+import { tokenStatusUrl } from "@/lib/security/signed-link";
 import { Permission, assertPermission, tenantScope } from "@/lib/permissions";
 import {
   describeStep,
@@ -696,6 +697,7 @@ function templateVariables(
   const followUp = context.followUp as { dueDate?: Date } | undefined;
   const queueEntry = context.queueEntry as
     | {
+        id?: string;
         token?: string;
         currentToken?: string | null;
         waitMinutes?: number;
@@ -716,6 +718,11 @@ function templateVariables(
     variables.currentToken = queueEntry.currentToken ?? "—";
     variables.waitMinutes = String(queueEntry.waitMinutes ?? 0);
     if (queueEntry.roomLabel) variables.roomLabel = queueEntry.roomLabel;
+    // Spec §12 — the patient's live token page. Only offered when the app
+    // knows its own public address; a template that uses it is otherwise
+    // held back as unfinished rather than sent with a broken link.
+    const link = queueEntry.id ? tokenStatusUrl(queueEntry.id) : null;
+    if (link) variables.statusLink = link;
   }
 
   if (when) {
