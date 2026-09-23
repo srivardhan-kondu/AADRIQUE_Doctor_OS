@@ -31,6 +31,10 @@ before implementing a feature.
 | 6b | Performance (build order 25) | Done |
 | 6c | Live queue, Front Desk, patient-facing queue, doctor & admin screens | Done |
 | 6d | Production polish (build order 27) and E2E journeys | Done |
+| 7a | Hardening: passwords & staff, shared rate limits, nonce CSP | Done |
+| 7b | Real messaging gateways, delivery webhooks, patient replies | Done |
+| 7c | Phase 4: workflow builder, template editor, patient portal | Done |
+| 7d | Phase 4: multi-location operations, advanced analytics | Not started |
 
 ## Architecture rules
 
@@ -76,7 +80,18 @@ before implementing a feature.
 - Grid and flex children that hold a non-wrapping row need `min-w-0`, and
   header action rows (including skeletons) need `flex-wrap`, or a phone
   scrolls sideways. The E2E suite checks this.
-- Public surfaces (`/display`, `/q/…`) show token numbers only. Clinical
+- Don't run `prisma format` for a small schema change — it realigns the
+  whole file. Add the lines and run `prisma validate`.
+- Sessions are ended by `User.sessionVersion`, not by timestamps: bump it on
+  anything that should sign a person out everywhere.
+- Rate limits go through `rateLimit()` (Postgres store); the in-memory store
+  is for unit tests and single instances.
+- A credential is only ever `env://VARIABLE` on an integration row, resolved
+  by `resolveSecret` at the moment of use.
+- The patient portal has its own signed cookie and services that take an
+  organization and patient id from it — never a staff actor, never an id
+  from the browser.
+- Public surfaces (`/display`, `/q/…`, `/portal/…`) show token numbers only. Clinical
   content is withheld by the service for anyone without CONSULTATION_READ —
   never only hidden in the UI.
 

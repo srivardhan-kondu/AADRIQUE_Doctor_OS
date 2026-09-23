@@ -39,11 +39,21 @@ region; `.env.example` shows both.
 
 ### Deploying
 
-- Host the app in the same region as its database.
-- `AUTH_SECRET` and, outside Vercel, `AUTH_TRUST_HOST=true`.
-- `TZ` set to the clinic's time zone — "today" is the server's local day.
-- `APP_URL`, so token messages can carry the patient's live token link.
-- `CRON_SECRET`, and a scheduler calling `POST /api/jobs/workflows`.
+Everything the server reads is listed, with notes, in `.env.example`. In
+short:
+
+| Setting | Why |
+|---|---|
+| `DATABASE_URL`, `DIRECT_DATABASE_URL` | Postgres; run `npm run db:deploy` on release |
+| `AUTH_SECRET` | Signs staff sessions, patient portal sessions and patient links |
+| `AUTH_TRUST_HOST=true` | Outside Vercel, so Auth.js accepts the host |
+| `TZ` | The clinic's time zone — "today" is the server's local day |
+| `APP_URL` | Lets token messages carry the patient's live token link |
+| `CRON_SECRET` | Authorises the scheduler that resumes waiting workflows (`POST /api/jobs/workflows`) |
+| `WHATSAPP_*`, `MSG91_AUTH_KEY`, `RESEND_*` | Real messaging; each integration names its credential as `env://VARIABLE` |
+
+Host the app in the same region as its database. Never set
+`PORTAL_DEMO_CODES` on a real deployment.
 
 ---
 
@@ -58,21 +68,29 @@ region; `.env.example` shows both.
 - **Front desk** — registration, instant search, walk-in tokens with
   priority, booking for any doctor, today's arrivals and check-in, every
   doctor's queue on one screen, notifications.
-- **Patients** — a waiting-room display (`/display`) and a personal live
-  token page from a signed link. Token numbers only, never names.
-- **Admin** — doctors (add, department, clinic hours), departments, patient
-  directory with audited export, operations, reports, audit log,
-  communication templates and workflows, AI activity, integrations, roles.
+- **Patients** — a portal at `/portal/<organisation>`: sign in with a code
+  sent to their mobile, book and cancel, follow their token, rate a visit.
+  A waiting-room display (`/display`) and a personal live token page. Token
+  numbers only on public screens, never names.
+- **Admin** — doctors (add, department, clinic hours), staff accounts (add,
+  reset password, remove access), departments, patient directory with
+  audited export, operations, reports, audit log, AI activity, integrations,
+  and communications: a template editor and a workflow builder.
+- **Messaging** — WhatsApp (Meta Cloud API), SMS (MSG91) and email (Resend)
+  once an integration is connected; signed delivery receipts and WhatsApp
+  replies into the inbox. Until then, a clearly labelled simulated gateway.
 - **Throughout** — queues update without a refresh; permissions and tenant
   boundaries are enforced on the server; every important action is audited;
-  automations are data (spec §28), not code.
+  sessions end the moment a password changes or access is removed; a
+  nonce-based CSP; rate limiting shared across instances; automations are
+  data (spec §28), not code.
 
 ### Not built yet
 
-Real messaging gateways (every channel uses a simulated provider until one is
-connected), a shared-store rate limiter and a nonce-based CSP for
-multi-instance production, password change and reset, and the spec's
-Phase 4 items (patient portal, multi-location operations).
+Multi-location operations (per-facility queues, reports and staff — the
+schema carries facilities, but screens work across the organisation),
+advanced analytics beyond the doctor and admin reports, and two-factor
+sign-in for staff.
 
 ---
 
@@ -119,7 +137,7 @@ src/
     permissions/        role matrix, tenant + permission assertions
   proxy.ts              redirects unauthenticated users to sign-in
 prisma/
-  schema.prisma         41 models
+  schema.prisma         the data model (43 models)
   seed.ts               the demo dataset
 e2e/                    browser journeys (Playwright)
 
