@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 import { Building, Lock, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageBody, PageHeader } from "@/components/shell/page-header";
@@ -60,6 +62,22 @@ async function SettingsScreen() {
         <Stat label="Staff accounts" value={settings.counts.users} />
         <Stat label="Departments" value={settings.counts.departments} />
       </div>
+
+      {/* Spec §3 — where patients book and follow their token online. */}
+      <Card className="mb-5 flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+        <div>
+          <p className="text-[14px] font-semibold">Patient portal</p>
+          <p className="mt-0.5 text-[13px] text-muted-foreground">
+            Patients sign in with a code sent to their mobile to book, cancel,
+            follow their token and rate a visit. Share this address.
+          </p>
+        </div>
+        <Button asChild variant="outline">
+          <Link href={`/portal/${settings.slug}`} target="_blank" rel="noopener">
+            /portal/{settings.slug}
+          </Link>
+        </Button>
+      </Card>
 
       <div className="grid gap-5 xl:grid-cols-[1fr_1.4fr]">
         <Card className="p-0">

@@ -365,6 +365,8 @@ model Organization {
   attachments     Attachment[]
 
   @@index([active])
+
+  portalOtps PortalOtp[]
 }
 
 model Facility {
@@ -1564,4 +1566,22 @@ model RateLimit {
   resetAt DateTime
 
   @@index([resetAt])
+}
+
+/// Spec §3 (patient-facing) — one-time sign-in codes for the patient portal.
+/// Only a keyed hash of the code is stored; it expires in minutes, allows a
+/// few attempts, and is deleted once used.
+model PortalOtp {
+  id             String   @id @default(cuid())
+  organizationId String
+  /// Canonical mobile number the code was sent to.
+  phone          String
+  codeHash       String
+  attempts       Int      @default(0)
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, phone, createdAt])
 }

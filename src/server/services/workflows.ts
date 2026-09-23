@@ -313,6 +313,16 @@ function readActorId(context: Prisma.JsonValue): string | null {
  * attributable to that booking. A run resumed after they have gone home falls
  * back to an administrator of the same organization, never across one.
  */
+/**
+ * An actor for something the system does on no staff member's behalf — a
+ * patient booking online, say — so automations still fire. Resolves to an
+ * administrator of the same organization, never across one; null if it has
+ * none.
+ */
+export function automationActor(organizationId: string): Promise<RequestActor | null> {
+  return systemActor(organizationId, null);
+}
+
 async function systemActor(
   organizationId: string,
   preferredUserId: string | null,

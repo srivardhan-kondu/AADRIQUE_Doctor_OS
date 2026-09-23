@@ -138,6 +138,9 @@ export const KNOWN_VARIABLES: readonly string[] = [
   ),
   // Filled by whoever sends a campaign, not by an automation.
   "campDate",
+  // The patient portal's sign-in code — a `portal_code` SMS template carries
+  // the DLT flow id it is sent under. No automation fills it.
+  "code",
 ];
 
 export interface TemplateRef {

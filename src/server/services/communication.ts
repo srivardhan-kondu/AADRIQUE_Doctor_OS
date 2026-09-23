@@ -443,7 +443,7 @@ export interface SendResult {
  * its credential reference resolves in the secret store — a row that only
  * looks connected never sends.
  */
-async function gatewayRoute(
+export async function gatewayRoute(
   organizationId: string,
   channel: MessageChannel,
 ): Promise<GatewayRoute | null> {

@@ -44,6 +44,9 @@ export default defineConfig({
       AUTH_TRUST_HOST: "true",
       // Lets the webhook test sign a request; never a real secret.
       WHATSAPP_APP_SECRET: "e2e-app-secret",
+      // The portal shows sign-in codes on screen only with this, and only
+      // while no real SMS gateway is connected.
+      PORTAL_DEMO_CODES: "true",
     },
   },
 });
