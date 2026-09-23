@@ -21,8 +21,8 @@ const schema = z.object({
 /**
  * Changes the signed-in person's password, then signs them in again.
  *
- * The change stamps `passwordChangedAt`, which ends every session issued
- * before it — this one included. Signing in with the new password issues the
+ * The change bumps the account's session version, which ends every session
+ * issued under the old one — this one included. Signing in with the new password issues the
  * session they continue on, so the device they changed it on stays signed in
  * while every other one is signed out.
  */

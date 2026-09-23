@@ -61,7 +61,7 @@ const resolve = cache(async (): Promise<Resolved> => {
       select: {
         active: true,
         mustChangePassword: true,
-        passwordChangedAt: true,
+        sessionVersion: true,
         memberships: {
           where: {
             organizationId: user.organizationId,
@@ -80,12 +80,9 @@ const resolve = cache(async (): Promise<Resolved> => {
     return { state: "ended" };
   }
 
-  // A second of grace: the session issued by a password change is stamped in
-  // the same second the change is recorded.
-  if (
-    account.passwordChangedAt &&
-    user.issuedAt * 1000 < account.passwordChangedAt.getTime() - 1000
-  ) {
+  // A password change or reset bumps the version; a session from before it
+  // is over. A counter, not a timestamp, so no window is left open.
+  if (account.sessionVersion !== user.sessionVersion) {
     return { state: "ended" };
   }
 

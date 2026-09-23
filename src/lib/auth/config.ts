@@ -24,15 +24,15 @@ export interface SessionUser {
   department: string | null;
   facilityName: string;
   organizationName: string;
-  /** When this session was issued (seconds), to refuse it after a password change. */
-  issuedAt: number;
+  /** The account's session version at sign-in; see User.sessionVersion. */
+  sessionVersion: number;
 }
 
 declare module "next-auth" {
   interface Session {
     user: SessionUser;
   }
-  interface User extends Omit<SessionUser, "id" | "issuedAt"> {
+  interface User extends Omit<SessionUser, "id"> {
     id?: string;
   }
 }
@@ -49,6 +49,7 @@ declare module "next-auth/jwt" {
     department: string | null;
     facilityName: string;
     organizationName: string;
+    sessionVersion: number;
   }
 }
 
@@ -83,6 +84,7 @@ export const authConfig = {
         token.department = user.department;
         token.facilityName = user.facilityName;
         token.organizationName = user.organizationName;
+        token.sessionVersion = user.sessionVersion;
       }
       return token;
     },
@@ -104,7 +106,8 @@ export const authConfig = {
         department: token.department,
         facilityName: token.facilityName,
         organizationName: token.organizationName,
-        issuedAt: typeof token.iat === "number" ? token.iat : 0,
+        sessionVersion:
+          typeof token.sessionVersion === "number" ? token.sessionVersion : 0,
       };
       return session;
     },

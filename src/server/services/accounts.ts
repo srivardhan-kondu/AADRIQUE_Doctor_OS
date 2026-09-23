@@ -13,9 +13,9 @@ import { ServiceError, notFound } from "./errors";
 /**
  * Spec §21 + §31 — accounts: passwords, and the organization's staff.
  *
- * Every change to a password stamps `passwordChangedAt`, which ends every
- * session issued before it (see `requireActor`). A reset signs the person
- * out everywhere; a change signs out every other device.
+ * Every change to a password bumps the account's session version, which ends
+ * every session issued under the old one (see `requireActor`). A reset signs
+ * the person out everywhere; a change signs out every other device.
  */
 
 const TX_OPTIONS = { timeout: 20_000, maxWait: 10_000 } as const;
@@ -60,6 +60,7 @@ export async function changeOwnPassword(
         passwordHash,
         mustChangePassword: false,
         passwordChangedAt: new Date(),
+        sessionVersion: { increment: 1 },
       },
     });
     await writeAudit(tx, actor, {
@@ -234,6 +235,7 @@ export async function resetStaffPassword(
         passwordHash,
         mustChangePassword: true,
         passwordChangedAt: new Date(),
+        sessionVersion: { increment: 1 },
       },
     });
     await writeAudit(tx, actor, {

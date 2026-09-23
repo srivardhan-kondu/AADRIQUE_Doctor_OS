@@ -127,6 +127,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           department: user.doctorProfile?.department?.name ?? null,
           facilityName: membership.facility?.name ?? membership.organization.name,
           organizationName: membership.organization.name,
+          sessionVersion: user.sessionVersion,
         };
       },
     }),

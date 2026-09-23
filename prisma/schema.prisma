@@ -436,9 +436,12 @@ model User {
   /// Set when an administrator issues a temporary password: the next sign-in
   /// must choose a new one before anything else.
   mustChangePassword Boolean @default(false)
-  /// Sessions issued before this are refused — a reset or change signs every
-  /// other device out.
+  /// When the password last changed, for the record.
   passwordChangedAt  DateTime?
+  /// Bumped by every password change or reset. A session carries the version
+  /// it was issued under and is refused once they differ — every other
+  /// device is signed out, with no clock involved.
+  sessionVersion     Int       @default(0)
   mfaEnabled    Boolean   @default(false)
   mfaSecret     String?
   active        Boolean   @default(true)

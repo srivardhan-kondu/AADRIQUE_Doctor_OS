@@ -64,10 +64,16 @@ describe("Accounts", { skip: !configured && "DATABASE_URL is not set" }, () => {
 
     const user = await prisma.user.findUniqueOrThrow({
       where: { id: t.reception.userId },
-      select: { passwordHash: true, passwordChangedAt: true, mustChangePassword: true },
+      select: {
+        passwordHash: true,
+        passwordChangedAt: true,
+        mustChangePassword: true,
+        sessionVersion: true,
+      },
     });
     assert.ok(await verifyPassword("a much better passphrase", user.passwordHash!));
-    assert.ok(user.passwordChangedAt!.getTime() >= before - 1000, "sessions before now end");
+    assert.ok(user.passwordChangedAt!.getTime() >= before - 1000);
+    assert.equal(user.sessionVersion, 1, "every earlier session is over");
     assert.equal(user.mustChangePassword, false);
   });
 
