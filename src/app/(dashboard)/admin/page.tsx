@@ -115,7 +115,7 @@ async function OverviewScreen() {
         <Stat label="OPD, 30 days" value={analytics.metrics.opdVolume.value ?? 0} />
         <Stat
           label="Message delivery"
-          value={analytics.metrics.deliveryRate.value ?? 0}
+          value={analytics.metrics.deliveryRate.value}
           suffix="%"
         />
       </div>
@@ -224,7 +224,8 @@ function Stat({
   suffix = "",
 }: {
   label: string;
-  value: number;
+  /** Null when the rate has no denominator yet — shown as a dash, not 0. */
+  value: number | null;
   suffix?: string;
 }) {
   return (
@@ -233,8 +234,8 @@ function Stat({
         {label}
       </p>
       <p className="mt-1 font-display text-2xl font-bold tabular">
-        {value}
-        {suffix && (
+        {value ?? "—"}
+        {value !== null && suffix && (
           <span className="text-[15px] font-semibold text-muted-foreground">
             {suffix}
           </span>

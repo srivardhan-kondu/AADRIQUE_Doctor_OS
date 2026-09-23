@@ -182,39 +182,41 @@ export async function getSchedule(
   const dayCount = view === "week" ? 7 : 1;
   const rangeEnd = addDays(rangeStart, dayCount);
 
-  const doctor = await prisma.doctorProfile.findFirst({
-    where: { id: doctorId, facility: { organizationId: actor.organizationId } },
-    select: {
-      id: true,
-      consultationMinutes: true,
-      acceptsWalkIns: true,
-      user: { select: { name: true } },
-      department: { select: { name: true } },
-      availability: {
-        select: {
-          dayOfWeek: true,
-          startMinute: true,
-          endMinute: true,
-          isBlock: true,
-          label: true,
-          effectiveFrom: true,
-          effectiveTo: true,
+  const [doctor, appointments] = await Promise.all([
+    prisma.doctorProfile.findFirst({
+      where: { id: doctorId, facility: { organizationId: actor.organizationId } },
+      select: {
+        id: true,
+        consultationMinutes: true,
+        acceptsWalkIns: true,
+        user: { select: { name: true } },
+        department: { select: { name: true } },
+        availability: {
+          select: {
+            dayOfWeek: true,
+            startMinute: true,
+            endMinute: true,
+            isBlock: true,
+            label: true,
+            effectiveFrom: true,
+            effectiveTo: true,
+          },
         },
       },
-    },
-  });
+    }),
+    // Scoped by tenant on its own, so it runs alongside the doctor lookup.
+    prisma.appointment.findMany({
+      where: {
+        doctorId,
+        ...tenantScope(actor),
+        scheduledStart: { gte: rangeStart, lt: rangeEnd },
+      },
+      orderBy: { scheduledStart: "asc" },
+      select: appointmentSelect,
+    }),
+  ]);
 
   if (!doctor) throw notFound("Doctor");
-
-  const appointments = await prisma.appointment.findMany({
-    where: {
-      doctorId,
-      ...tenantScope(actor),
-      scheduledStart: { gte: rangeStart, lt: rangeEnd },
-    },
-    orderBy: { scheduledStart: "asc" },
-    select: appointmentSelect,
-  });
 
   const now = Date.now();
   const nextId =
@@ -302,34 +304,36 @@ export async function getAvailableSlots(
   const day = startOfDay(date);
   const weekday = day.getDay();
 
-  const doctor = await prisma.doctorProfile.findFirst({
-    where: { id: doctorId, facility: { organizationId: actor.organizationId } },
-    select: {
-      consultationMinutes: true,
-      availability: {
-        where: { dayOfWeek: weekday },
-        select: {
-          startMinute: true,
-          endMinute: true,
-          isBlock: true,
-          effectiveFrom: true,
-          effectiveTo: true,
+  const [doctor, taken] = await Promise.all([
+    prisma.doctorProfile.findFirst({
+      where: { id: doctorId, facility: { organizationId: actor.organizationId } },
+      select: {
+        consultationMinutes: true,
+        availability: {
+          where: { dayOfWeek: weekday },
+          select: {
+            startMinute: true,
+            endMinute: true,
+            isBlock: true,
+            effectiveFrom: true,
+            effectiveTo: true,
+          },
         },
       },
-    },
-  });
+    }),
+    // Scoped by tenant on its own, so it runs alongside the doctor lookup.
+    prisma.appointment.findMany({
+      where: {
+        doctorId,
+        ...tenantScope(actor),
+        scheduledStart: { gte: day, lt: addDays(day, 1) },
+        status: { in: [...ACTIVE_STATUSES, "COMPLETED"] },
+      },
+      select: { scheduledStart: true, scheduledEnd: true },
+    }),
+  ]);
 
   if (!doctor) throw notFound("Doctor");
-
-  const taken = await prisma.appointment.findMany({
-    where: {
-      doctorId,
-      ...tenantScope(actor),
-      scheduledStart: { gte: day, lt: addDays(day, 1) },
-      status: { in: [...ACTIVE_STATUSES, "COMPLETED"] },
-    },
-    select: { scheduledStart: true, scheduledEnd: true },
-  });
 
   return buildSlots({
     day,
@@ -375,21 +379,21 @@ export async function bookAppointment(
 
   const [patient, doctor] = await Promise.all([
     prisma.patient.findFirst({
-      where: { id: input.patientId, ...tenantScope(actor), active: true },
-      select: { id: true, firstName: true, lastName: true, mrn: true },
+        where: { id: input.patientId, ...tenantScope(actor), active: true },
+        select: { id: true, firstName: true, lastName: true, mrn: true },
     }),
     prisma.doctorProfile.findFirst({
-      where: {
-        id: input.doctorId,
-        facility: { organizationId: actor.organizationId },
-      },
-      select: {
-        id: true,
-        facilityId: true,
-        departmentId: true,
-        consultationMinutes: true,
-        user: { select: { name: true } },
-      },
+        where: {
+          id: input.doctorId,
+          facility: { organizationId: actor.organizationId },
+        },
+        select: {
+          id: true,
+          facilityId: true,
+          departmentId: true,
+          consultationMinutes: true,
+          user: { select: { name: true } },
+        },
     }),
   ]);
 

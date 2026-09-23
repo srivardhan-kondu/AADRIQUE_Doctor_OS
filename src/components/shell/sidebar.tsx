@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { NAV, isNavItemActive, type NavItem } from "@/lib/nav";
 import type { Workspace } from "@/types";
@@ -134,11 +133,10 @@ function SidebarLink({
       )}
     >
       {active && (
-        <motion.span
-          layoutId="sidebar-active-rail"
-          className="absolute -left-2.5 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-accent"
-          transition={{ type: "spring", stiffness: 500, damping: 40 }}
-        />
+        // CSS, not an animation library: the shell is on every route, and a
+        // sliding rail is not worth shipping a motion engine to each of them
+        // (spec §52). Motion stays where it aids comprehension (spec §33).
+        <span className="absolute -left-2.5 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-accent animate-in fade-in zoom-in-50 duration-200" />
       )}
       <Icon
         className={cn(
@@ -148,18 +146,14 @@ function SidebarLink({
       />
       {!collapsed && <span className="truncate">{item.label}</span>}
       {!collapsed && count !== undefined && count > 0 && (
-        <AnimatePresence mode="popLayout">
-          <motion.span
-            key={count}
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 4 }}
-            data-numeric
-            className="ml-auto rounded-md bg-sidebar-accent px-1.5 py-0.5 text-[10px] font-bold text-sidebar-accent-foreground"
-          >
-            {count}
-          </motion.span>
-        </AnimatePresence>
+        // Re-keyed on the count so a change plays the entry animation again.
+        <span
+          key={count}
+          data-numeric
+          className="ml-auto rounded-md bg-sidebar-accent px-1.5 py-0.5 text-[10px] font-bold text-sidebar-accent-foreground animate-in fade-in slide-in-from-top-1 duration-200"
+        >
+          {count}
+        </span>
       )}
       {collapsed && count !== undefined && count > 0 && (
         <span className="absolute right-2 top-1.5 size-1.5 rounded-full bg-accent" />

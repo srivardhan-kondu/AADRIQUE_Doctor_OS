@@ -2,6 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/db";
 import { Permission, assertPermission } from "@/lib/permissions";
 import type { RequestActor } from "@/server/context";
+import { notFound } from "./errors";
 
 /**
  * Doctor Command Center data (spec §5.1).
@@ -107,7 +108,7 @@ export async function getDashboard(
 
   const { start, end } = todayBounds();
 
-  const doctor = await prisma.doctorProfile.findFirst({
+  const doctorQuery = prisma.doctorProfile.findFirst({
     // Scoped to the actor's organization — an id from elsewhere finds nothing.
     where: { id: doctorId, facility: { organizationId: actor.organizationId } },
     include: {
@@ -139,9 +140,56 @@ export async function getDashboard(
     },
   });
 
-  if (!doctor) {
-    throw new Error("Doctor not found in this organization");
-  }
+  const dayQueries = Promise.all([
+    prisma.appointment.findMany({
+      where: {
+        doctorId,
+        organizationId: actor.organizationId,
+        scheduledStart: { gte: start, lt: end },
+      },
+      select: {
+        id: true,
+        scheduledStart: true,
+        status: true,
+        type: true,
+        reason: true,
+        patient: { select: { firstName: true, lastName: true, mrn: true } },
+      },
+      orderBy: { scheduledStart: "asc" },
+    }),
+    prisma.followUp.count({
+      where: {
+        doctorId,
+        organizationId: actor.organizationId,
+        status: { in: ["PENDING", "SCHEDULED"] },
+        dueDate: { lt: end },
+      },
+    }),
+    prisma.visit.count({
+      where: {
+        doctorId,
+        organizationId: actor.organizationId,
+        startedAt: { gte: start, lt: end },
+        patient: { createdAt: { gte: start } },
+      },
+    }),
+    prisma.appointment.findFirst({
+      where: {
+        doctorId,
+        organizationId: actor.organizationId,
+        scheduledStart: { gte: start, lt: end },
+      },
+      orderBy: { scheduledStart: "asc" },
+      select: { scheduledStart: true },
+    }),
+  ]);
+
+  // The day's queries are scoped by doctor and organization themselves, so
+  // they run alongside the doctor lookup instead of after it.
+  const [doctor, [appointments, followUpsDue, newPatients, firstAppointment]] =
+    await Promise.all([doctorQuery, dayQueries]);
+
+  if (!doctor) throw notFound("Doctor");
 
   const queue = doctor.queues[0];
   const entries = queue?.entries ?? [];
@@ -172,51 +220,6 @@ export async function getDashboard(
   const waiting = queueRows.filter((r) => r.status === "WAITING" || r.status === "VITALS");
   const inConsultation = queueRows.filter((r) => r.status === "IN_CONSULTATION");
   const completed = entries.filter((e) => e.status === "COMPLETED").length;
-
-  const [appointments, followUpsDue, newPatients, firstAppointment] =
-    await Promise.all([
-      prisma.appointment.findMany({
-        where: {
-          doctorId,
-          organizationId: actor.organizationId,
-          scheduledStart: { gte: start, lt: end },
-        },
-        select: {
-          id: true,
-          scheduledStart: true,
-          status: true,
-          type: true,
-          reason: true,
-          patient: { select: { firstName: true, lastName: true, mrn: true } },
-        },
-        orderBy: { scheduledStart: "asc" },
-      }),
-      prisma.followUp.count({
-        where: {
-          doctorId,
-          organizationId: actor.organizationId,
-          status: { in: ["PENDING", "SCHEDULED"] },
-          dueDate: { lt: end },
-        },
-      }),
-      prisma.visit.count({
-        where: {
-          doctorId,
-          organizationId: actor.organizationId,
-          startedAt: { gte: start, lt: end },
-          patient: { createdAt: { gte: start } },
-        },
-      }),
-      prisma.appointment.findFirst({
-        where: {
-          doctorId,
-          organizationId: actor.organizationId,
-          scheduledStart: { gte: start, lt: end },
-        },
-        orderBy: { scheduledStart: "asc" },
-        select: { scheduledStart: true },
-      }),
-    ]);
 
   const now = Date.now();
   const nextAppointmentId = appointments.find(

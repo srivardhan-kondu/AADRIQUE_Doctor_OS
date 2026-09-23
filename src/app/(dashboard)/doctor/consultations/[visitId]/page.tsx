@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, FlaskConical, Pill, TriangleAlert } from "lucide-react";
@@ -15,6 +16,14 @@ import { requireActor } from "@/server/context";
 import { getConsultationWorkspace } from "@/server/services/consultation";
 import { ServiceError } from "@/server/services/errors";
 
+/**
+ * The title and the page both need the workspace. `cache` makes that one read
+ * per request rather than loading the whole visit twice.
+ */
+const loadWorkspace = cache(async (visitId: string) =>
+  getConsultationWorkspace(await requireActor(), visitId),
+);
+
 export async function generateMetadata({
   params,
 }: {
@@ -22,8 +31,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { visitId } = await params;
   try {
-    const actor = await requireActor();
-    const ws = await getConsultationWorkspace(actor, visitId);
+    const ws = await loadWorkspace(visitId);
     return { title: `Consultation · ${ws.patient.name}` };
   } catch {
     return { title: "Consultation" };
@@ -45,11 +53,10 @@ export default async function ConsultationPage({
   params: Promise<{ visitId: string }>;
 }) {
   const { visitId } = await params;
-  const actor = await requireActor();
 
   let ws;
   try {
-    ws = await getConsultationWorkspace(actor, visitId);
+    ws = await loadWorkspace(visitId);
   } catch (error) {
     if (error instanceof ServiceError && error.code === "NOT_FOUND") notFound();
     throw error;

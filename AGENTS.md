@@ -28,7 +28,7 @@ before implementing a feature.
 | 4 | AI abstraction, pre-consultation brief, documentation copilot, retrieval | Done |
 | 5 | Workflow engine, integrations, admin, security review | Done |
 | 6a | Testing: rule modules, unit + integration tests (build order 24) | Done |
-| 6b | Performance (build order 25) | In progress — DB pool tuned |
+| 6b | Performance (build order 25) | Done |
 | 6c | Production polish (build order 27) | Not started |
 
 ## Architecture rules
@@ -45,6 +45,15 @@ before implementing a feature.
   database is far enough away that Prisma's default 5s interactive-transaction
   timeout aborts normal work.
 - No `any` without a comment explaining why.
+- Independent reads go in one `Promise.all`. A lookup that only proves a
+  record exists need not run before queries that are tenant-scoped on their
+  own. Relations load by SQL join (`relationJoins`), so a deep `include` is
+  one round trip, not one per level.
+- A page whose `generateMetadata` needs the same record as the page wraps the
+  read in React `cache`, so it is loaded once per request.
+- The shell is on every route: keep client libraries out of it. Motion that
+  aids comprehension (the live queue) uses framer-motion on its own screen;
+  decoration uses CSS.
 - Decisions with no I/O — slot generation, status transitions, token
   formats — live in `src/server/rules/` as pure functions the services call,
   so they are unit tested against the same code that runs.

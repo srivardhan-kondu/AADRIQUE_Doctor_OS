@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
@@ -23,6 +24,14 @@ import { requireActor } from "@/server/context";
 import { getPatient360 } from "@/server/services/patients";
 import { ServiceError } from "@/server/services/errors";
 
+/**
+ * The title and the page both need the patient. `cache` makes that one read
+ * per request rather than loading the whole record twice.
+ */
+const loadPatient = cache(async (patientId: string) =>
+  getPatient360(await requireActor(), patientId),
+);
+
 export async function generateMetadata({
   params,
 }: {
@@ -30,8 +39,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { patientId } = await params;
   try {
-    const actor = await requireActor();
-    const patient = await getPatient360(actor, patientId);
+    const patient = await loadPatient(patientId);
     return { title: patient.name };
   } catch {
     return { title: "Patient" };
@@ -56,11 +64,10 @@ export default async function Patient360Page({
   params: Promise<{ patientId: string }>;
 }) {
   const { patientId } = await params;
-  const actor = await requireActor();
 
   let patient;
   try {
-    patient = await getPatient360(actor, patientId);
+    patient = await loadPatient(patientId);
   } catch (error) {
     // A record in another tenant and a missing one look identical (spec §22).
     if (error instanceof ServiceError && error.code === "NOT_FOUND") notFound();

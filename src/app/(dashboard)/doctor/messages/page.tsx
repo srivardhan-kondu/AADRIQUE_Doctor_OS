@@ -81,7 +81,11 @@ async function InboxScreen({ searchParams }: PageProps) {
     <>
       <PageHeader
         title="Messages"
-        description={`One inbox across WhatsApp, SMS and email · ${inbox.deliveryRate}% delivered over 30 days`}
+        description={`One inbox across WhatsApp, SMS and email · ${
+          inbox.deliveryRate === null
+            ? "nothing sent in the last 30 days"
+            : `${inbox.deliveryRate}% delivered over 30 days`
+        }`}
       />
 
       <div className="mb-4 grid gap-3 sm:grid-cols-3">
@@ -139,7 +143,7 @@ function ChannelCard({
     sent: number;
     delivered: number;
     failed: number;
-    rate: number;
+    rate: number | null;
   };
 }) {
   return (
@@ -149,18 +153,22 @@ function ChannelCard({
           {row.label}
         </p>
         <p className="font-display text-lg font-bold tabular">
-          {row.sent + row.failed === 0 ? "—" : `${row.rate}%`}
+          {row.rate === null ? "—" : `${row.rate}%`}
         </p>
       </div>
 
       <div
         className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"
         role="img"
-        aria-label={`${row.label}: ${row.rate}% delivered`}
+        aria-label={
+          row.rate === null
+            ? `${row.label}: nothing sent`
+            : `${row.label}: ${row.rate}% delivered`
+        }
       >
         <div
           className="h-full rounded-full bg-accent"
-          style={{ width: `${row.rate}%` }}
+          style={{ width: `${row.rate ?? 0}%` }}
         />
       </div>
 

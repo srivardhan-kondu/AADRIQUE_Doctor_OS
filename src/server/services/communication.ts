@@ -71,15 +71,15 @@ export interface Inbox {
     delivered: number;
     read: number;
   };
-  /** Spec §16 — delivery rate across the window shown. */
-  deliveryRate: number;
+  /** Spec §16 — delivery rate across the window shown; null with nothing sent. */
+  deliveryRate: number | null;
   byChannel: {
     channel: MessageChannel;
     label: string;
     sent: number;
     delivered: number;
     failed: number;
-    rate: number;
+    rate: number | null;
   }[];
 }
 
@@ -232,7 +232,7 @@ export async function getInbox(
       sent: channelSent,
       delivered: channelDelivered,
       failed: channelFailed,
-      rate: attempted ? Math.round((channelDelivered / attempted) * 100) : 0,
+      rate: attempted ? Math.round((channelDelivered / attempted) * 100) : null,
     };
   });
 
@@ -243,7 +243,7 @@ export async function getInbox(
     counts: { total, failed, pending, delivered, read },
     deliveryRate: attempted
       ? Math.round(((delivered + read) / attempted) * 100)
-      : 0,
+      : null,
     byChannel: channelRows,
   };
 }
@@ -289,47 +289,54 @@ export async function getPatientThread(
 ): Promise<PatientThread> {
   assertPermission(actor, Permission.COMMUNICATION_READ);
 
-  const patient = await prisma.patient.findFirst({
-    where: { id: patientId, ...tenantScope(actor) },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      mrn: true,
-      phone: true,
-      email: true,
-      whatsappOptIn: true,
-      smsOptIn: true,
-      emailOptIn: true,
-      preferredLanguage: true,
-    },
-  });
+  const [patient, newestFirst] = await Promise.all([
+    prisma.patient.findFirst({
+      where: { id: patientId, ...tenantScope(actor) },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        mrn: true,
+        phone: true,
+        email: true,
+        whatsappOptIn: true,
+        smsOptIn: true,
+        emailOptIn: true,
+        preferredLanguage: true,
+      },
+    }),
+    // Tenant-scoped on its own, so it need not wait for the patient lookup.
+    // The newest 200, not the oldest: a long history must never hide the
+    // message that just arrived.
+    prisma.message.findMany({
+      where: { patientId, ...tenantScope(actor) },
+      orderBy: { createdAt: "desc" },
+      take: 200,
+      select: {
+        id: true,
+        channel: true,
+        direction: true,
+        category: true,
+        status: true,
+        subject: true,
+        body: true,
+        toAddress: true,
+        failureReason: true,
+        attemptCount: true,
+        createdAt: true,
+        sentAt: true,
+        deliveredAt: true,
+        readAt: true,
+        template: { select: { name: true } },
+        sentBy: { select: { name: true } },
+      },
+    }),
+  ]);
 
   if (!patient) throw notFound("Patient");
 
-  const messages = await prisma.message.findMany({
-    where: { patientId: patient.id, ...tenantScope(actor) },
-    orderBy: { createdAt: "asc" },
-    take: 200,
-    select: {
-      id: true,
-      channel: true,
-      direction: true,
-      category: true,
-      status: true,
-      subject: true,
-      body: true,
-      toAddress: true,
-      failureReason: true,
-      attemptCount: true,
-      createdAt: true,
-      sentAt: true,
-      deliveredAt: true,
-      readAt: true,
-      template: { select: { name: true } },
-      sentBy: { select: { name: true } },
-    },
-  });
+  // Oldest first on screen, as a conversation reads.
+  const messages = newestFirst.reverse();
 
   return {
     patient: {
