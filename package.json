@@ -14,7 +14,8 @@
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:integration": "tsx --conditions react-server --test $(find src -name '*.integration.ts')"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",

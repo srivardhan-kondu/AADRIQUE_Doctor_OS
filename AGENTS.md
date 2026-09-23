@@ -27,6 +27,9 @@ before implementing a feature.
 | 3 | Appointments, follow-ups, communication centre, analytics, audit UI | Done |
 | 4 | AI abstraction, pre-consultation brief, documentation copilot, retrieval | Done |
 | 5 | Workflow engine, integrations, admin, security review | Done |
+| 6a | Testing: rule modules, unit + integration tests (build order 24) | Done |
+| 6b | Performance (build order 25) | In progress — DB pool tuned |
+| 6c | Production polish (build order 27) | Not started |
 
 ## Architecture rules
 
@@ -42,6 +45,9 @@ before implementing a feature.
   database is far enough away that Prisma's default 5s interactive-transaction
   timeout aborts normal work.
 - No `any` without a comment explaining why.
+- Decisions with no I/O — slot generation, status transitions, token
+  formats — live in `src/server/rules/` as pure functions the services call,
+  so they are unit tested against the same code that runs.
 
 ## Automation rules (spec §28)
 
@@ -133,6 +139,11 @@ npx eslint .
 npm test
 npm run build
 ```
+
+`npm run test:integration` walks Appointment → Queue → Consultation →
+Follow-up through the real services against `DATABASE_URL` (spec §53). It
+builds two throwaway organizations and deletes them afterwards; run it when a
+change touches a service. It takes about a minute against the hosted database.
 
 ## Database
 

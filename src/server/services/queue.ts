@@ -4,6 +4,17 @@ import { Permission, assertPermission } from "@/lib/permissions";
 import type { RequestActor } from "@/server/context";
 import { writeAudit } from "./audit";
 import { invalidState, notFound } from "./errors";
+import {
+  ACTIVE_STATUSES,
+  SETTLED_STATUSES,
+  WAITING_STATUSES,
+  assertCanComplete,
+  assertCanMoveToVitals,
+  assertCanSkip,
+  averageWait,
+  visitNumber,
+  waitMinutes,
+} from "@/server/rules/queue";
 import { fireTrigger } from "./workflows";
 
 /**
@@ -133,7 +144,7 @@ export async function callNext(
 
     // Close out whoever is currently with the doctor.
     const active = await tx.queueEntry.findFirst({
-      where: { queueId, status: { in: ["CALLED", "IN_CONSULTATION"] } },
+      where: { queueId, status: { in: [...ACTIVE_STATUSES] } },
       select: { id: true, visit: { select: { id: true } } },
     });
 
@@ -152,7 +163,7 @@ export async function callNext(
     }
 
     const next = await tx.queueEntry.findFirst({
-      where: { queueId, status: { in: ["WAITING", "VITALS"] } },
+      where: { queueId, status: { in: [...WAITING_STATUSES] } },
       orderBy: [{ priority: "desc" }, { position: "asc" }],
       include: {
         patient: { select: { id: true, firstName: true, lastName: true, mrn: true } },
@@ -191,11 +202,6 @@ export async function callNext(
         data: { stage: "WITH_DOCTOR", status: "OPEN" },
       });
     } else {
-      // Derived from the day and the token rather than a COUNT. A count is one
-      // more round trip inside the transaction, and two doctors calling at the
-      // same moment would both read the same number and collide on the unique
-      // index. A token is already unique within its queue for the day.
-      const day = now.toISOString().slice(0, 10).replace(/-/g, "");
       const visit = await tx.visit.create({
         data: {
           organizationId: queue.organizationId,
@@ -205,7 +211,7 @@ export async function callNext(
           doctorId,
           appointmentId: next.appointmentId,
           queueEntryId: next.id,
-          visitNumber: `V-${day}-${next.token}`,
+          visitNumber: visitNumber(now, next.token),
           stage: "WITH_DOCTOR",
           status: "OPEN",
           startedAt: now,
@@ -264,9 +270,7 @@ export async function completeConsultation(
 
   const entry = await loadEntry(actor, queueEntryId);
 
-  if (entry.status === "COMPLETED") {
-    throw invalidState("This consultation is already complete.");
-  }
+  assertCanComplete(entry.status);
 
   await prisma.$transaction(async (tx) => {
     const now = new Date();
@@ -297,7 +301,7 @@ export async function completeConsultation(
       summary: `Completed token ${entry.token} · Patient ${entry.patient.mrn}`,
       metadata: { token: entry.token, patientMrn: entry.patient.mrn },
     });
- }, TX_OPTIONS);
+  }, TX_OPTIONS);
 
   // Spec §28 — the visit is over; feedback and follow-up automations listen
   // for this. Fired after the transaction commits, so an automation can never
@@ -318,9 +322,7 @@ export async function recordArrivalAtVitals(
   assertPermission(actor, Permission.QUEUE_MANAGE);
   const entry = await loadEntry(actor, queueEntryId);
 
-  if (entry.status !== "WAITING") {
-    throw invalidState("Only a waiting patient can be moved to vitals.");
-  }
+  assertCanMoveToVitals(entry.status);
 
   await prisma.$transaction(async (tx) => {
     await tx.queueEntry.update({
@@ -333,7 +335,7 @@ export async function recordArrivalAtVitals(
       entityId: entry.id,
       summary: `Token ${entry.token} moved to vitals`,
     });
- }, TX_OPTIONS);
+  }, TX_OPTIONS);
 }
 
 /** Spec §12 — pause and resume, so a doctor can step away honestly. */
@@ -361,7 +363,7 @@ export async function setQueueStatus(
       entityId: queueId,
       summary: status === "PAUSED" ? "Queue paused" : "Queue resumed",
     });
- }, TX_OPTIONS);
+  }, TX_OPTIONS);
 }
 
 /** Skips a patient who did not respond when called. */
@@ -371,6 +373,7 @@ export async function skipEntry(
 ): Promise<void> {
   assertPermission(actor, Permission.QUEUE_MANAGE);
   const entry = await loadEntry(actor, queueEntryId);
+  assertCanSkip(entry.status);
 
   await prisma.$transaction(async (tx) => {
     await tx.queueEntry.update({
@@ -391,7 +394,7 @@ export async function skipEntry(
       entityId: entry.id,
       summary: `Token ${entry.token} skipped · Patient ${entry.patient.mrn}`,
     });
- }, TX_OPTIONS);
+  }, TX_OPTIONS);
 }
 
 export interface QueueBoardEntry {
@@ -484,6 +487,8 @@ export async function getQueueBoard(
   const queue = doctor.queues[0] ?? null;
   const entries = queue?.entries ?? [];
 
+  const now = new Date();
+
   const toEntry = (e: (typeof entries)[number]): QueueBoardEntry => {
     const age =
       e.patient.approximateAge ??
@@ -493,9 +498,6 @@ export async function getQueueBoard(
               (365.25 * 24 * 60 * 60 * 1000),
           )
         : null);
-
-    const settled =
-      e.status === "COMPLETED" || e.status === "SKIPPED" || e.status === "LEFT";
 
     return {
       id: e.id,
@@ -508,10 +510,7 @@ export async function getQueueBoard(
       phone: e.patient.phone,
       status: e.status as QueueBoardEntry["status"],
       priority: e.priority as QueueBoardEntry["priority"],
-      waitMinutes:
-        settled || e.status === "IN_CONSULTATION"
-          ? 0
-          : Math.max(0, Math.round((Date.now() - e.joinedAt.getTime()) / 60_000)),
+      waitMinutes: waitMinutes(e.status, e.joinedAt, now),
       reason: e.appointment?.reason ?? null,
       isFollowUp: e.appointment?.type === "FOLLOW_UP",
       allergyCount: e.patient._count.allergies,
@@ -519,19 +518,9 @@ export async function getQueueBoard(
     };
   };
 
-  const active =
-    entries.find((e) => e.status === "IN_CONSULTATION" || e.status === "CALLED") ??
-    null;
-  const waiting = entries.filter(
-    (e) => e.status === "WAITING" || e.status === "VITALS",
-  );
-  const done = entries.filter((e) =>
-    ["COMPLETED", "SKIPPED", "LEFT"].includes(e.status),
-  );
-
-  const waits = waiting.map((e) =>
-    Math.max(0, Math.round((Date.now() - e.joinedAt.getTime()) / 60_000)),
-  );
+  const active = entries.find((e) => ACTIVE_STATUSES.includes(e.status)) ?? null;
+  const waiting = entries.filter((e) => WAITING_STATUSES.includes(e.status));
+  const done = entries.filter((e) => SETTLED_STATUSES.includes(e.status));
 
   return {
     queueId: queue?.id ?? "",
@@ -547,8 +536,8 @@ export async function getQueueBoard(
     waiting: waiting.map(toEntry),
     done: done.map(toEntry).sort((a, b) => b.tokenSeq - a.tokenSeq),
     currentToken: active?.token ?? null,
-    averageWaitMinutes: waits.length
-      ? Math.round(waits.reduce((a, b) => a + b, 0) / waits.length)
-      : 0,
+    averageWaitMinutes: averageWait(
+      waiting.map((e) => waitMinutes(e.status, e.joinedAt, now)),
+    ),
   };
 }

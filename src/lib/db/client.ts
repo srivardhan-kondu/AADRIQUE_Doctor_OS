@@ -25,7 +25,19 @@ function createPrismaClient() {
   }
 
   return new PrismaClient({
-    adapter: new PrismaPg({ connectionString }),
+    adapter: new PrismaPg({
+      connectionString,
+      // A new connection to a hosted database costs a TLS handshake and an
+      // auth round trip — seconds, not milliseconds, from a distant region.
+      // pg's default drops idle connections after 10s, so every request after
+      // a short pause paid that cost again. Keep them for five minutes.
+      idleTimeoutMillis: 5 * 60_000,
+      keepAlive: true,
+      // With no limit, a connection attempt that stalls in the network waits
+      // for the operating system to give up (75s on macOS), and the request
+      // with it. Fail in a bounded time instead.
+      connectionTimeoutMillis: 15_000,
+    }),
     log:
       process.env.NODE_ENV === "development"
         ? ["warn", "error"]

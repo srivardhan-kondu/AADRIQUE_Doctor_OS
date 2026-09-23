@@ -10,6 +10,26 @@ import type { RequestActor } from "@/server/context";
 import { writeAudit } from "./audit";
 import { fireTrigger } from "./workflows";
 import { ServiceError, invalidState, notFound } from "./errors";
+import {
+  ACTIVE_STATUSES,
+  type SlotOption,
+  addDays,
+  appliesOn,
+  assertCanCancel,
+  assertCanCheckIn,
+  assertCanMarkNoShow,
+  assertCanReschedule,
+  buildSlots,
+  dayCapacity,
+  isInPast,
+  isValidDuration,
+  MAX_DURATION,
+  MIN_DURATION,
+  noShowRate,
+  startOfDay,
+  startOfWeek,
+} from "@/server/rules/appointments";
+import { formatToken } from "@/server/rules/queue";
 
 /**
  * Spec §11 — appointment management.
@@ -22,38 +42,7 @@ import { ServiceError, invalidState, notFound } from "./errors";
 
 const TX_OPTIONS = { timeout: 20_000, maxWait: 10_000 } as const;
 
-/** Statuses that still occupy a slot in the doctor's day. */
-const ACTIVE_STATUSES: readonly AppointmentStatus[] = [
-  "SCHEDULED",
-  "CHECKED_IN",
-  "WAITING",
-  "IN_CONSULTATION",
-];
-
-export function startOfDay(date: Date): Date {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function addDays(date: Date, days: number): Date {
-  const d = new Date(date);
-  d.setDate(d.getDate() + days);
-  return d;
-}
-
-/** Monday-first week containing `date`. */
-export function startOfWeek(date: Date): Date {
-  const d = startOfDay(date);
-  const weekday = (d.getDay() + 6) % 7;
-  return addDays(d, -weekday);
-}
-
-function atMinute(day: Date, minute: number): Date {
-  const d = startOfDay(day);
-  d.setMinutes(minute);
-  return d;
-}
+export { startOfDay, startOfWeek, type SlotOption };
 
 export interface AppointmentRow {
   id: string;
@@ -107,8 +96,8 @@ export interface ScheduleView {
     cancelled: number;
     noShow: number;
     checkedIn: number;
-    /** Spec §16 — no-show rate over the range. */
-    noShowRate: number;
+    /** Spec §16 — no-show rate over the range; null when nothing has settled. */
+    noShowRate: number | null;
   };
 }
 
@@ -241,10 +230,7 @@ export async function getSchedule(
 
     const windows = doctor.availability
       .filter((slot) => {
-        if (slot.dayOfWeek !== weekday || slot.isBlock) return false;
-        if (slot.effectiveFrom && slot.effectiveFrom > date) return false;
-        if (slot.effectiveTo && slot.effectiveTo < date) return false;
-        return true;
+        return slot.dayOfWeek === weekday && !slot.isBlock && appliesOn(slot, date);
       })
       .sort((a, b) => a.startMinute - b.startMinute)
       .map((slot) => ({
@@ -258,11 +244,6 @@ export async function getSchedule(
         a.scheduledStart >= date && a.scheduledStart < addDays(date, 1),
     );
 
-    const minutesAvailable = windows.reduce(
-      (sum, w) => sum + (w.endMinute - w.startMinute),
-      0,
-    );
-
     return {
       date,
       isToday: date.getTime() === today,
@@ -271,7 +252,7 @@ export async function getSchedule(
       booked: dayAppointments.filter((a) =>
         ACTIVE_STATUSES.includes(a.status),
       ).length,
-      capacity: Math.floor(minutesAvailable / doctor.consultationMinutes),
+      capacity: dayCapacity(windows, doctor.consultationMinutes),
     };
   });
 
@@ -280,7 +261,6 @@ export async function getSchedule(
 
   const noShow = count("NO_SHOW");
   const completed = count("COMPLETED");
-  const settled = noShow + completed;
 
   return {
     doctor: {
@@ -300,17 +280,9 @@ export async function getSchedule(
       cancelled: count("CANCELLED"),
       noShow,
       checkedIn: count("CHECKED_IN") + count("WAITING") + count("IN_CONSULTATION"),
-      noShowRate: settled ? Math.round((noShow / settled) * 100) : 0,
+      noShowRate: noShowRate(noShow, completed),
     },
   };
-}
-
-export interface SlotOption {
-  start: Date;
-  end: Date;
-  available: boolean;
-  /** Why the slot cannot be used, when it cannot. */
-  reason: string | null;
 }
 
 /**
@@ -349,15 +321,6 @@ export async function getAvailableSlots(
 
   if (!doctor) throw notFound("Doctor");
 
-  const applicable = doctor.availability.filter((slot) => {
-    if (slot.effectiveFrom && slot.effectiveFrom > day) return false;
-    if (slot.effectiveTo && slot.effectiveTo < day) return false;
-    return true;
-  });
-
-  const windows = applicable.filter((s) => !s.isBlock);
-  const blocks = applicable.filter((s) => s.isBlock);
-
   const taken = await prisma.appointment.findMany({
     where: {
       doctorId,
@@ -368,42 +331,13 @@ export async function getAvailableSlots(
     select: { scheduledStart: true, scheduledEnd: true },
   });
 
-  const step = doctor.consultationMinutes;
-  const now = Date.now();
-  const slots: SlotOption[] = [];
-
-  for (const window of windows.sort((a, b) => a.startMinute - b.startMinute)) {
-    for (
-      let minute = window.startMinute;
-      minute + step <= window.endMinute;
-      minute += step
-    ) {
-      const start = atMinute(day, minute);
-      const end = atMinute(day, minute + step);
-
-      const blocked = blocks.some(
-        (b) => minute < b.endMinute && minute + step > b.startMinute,
-      );
-      const clash = taken.some(
-        (a) => start < a.scheduledEnd && end > a.scheduledStart,
-      );
-
-      slots.push({
-        start,
-        end,
-        available: !blocked && !clash && start.getTime() > now,
-        reason: blocked
-          ? "Blocked"
-          : clash
-            ? "Booked"
-            : start.getTime() <= now
-              ? "Past"
-              : null,
-      });
-    }
-  }
-
-  return slots;
+  return buildSlots({
+    day,
+    rules: doctor.availability,
+    taken,
+    consultationMinutes: doctor.consultationMinutes,
+    now: new Date(),
+  });
 }
 
 export interface BookInput {
@@ -464,17 +398,17 @@ export async function bookAppointment(
 
   const duration = input.durationMinutes ?? doctor.consultationMinutes;
 
-  if (duration < 5 || duration > 240) {
+  if (!isValidDuration(duration)) {
     throw new ServiceError(
       "VALIDATION",
-      "An appointment must be between 5 and 240 minutes.",
+      `An appointment must be between ${MIN_DURATION} and ${MAX_DURATION} minutes.`,
     );
   }
 
   const start = new Date(input.start);
   const end = new Date(start.getTime() + duration * 60_000);
 
-  if (start.getTime() < Date.now() - 60_000) {
+  if (isInPast(start, new Date())) {
     throw invalidState(
       "That time has already passed.",
       "Pick a later slot, or register the patient as a walk-in.",
@@ -611,24 +545,12 @@ export async function rescheduleAppointment(
 
   const existing = await loadAppointment(actor, appointmentId);
 
-  if (!ACTIVE_STATUSES.includes(existing.status)) {
-    throw invalidState(
-      `A ${existing.status.toLowerCase().replace("_", " ")} appointment cannot be moved.`,
-      "Book a new appointment instead.",
-    );
-  }
-
-  if (existing.status !== "SCHEDULED") {
-    throw invalidState(
-      "This patient has already arrived.",
-      "Use the queue to manage them from here.",
-    );
-  }
+  assertCanReschedule(existing.status);
 
   const start = new Date(newStart);
   const end = new Date(start.getTime() + existing.durationMinutes * 60_000);
 
-  if (start.getTime() < Date.now() - 60_000) {
+  if (isInPast(start, new Date())) {
     throw invalidState("That time has already passed.", "Pick a later slot.");
   }
 
@@ -727,18 +649,7 @@ export async function cancelAppointment(
 
   const existing = await loadAppointment(actor, appointmentId);
 
-  if (existing.status === "CANCELLED") {
-    throw invalidState("This appointment is already cancelled.");
-  }
-  if (existing.status === "COMPLETED") {
-    throw invalidState("A completed appointment cannot be cancelled.");
-  }
-  if (existing.status === "IN_CONSULTATION") {
-    throw invalidState(
-      "This patient is with the doctor.",
-      "Complete the consultation instead.",
-    );
-  }
+  assertCanCancel(existing.status);
 
   await prisma.$transaction(async (tx) => {
     await tx.appointment.update({
@@ -804,26 +715,9 @@ export async function checkInAppointment(
 
   const appointment = await loadAppointment(actor, appointmentId);
 
-  if (appointment.status !== "SCHEDULED") {
-    throw invalidState(
-      appointment.status === "CANCELLED"
-        ? "This appointment was cancelled."
-        : "This patient has already been checked in.",
-      appointment.status === "CANCELLED"
-        ? "Book a new appointment for them."
-        : "Find their token on the queue board.",
-    );
-  }
+  assertCanCheckIn(appointment.status, appointment.scheduledStart, new Date());
 
   const day = startOfDay(appointment.scheduledStart);
-  const today = startOfDay(new Date());
-
-  if (day.getTime() !== today.getTime()) {
-    throw invalidState(
-      "This appointment is not for today.",
-      "Reschedule it to today before checking the patient in.",
-    );
-  }
 
   const result = await prisma.$transaction(async (tx) => {
     const queue = await tx.queue.upsert({
@@ -849,7 +743,7 @@ export async function checkInAppointment(
     });
 
     const tokenSeq = (last?.tokenSeq ?? 0) + 1;
-    const token = `${queue.tokenPrefix}${String(tokenSeq).padStart(3, "0")}`;
+    const token = formatToken(queue.tokenPrefix, tokenSeq);
     const now = new Date();
 
     const entry = await tx.queueEntry.create({
@@ -922,12 +816,7 @@ export async function markNoShow(
 
   const appointment = await loadAppointment(actor, appointmentId);
 
-  if (appointment.status === "NO_SHOW") {
-    throw invalidState("This appointment is already marked as a no show.");
-  }
-  if (appointment.status === "COMPLETED") {
-    throw invalidState("This patient was seen.");
-  }
+  assertCanMarkNoShow(appointment.status);
 
   await prisma.$transaction(async (tx) => {
     await tx.appointment.update({
