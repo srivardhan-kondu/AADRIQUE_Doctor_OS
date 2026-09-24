@@ -1,6 +1,7 @@
 "use server";
 
-import { AuthError } from "next-auth";
+import { redirect } from "next/navigation";
+import { AuthError, CredentialsSignin } from "next-auth";
 import { z } from "zod";
 import { signIn } from "@/lib/auth";
 import { homeFor } from "@/lib/nav";
@@ -60,6 +61,10 @@ export async function changePasswordAction(
       redirectTo: homeFor(actor.role),
     });
   } catch (error) {
+    if (error instanceof CredentialsSignin && error.code === "mfa_required") {
+      // Two-factor accounts confirm the new password with a code as well.
+      redirect("/sign-in?ended=1");
+    }
     if (error instanceof AuthError) {
       // The password is changed; only the automatic sign-in failed.
       return { error: "Your password was changed. Sign in again with the new one." };

@@ -109,6 +109,28 @@ export function SignInForm({ next, demo = false }: { next?: string; demo?: boole
           )}
         </div>
 
+        {state.needsCode && (
+          <div>
+            <label htmlFor="code" className="mb-1.5 block text-[13px] font-medium">
+              Authenticator code
+            </label>
+            <Input
+              id="code"
+              name="code"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              pattern="\d{6}"
+              maxLength={6}
+              required
+              autoFocus
+              className="text-center font-mono tracking-[0.4em]"
+            />
+            <p className="mt-1.5 text-[12px] text-muted-foreground">
+              The six digits your authenticator app shows for AADRIQUE Doctor OS.
+            </p>
+          </div>
+        )}
+
         {state.error && (
           <div
             role="alert"

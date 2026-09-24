@@ -446,6 +446,8 @@ model User {
   sessionVersion     Int       @default(0)
   mfaEnabled    Boolean   @default(false)
   mfaSecret     String?
+  /// The last TOTP time step accepted, so a code cannot be used twice.
+  mfaLastStep   Int?
   active        Boolean   @default(true)
   lastLoginAt   DateTime?
 

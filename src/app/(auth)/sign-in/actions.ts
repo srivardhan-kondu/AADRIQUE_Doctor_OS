@@ -1,7 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
-import { AuthError } from "next-auth";
+import { AuthError, CredentialsSignin } from "next-auth";
 import { z } from "zod";
 import { signIn } from "@/lib/auth";
 import { homeForEmail } from "@/lib/auth/home";
@@ -19,10 +19,13 @@ const schema = z.object({
   // `formData.get` returns null for a field the form did not send — a
   // sign-in opened directly, with no page to return to.
   next: z.string().nullish(),
+  code: z.string().trim().max(12).nullish(),
 });
 
 export interface SignInState {
   error?: string;
+  /** The password was right; the account wants its authenticator code. */
+  needsCode?: boolean;
   fieldErrors?: { email?: string; password?: string };
 }
 
@@ -41,6 +44,7 @@ export async function signInAction(
     email: formData.get("email"),
     password: formData.get("password"),
     next: formData.get("next"),
+    code: formData.get("code"),
   });
 
   if (!parsed.success) {
@@ -55,7 +59,7 @@ export async function signInAction(
     return { fieldErrors: { email, password } };
   }
 
-  const { email, password, next } = parsed.data;
+  const { email, password, next, code } = parsed.data;
 
   /**
    * Spec §38 — the limit itself is enforced in `authorize`, which every
@@ -91,8 +95,14 @@ export async function signInAction(
       : await homeForEmail(email);
 
   try {
-    await signIn("credentials", { email, password, redirectTo });
+    await signIn("credentials", { email, password, ...(code ? { code } : {}), redirectTo });
   } catch (error) {
+    if (error instanceof CredentialsSignin && error.code === "mfa_required") {
+      return { needsCode: true };
+    }
+    if (error instanceof CredentialsSignin && error.code === "mfa_invalid") {
+      return { needsCode: true, error: "That code is not right, or was already used. Wait for the next one." };
+    }
     if (error instanceof AuthError) {
       return { error: "That email and password do not match an account." };
     }

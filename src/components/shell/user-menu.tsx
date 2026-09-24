@@ -3,11 +3,12 @@
 import { useRouter } from "next/navigation";
 import {
   ChevronDown,
+  KeyRound,
   LogOut,
   Monitor,
   Moon,
-  KeyRound,
   Settings,
+  ShieldCheck,
   Sun,
   UserCog,
 } from "lucide-react";
@@ -109,6 +110,10 @@ export function UserMenu() {
         <DropdownMenuItem onSelect={() => router.push("/account/password")}>
           <KeyRound />
           Change password
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => router.push("/account/two-factor")}>
+          <ShieldCheck />
+          Two-factor sign-in
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />

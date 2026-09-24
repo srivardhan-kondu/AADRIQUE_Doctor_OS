@@ -236,13 +236,18 @@ export async function resetStaffPassword(
         mustChangePassword: true,
         passwordChangedAt: new Date(),
         sessionVersion: { increment: 1 },
+        // The recovery for a lost phone: the person sets two-factor up
+        // again after choosing their password.
+        mfaEnabled: false,
+        mfaSecret: null,
+        mfaLastStep: null,
       },
     });
     await writeAudit(tx, actor, {
       action: "RECORD_UPDATED",
       entityType: "User",
       entityId: member.user.id,
-      summary: `Reset the password for ${member.user.name}`,
+      summary: `Reset the password (and any two-factor) for ${member.user.name}`,
     });
   }, TX_OPTIONS);
 

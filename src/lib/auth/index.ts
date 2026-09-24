@@ -12,6 +12,8 @@ import {
 } from "@/lib/security/rate-limit";
 import { authConfig } from "./config";
 import { verifyPassword } from "./password";
+import { MfaInvalid, MfaRequired } from "./mfa-errors";
+import { consumeTotp } from "./two-factor";
 
 /**
  * The full Auth.js setup, including the credentials provider.
@@ -23,6 +25,8 @@ import { verifyPassword } from "./password";
 const credentialsSchema = z.object({
   email: z.string().email().max(320),
   password: z.string().min(1).max(200),
+  /** The authenticator code, once the password has been accepted. */
+  code: z.string().max(12).optional(),
 });
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -32,6 +36,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        code: { label: "Code", type: "text" },
       },
 
       /**
@@ -46,7 +51,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const parsed = credentialsSchema.safeParse(raw);
         if (!parsed.success) return null;
 
-        const { email, password } = parsed.data;
+        const { email, password, code } = parsed.data;
 
         // An unidentifiable caller shares one bucket rather than skipping it.
         const address =
@@ -92,6 +97,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const membership = user.memberships.find((m) => m.organization.active);
         if (!membership) return null;
+
+        // Spec §31 — the second factor. A wrong code has already been
+        // counted against the account's limit above, like a wrong password.
+        if (user.mfaEnabled) {
+          if (!code) throw new MfaRequired();
+          if (!(await consumeTotp(user, code))) throw new MfaInvalid();
+        }
 
         // A genuine sign-in clears the counters, so a user is never held back
         // by their own earlier typos.

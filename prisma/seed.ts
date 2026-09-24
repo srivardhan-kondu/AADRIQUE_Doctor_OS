@@ -283,7 +283,6 @@ async function seedPeople(
       passwordHash,
       phone: phoneNumber(random),
       emailVerified: new Date(),
-      mfaEnabled: s.role === Role.HOSPITAL_ADMIN,
     });
     memberships.push({
       id: id("mem"),
