@@ -1,0 +1,39 @@
+# Resumes waiting automations (appointment reminders, feedback requests,
+# follow-up reminders) every 5 minutes by calling the app's job endpoint.
+#
+# Vercel's Hobby plan only runs its own cron once a day (vercel.json keeps a
+# daily run as a backstop), so this free GitHub schedule does the frequent
+# work. Needs two repository secrets (Settings → Secrets and variables →
+# Actions):
+#   APP_URL      the deployed address, e.g. https://aadrique.vercel.app
+#   CRON_SECRET  the same value as CRON_SECRET in Vercel
+#
+# GitHub may start scheduled runs a few minutes late under load; reminders
+# are due hours ahead, so that is harmless. On Vercel Pro, change the cron in
+# vercel.json back to "*/5 * * * *" and delete this file.
+name: Workflow scheduler
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  run-due-workflows:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Call the job endpoint
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "Set the APP_URL and CRON_SECRET repository secrets." >&2
+            exit 1
+          fi
+          curl --fail-with-body --silent --show-error --max-time 60 \
+            -X POST -H "Authorization: Bearer $CRON_SECRET" \
+            "${APP_URL%/}/api/jobs/workflows"

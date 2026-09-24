@@ -51,7 +51,7 @@ short:
 | `AUTH_TRUST_HOST=true` | Outside Vercel, so Auth.js accepts the host |
 | `TZ` | The clinic's time zone — "today" is the server's local day |
 | `APP_URL` | The public address — token links and password-reset links are built from it |
-| `CRON_SECRET` | Authorises the scheduler that resumes waiting workflows (`/api/jobs/workflows`; `vercel.json` schedules it) |
+| `CRON_SECRET` | Authorises the scheduler that resumes waiting workflows (`/api/jobs/workflows`). On Vercel Hobby, a GitHub Action calls it every 5 minutes — add `APP_URL` and `CRON_SECRET` as GitHub repository secrets too |
 | `WHATSAPP_*`, `MSG91_AUTH_KEY`, `RESEND_*` | Real messaging; each integration names its credential as `env://VARIABLE` |
 | `AUTH_EMAIL_FROM` | With `RESEND_API_KEY`, "Forgot password?" emails a reset link; without, it asks the clinic's admin |
 | `ERROR_ALERT_WEBHOOK_URL` | Optional: each distinct server error posted to a chat webhook |
