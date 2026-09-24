@@ -8,7 +8,11 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { signInAction, type SignInState } from "./actions";
 
-/** The accounts the seed creates, offered so a reviewer can get in quickly. */
+/**
+ * The accounts the seed creates, offered so a reviewer can get in quickly —
+ * only when the deployment says it is a demo (DEMO_MODE=true). A real
+ * deployment never shows, or prefills, a shared password.
+ */
 const DEMO_ACCOUNTS = [
   { label: "Doctor", email: "ananya.rao@aadrique.demo" },
   { label: "Front desk", email: "frontdesk@aadrique.demo" },
@@ -18,13 +22,13 @@ const DEMO_ACCOUNTS = [
 
 const DEMO_PASSWORD = "aadrique123";
 
-export function SignInForm({ next }: { next?: string }) {
+export function SignInForm({ next, demo = false }: { next?: string; demo?: boolean }) {
   const [state, formAction] = useActionState<SignInState, FormData>(
     signInAction,
     {},
   );
-  const [email, setEmail] = useState(DEMO_ACCOUNTS[0].email);
-  const [password, setPassword] = useState(DEMO_PASSWORD);
+  const [email, setEmail] = useState(demo ? DEMO_ACCOUNTS[0].email : "");
+  const [password, setPassword] = useState(demo ? DEMO_PASSWORD : "");
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -114,24 +118,25 @@ export function SignInForm({ next }: { next?: string }) {
         <SubmitButton />
       </form>
 
-      <div className="mt-8 rounded-xl border border-border bg-muted/50 p-4">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-          Demo accounts
-        </p>
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
-          {DEMO_ACCOUNTS.map((account) => (
-            <button
-              key={account.email}
-              type="button"
-              onClick={() => {
-                setEmail(account.email);
-                setPassword(DEMO_PASSWORD);
-              }}
-              className={cn(
-                "rounded-md border px-2.5 py-1 text-[12px] font-medium transition-colors",
-                email === account.email
-                  ? "border-accent bg-accent-soft text-brand-700"
-                  : "border-border bg-card text-muted-foreground hover:text-foreground",
+      {demo && (
+        <div className="mt-8 rounded-xl border border-border bg-muted/50 p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            Demo accounts
+          </p>
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
+            {DEMO_ACCOUNTS.map((account) => (
+              <button
+                key={account.email}
+                type="button"
+                onClick={() => {
+                  setEmail(account.email);
+                  setPassword(DEMO_PASSWORD);
+                }}
+                className={cn(
+                  "rounded-md border px-2.5 py-1 text-[12px] font-medium transition-colors",
+                  email === account.email
+                    ? "border-accent bg-accent-soft text-brand-700"
+                    : "border-border bg-card text-muted-foreground hover:text-foreground",
               )}
             >
               {account.label}
@@ -143,6 +148,7 @@ export function SignInForm({ next }: { next?: string }) {
           <span className="font-mono text-foreground">{DEMO_PASSWORD}</span>
         </p>
       </div>
+      )}
     </>
   );
 }

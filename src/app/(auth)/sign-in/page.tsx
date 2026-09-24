@@ -57,7 +57,7 @@ export default async function SignInPage({
         </div>
 
         <p className="text-[12px] text-navy-500">
-          AADRIQUE Medical Center · Hyderabad
+          AADRIQUE Doctor OS
         </p>
       </section>
 
@@ -79,7 +79,7 @@ export default async function SignInPage({
             Sign in
           </h2>
           <p className="mt-1.5 text-[14px] text-muted-foreground">
-            Use your AADRIQUE Medical Center account.
+            Use the account your clinic gave you.
           </p>
 
           {ended && (
@@ -94,7 +94,10 @@ export default async function SignInPage({
             </p>
           )}
 
-          <SignInForm next={next} />
+          <SignInForm
+            next={next}
+            demo={process.env.DEMO_MODE === "true"}
+          />
         </div>
       </section>
     </div>

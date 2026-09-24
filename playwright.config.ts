@@ -47,6 +47,7 @@ export default defineConfig({
       // The portal shows sign-in codes on screen only with this, and only
       // while no real SMS gateway is connected.
       PORTAL_DEMO_CODES: "true",
+      CRON_SECRET: "e2e-cron-secret",
     },
   },
 });

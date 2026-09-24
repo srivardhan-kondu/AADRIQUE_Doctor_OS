@@ -85,3 +85,24 @@ test("delivery webhooks believe only the vendor's signature", async ({ request }
   const resend = await request.post("/api/webhooks/resend", { data: "{}" });
   expect(resend.status()).toBe(503);
 });
+
+test("the scheduler runs only with its secret, by GET (Vercel Cron) or POST", async ({ request }) => {
+  expect((await request.get("/api/jobs/workflows")).status()).toBe(401);
+  expect(
+    (await request.get("/api/jobs/workflows", { headers: { authorization: "Bearer wrong" } })).status(),
+  ).toBe(401);
+
+  const run = await request.get("/api/jobs/workflows", {
+    headers: { authorization: "Bearer e2e-cron-secret" },
+  });
+  expect(run.status()).toBe(200);
+  const body = await run.json();
+  expect(body.ok).toBe(true);
+  expect(body.cleared).toBeDefined();
+});
+
+test("the sign-in page offers no shared password unless it is a demo", async ({ page }) => {
+  await page.goto("/sign-in");
+  await expect(page.getByText("Demo accounts")).toHaveCount(0);
+  await expect(page.getByLabel("Password", { exact: true })).toHaveValue("");
+});

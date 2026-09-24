@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { runHousekeeping } from "@/server/services/housekeeping";
 import { processDueRuns } from "@/server/services/workflows";
 
 /**
@@ -14,6 +15,15 @@ import { processDueRuns } from "@/server/services/workflows";
  */
 
 export const dynamic = "force-dynamic";
+
+/**
+ * GET as well as POST: Vercel Cron calls with GET and the same bearer token.
+ * Any other scheduler (cron + curl, GitHub Actions, a cloud scheduler) can
+ * POST. Both are refused without CRON_SECRET.
+ */
+export async function GET(request: Request): Promise<NextResponse> {
+  return POST(request);
+}
 
 export async function POST(request: Request): Promise<NextResponse> {
   const secret = process.env.CRON_SECRET?.trim();
@@ -40,7 +50,11 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   try {
     const result = await processDueRuns();
-    return NextResponse.json({ ok: true, ...result });
+
+    // Housekeeping rides on the same schedule.
+    const cleared = await runHousekeeping();
+
+    return NextResponse.json({ ok: true, ...result, cleared });
   } catch (error) {
     console.error("Workflow job failed", error);
     return NextResponse.json({ error: "job_failed" }, { status: 500 });
