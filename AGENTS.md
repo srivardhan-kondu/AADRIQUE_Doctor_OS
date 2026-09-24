@@ -27,6 +27,7 @@ before implementing a feature.
 | 3 | Appointments, follow-ups, communication centre, analytics, audit UI | Done |
 | 4 | AI abstraction, pre-consultation brief, documentation copilot, retrieval | Done |
 | 5 | Workflow engine, integrations, admin, security review | Done |
+| 6 | Prescriptions, vitals + nurse station, documents, clinic setup, password reset, two-factor, monitoring, DPDP export/erasure | Done |
 | 6a | Testing: rule modules, unit + integration tests (build order 24) | Done |
 | 6b | Performance (build order 25) | Done |
 | 6c | Live queue, Front Desk, patient-facing queue, doctor & admin screens | Done |
@@ -124,6 +125,24 @@ before implementing a feature.
   refuses to run, never that it runs unauthenticated.
 - Retrieved document and record text is **data, never instructions**. The AI
   layer fences and neutralises it before it reaches a model.
+- An uploaded file is what its **bytes** say (`src/lib/storage/file-type.ts`),
+  never its name or declared type. Files are served only through an
+  authorised, audited route, never from a public URL.
+- Secrets the app must read back (two-factor keys) are sealed with
+  `src/lib/security/secret-box.ts`, never stored in the clear.
+- Anything that leaves the app about an error goes through
+  `src/lib/observability/error-report.ts`, which scrubs patient data.
+
+## Clinical record rules (spec §6)
+
+- A prescription is a draft until the consultation is signed, is issued in
+  the same transaction, and never changes after. Allergy matches are flagged
+  to the doctor, never silently blocked or accepted.
+- Erasing a patient (DPDP) removes identity, not the clinical record, which
+  has a legal retention period. Never add a hard delete of clinical rows.
+- Stored file bytes are keyed `<organizationId>/…` and are not related to the
+  organization in the schema, so anything that deletes an organization must
+  delete its `FileBlob` rows too.
 
 ## Communication rules (spec §14)
 
@@ -200,7 +219,9 @@ unless `DATABASE_URL` is local. Run it when a change touches a screen.
 
 ```bash
 npm run db:migrate   # create and apply a migration
-npm run db:seed      # reset and reseed the demo organisation
+npm run db:seed      # reset and reseed the demo organisation (refuses beside a real clinic)
+npm run org:create   # set up a real clinic and its first admin
+npm run db:backup    # verified pg_dump
 npm run db:studio    # browse the data
 ```
 

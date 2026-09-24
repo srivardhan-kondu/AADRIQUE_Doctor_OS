@@ -3,6 +3,7 @@ import { cache } from "react";
 import { notFound } from "next/navigation";
 import { DocumentsPanel } from "@/components/documents/patient-documents";
 import { Patient360View } from "@/components/patients/patient-360-view";
+import { PatientDataRights } from "@/components/patients/patient-data-rights";
 import { Permission, hasPermission } from "@/lib/permissions";
 import { requireActor } from "@/server/context";
 import { ServiceError } from "@/server/services/errors";
@@ -48,6 +49,15 @@ export default async function AdminPatientPage({
       patient={patient}
       clinical={hasPermission(actor, Permission.CONSULTATION_READ)}
       back={{ href: "/admin/patients", label: "Patient directory" }}
+      actions={
+        hasPermission(actor, Permission.ADMIN_MANAGE) ? (
+          <PatientDataRights
+            patientId={patient.id}
+            mrn={patient.mrn}
+            canErase={hasPermission(actor, Permission.PATIENT_DELETE)}
+          />
+        ) : undefined
+      }
       documents={<DocumentsPanel patientId={patient.id} />}
     />
   );

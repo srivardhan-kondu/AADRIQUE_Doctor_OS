@@ -62,3 +62,24 @@ test("an administrator adds a doctor and sets their clinic hours", async ({ page
   await page.goto("/admin/doctors");
   await expect(page.getByText(`Dr. E2E ${stamp}`)).toBeVisible();
 });
+
+/** DPDP Act 2023 — an admin can hand a patient their data, and erasure asks for proof of intent. */
+test("an admin exports a patient's data, and erasure waits for the ID typed back", async ({ page }) => {
+  await signIn(page, "admin");
+  await page.goto("/admin/patients");
+  await page.locator('a[href^="/admin/patients/"]:not([href$="/export"])').first().click();
+
+  const exportLink = page.getByRole("link", { name: "Export data" });
+  const response = await page.request.get((await exportLink.getAttribute("href"))!);
+  expect(response.status()).toBe(200);
+  expect(response.headers()["content-disposition"]).toMatch(/attachment; filename="patient-.+-data\.json"/);
+  const data = await response.json();
+  expect(data.patient.mrn).toBeTruthy();
+
+  await page.getByRole("button", { name: "Erase identity" }).click();
+  const dialog = page.getByRole("dialog");
+  const erase = dialog.getByRole("button", { name: "Erase identity" });
+  await expect(erase).toBeDisabled();
+  await dialog.getByRole("textbox").fill("P-NOT-THIS-ONE");
+  await expect(erase).toBeDisabled();
+});
