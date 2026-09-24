@@ -106,3 +106,12 @@ test("the sign-in page offers no shared password unless it is a demo", async ({ 
   await expect(page.getByText("Demo accounts")).toHaveCount(0);
   await expect(page.getByLabel("Password", { exact: true })).toHaveValue("");
 });
+
+/** Spec §31 — an uptime monitor can tell the app is up and has its database, and learns nothing else. */
+test("the health check answers without signing in, and says only that", async ({ request }) => {
+  const response = await request.get("/api/health");
+  expect(response.status()).toBe(200);
+  const body = await response.json();
+  expect(body.status).toBe("ok");
+  expect(Object.keys(body).sort()).toEqual(["database", "latencyMs", "status"]);
+});
