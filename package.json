@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
     "test": "tsx --conditions react-server --test $(find src -name '*.test.ts')",
