@@ -103,3 +103,17 @@ test("removing access ends the session at once", async ({ browser }) => {
   await admin.close();
   await nurse.close();
 });
+
+/** Spec §31 — a forgotten password has a way back that gives nothing away. */
+test("forgot password answers the same whoever asks, and a bad link says so", async ({ page }) => {
+  await page.goto("/sign-in");
+  await page.getByRole("link", { name: "Forgot password?" }).click();
+  await expect(page).toHaveURL(/\/forgot-password$/);
+
+  await page.getByLabel("Email").fill("nobody-here@example.test");
+  await page.getByRole("button", { name: "Send reset link" }).click();
+  await expect(page.getByRole("status")).toContainText("If that email has an account");
+
+  await page.goto("/reset-password?token=forged.token.value");
+  await expect(page.getByRole("heading", { name: "This link does not work" })).toBeVisible();
+});

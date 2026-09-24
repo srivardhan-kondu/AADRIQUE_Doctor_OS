@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import { useFormStatus } from "react-dom";
 import { AlertCircle, Eye, EyeOff, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -62,12 +63,17 @@ export function SignInForm({ next, demo = false }: { next?: string; demo?: boole
         </div>
 
         <div>
-          <label
-            htmlFor="password"
-            className="mb-1.5 block text-[13px] font-medium"
-          >
-            Password
-          </label>
+          <div className="mb-1.5 flex items-baseline justify-between">
+            <label htmlFor="password" className="block text-[13px] font-medium">
+              Password
+            </label>
+            <Link
+              href="/forgot-password"
+              className="text-[12px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <div className="relative">
             <Input
               id="password"
