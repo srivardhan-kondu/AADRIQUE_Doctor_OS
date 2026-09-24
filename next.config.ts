@@ -39,6 +39,13 @@ const nextConfig: NextConfig = {
   // Never advertise the framework version.
   poweredByHeader: false,
 
+  experimental: {
+    // Spec §6 — lab reports are uploaded through a server action (which
+    // keeps Next's same-origin check). Files are capped at 4 MB in
+    // src/lib/storage/file-type.ts; this leaves room for the rest of the form.
+    serverActions: { bodySizeLimit: "5mb" },
+  },
+
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

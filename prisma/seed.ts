@@ -176,6 +176,7 @@ async function reset() {
     where: { memberships: { some: { organizationId: existing.id } } },
   });
   await prisma.organization.delete({ where: { id: existing.id } });
+  await prisma.fileBlob.deleteMany({ where: { key: { startsWith: `${existing.id}/` } } });
   await prisma.medication.deleteMany({});
 }
 

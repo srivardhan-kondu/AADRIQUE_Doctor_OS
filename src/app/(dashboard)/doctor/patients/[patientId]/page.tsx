@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cache } from "react";
 import { notFound } from "next/navigation";
+import { DocumentsPanel } from "@/components/documents/patient-documents";
 import { Patient360View } from "@/components/patients/patient-360-view";
 import { Permission, hasPermission } from "@/lib/permissions";
 import { requireActor } from "@/server/context";
@@ -52,6 +53,7 @@ export default async function Patient360Page({
       patient={patient}
       clinical={hasPermission(actor, Permission.CONSULTATION_READ)}
       back={{ href: "/doctor/queue", label: "Back to queue" }}
+      documents={<DocumentsPanel patientId={patient.id} />}
     />
   );
 }

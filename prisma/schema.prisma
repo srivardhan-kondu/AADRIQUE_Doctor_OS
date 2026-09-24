@@ -1585,3 +1585,13 @@ model PortalOtp {
 
   @@index([organizationId, phone, createdAt])
 }
+
+/// Spec §6 — the bytes of an uploaded file, when the database is the file
+/// store (src/lib/storage). `Attachment.storageKey` points here; nothing
+/// else does, so a different store can replace this table without a
+/// schema change anywhere else.
+model FileBlob {
+  key       String   @id
+  bytes     Bytes
+  createdAt DateTime @default(now())
+}

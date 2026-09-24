@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cache } from "react";
 import { notFound } from "next/navigation";
+import { DocumentsPanel } from "@/components/documents/patient-documents";
 import { Patient360View } from "@/components/patients/patient-360-view";
 import { Permission, hasPermission } from "@/lib/permissions";
 import { requireActor } from "@/server/context";
@@ -47,6 +48,7 @@ export default async function AdminPatientPage({
       patient={patient}
       clinical={hasPermission(actor, Permission.CONSULTATION_READ)}
       back={{ href: "/admin/patients", label: "Patient directory" }}
+      documents={<DocumentsPanel patientId={patient.id} />}
     />
   );
 }

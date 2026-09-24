@@ -44,12 +44,15 @@ export function Patient360View({
   clinical,
   back,
   actions,
+  documents,
 }: {
   patient: Patient360;
   clinical: boolean;
   back: { href: string; label: string };
   /** What this workspace does next — the desk books and issues tokens. */
   actions?: React.ReactNode;
+  /** The reports panel, for viewers allowed to read lab results. */
+  documents?: React.ReactNode;
 }) {
   const criticalAllergies = patient.allergies.filter(
     (a) => a.severity === "HIGH" || a.severity === "CRITICAL",
@@ -160,6 +163,7 @@ export function Patient360View({
         <aside className="space-y-5">
           <SummaryCard patient={patient} clinical={clinical} />
           {clinical && <ClinicalCard patient={patient} />}
+          {documents}
         </aside>
 
         <Card className="overflow-hidden">

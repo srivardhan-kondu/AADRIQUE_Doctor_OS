@@ -177,6 +177,8 @@ export async function removeTenant(tenant: Tenant | undefined) {
     },
   });
   await prisma.organization.deleteMany({ where: { id: tenant.organizationId } });
+  // Stored file bytes are keyed by organization, not related to it.
+  await prisma.fileBlob.deleteMany({ where: { key: { startsWith: `${tenant.organizationId}/` } } });
 }
 
 export async function rejection(promise: Promise<unknown>): Promise<ServiceError> {
