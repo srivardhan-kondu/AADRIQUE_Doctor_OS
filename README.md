@@ -207,6 +207,14 @@ e2e/                    browser journeys (Playwright)
 
 ---
 
+## User guide
+
+How to use it, role by role, with the test logins:
+[`docs/user-guide/`](./docs/user-guide/README.md). The client demo script is
+[`docs/DEMO.md`](./docs/DEMO.md).
+
+---
+
 ## Conventions
 
 Architecture, AI safety and design rules are in [`AGENTS.md`](./AGENTS.md).

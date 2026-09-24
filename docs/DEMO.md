@@ -1,6 +1,7 @@
 # Client demo guide
 
-A 20–25 minute walkthrough of AADRIQUE Doctor OS, built around one patient
+A 20–25 minute walkthrough of AADRIQUE Doctor OS (the full manual is the
+[user guide](./user-guide/README.md)), built around one patient
 the demo data prepares for you. `e2e/demo-story.spec.ts` rehearses the same
 story, so if that test passes, the demo works.
 
