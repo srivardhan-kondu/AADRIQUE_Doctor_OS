@@ -56,6 +56,7 @@ import {
   sequenceNo,
   type Random,
 } from "./seed-helpers.js";
+import { seedShowcase } from "./seed-showcase.js";
 
 /**
  * Demo seed (spec §39).
@@ -158,6 +159,7 @@ async function main() {
   await seedFollowUpsAndFeedback({ organizationId, doctors, patients, history });
   await seedCommunications({ organizationId, patients });
   await seedNotificationsAndAudit({ organizationId, doctors, staff, patients });
+  await seedShowcase(prisma, organizationId, TODAY);
 
   await summarise(organizationId);
 }
