@@ -19,6 +19,7 @@ const { auth } = NextAuth(authConfig);
 const PROTECTED_PREFIXES = [
   "/doctor",
   "/reception",
+  "/nurse",
   "/admin",
   "/design",
   "/display",

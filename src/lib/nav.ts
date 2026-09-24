@@ -8,6 +8,7 @@ import {
   CalendarDays,
   ClipboardList,
   Gauge,
+  HeartPulse,
   IdCard,
   LayoutDashboard,
   MessageSquare,
@@ -60,6 +61,14 @@ export const NAV: Record<Workspace, NavSection[]> = {
       items: [
         { label: "Analytics", href: "/doctor/analytics", icon: BarChart3 },
         { label: "AI Copilot", href: "/doctor/copilot", icon: Sparkles },
+      ],
+    },
+  ],
+
+  nurse: [
+    {
+      items: [
+        { label: "Vitals Station", href: "/nurse", icon: HeartPulse, shortcut: "h", counter: "queue" },
       ],
     },
   ],
@@ -121,6 +130,12 @@ export const WORKSPACE_META: Record<
     icon: Stethoscope,
     description: "Clinical command center",
   },
+  nurse: {
+    label: "Nursing",
+    href: "/nurse",
+    icon: HeartPulse,
+    description: "Vitals for today's patients",
+  },
   reception: {
     label: "Front Desk",
     href: "/reception",
@@ -147,6 +162,8 @@ export function homeFor(role: Role): string {
     case "RECEPTIONIST":
     case "STAFF":
       return "/reception";
+    case "NURSE":
+      return "/nurse";
     default:
       return "/doctor";
   }
@@ -161,6 +178,7 @@ export function flatNav(workspace: Workspace): NavItem[] {
 export function workspaceFromPath(pathname: string): Workspace {
   if (pathname.startsWith("/admin")) return "admin";
   if (pathname.startsWith("/reception")) return "reception";
+  if (pathname.startsWith("/nurse")) return "nurse";
   return "doctor";
 }
 

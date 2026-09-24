@@ -10,6 +10,7 @@ import {
 import { cn, initials } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { VitalsDialog } from "@/components/vitals/vitals-dialog";
 import type { ConsultationWorkspace } from "@/server/services/consultation";
 
 /**
@@ -23,10 +24,13 @@ export function PatientSnapshot({
   patient,
   vitals,
   token,
+  recordVitalsFor,
 }: {
   patient: ConsultationWorkspace["patient"];
   vitals: ConsultationWorkspace["vitals"];
   token: string | null;
+  /** The visit to record vitals against, when this user may. */
+  recordVitalsFor?: string | null;
 }) {
   const critical = patient.allergies.filter(
     (a) => a.severity === "HIGH" || a.severity === "CRITICAL",
@@ -197,6 +201,10 @@ export function PatientSnapshot({
             {vitals.recordedBy && ` · ${vitals.recordedBy}`}
           </p>
         </div>
+      )}
+
+      {recordVitalsFor && (
+        <VitalsDialog target={{ visitId: recordVitalsFor }} patientName={patient.name} />
       )}
     </aside>
   );

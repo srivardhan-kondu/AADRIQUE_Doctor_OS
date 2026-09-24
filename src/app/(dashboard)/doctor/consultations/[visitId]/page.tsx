@@ -13,6 +13,7 @@ import { ConsultationEditor } from "@/components/consultation/consultation-edito
 import { PatientSnapshot } from "@/components/consultation/patient-snapshot";
 import { PrescriptionEditor } from "@/components/consultation/prescription-editor";
 import { PreConsultationBrief } from "@/components/ai/pre-consultation-brief";
+import { Permission, hasPermission } from "@/lib/permissions";
 import { requireActor } from "@/server/context";
 import { getConsultationWorkspace } from "@/server/services/consultation";
 import { getPrescription } from "@/server/services/prescriptions";
@@ -67,6 +68,8 @@ export default async function ConsultationPage({
     if (error instanceof ServiceError && error.code === "NOT_FOUND") notFound();
     throw error;
   }
+  const canRecordVitals =
+    ws.status !== "SIGNED" && hasPermission(await requireActor(), Permission.VITALS_RECORD);
 
   return (
     <PageBody className="max-w-[1500px]">
@@ -106,6 +109,7 @@ export default async function ConsultationPage({
           patient={ws.patient}
           vitals={ws.vitals}
           token={ws.token}
+          recordVitalsFor={canRecordVitals ? ws.visitId : null}
         />
 
         <div className="min-w-0">

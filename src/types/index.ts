@@ -16,7 +16,7 @@ export type { Role } from "@/generated/prisma/enums";
 import type { Role } from "@/generated/prisma/enums";
 
 /** The three workspaces the shell can render (spec §4). */
-export type Workspace = "doctor" | "reception" | "admin";
+export type Workspace = "doctor" | "nurse" | "reception" | "admin";
 
 export const WORKSPACE_FOR_ROLE: Record<Role, Workspace> = {
   SUPER_ADMIN: "admin",

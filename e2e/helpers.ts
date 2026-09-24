@@ -5,6 +5,7 @@ export const PASSWORD = "aadrique123";
 export const ACCOUNTS = {
   doctor: "ananya.rao@aadrique.demo",
   desk: "frontdesk@aadrique.demo",
+  nurse: "nurse@aadrique.demo",
   admin: "admin@aadrique.demo",
 } as const;
 
