@@ -41,11 +41,26 @@ test("a doctor sees a patient, documents, signs and moves on", async ({ page }) 
   // AI content is marked as AI wherever it appears (spec §54).
   await expect(page.locator(".ai-surface").first()).toBeVisible();
 
-  // Sign.
+  // Prescribe — the prescription autosaves beside the note (spec §6).
+  await page.getByRole("tab", { name: /Medications/ }).click();
+  await page.getByRole("button", { name: "Add medicine" }).click();
+  await page.getByLabel("Medicine 1", { exact: true }).fill("Paracetamol 650 mg");
+  await page.getByLabel("Medicine 1 frequency").fill("Three times daily (TDS)");
+  await page.getByLabel("Medicine 1 days").fill("3");
+  await expect(page.getByText("Prescription saved")).toBeVisible({ timeout: 15_000 });
+  await page.getByRole("tab", { name: "Note" }).click();
+
+  // Sign — which issues the prescription with it.
   await page.getByRole("button", { name: "Sign consultation" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Sign", exact: true }).click();
   await expectToast(page, /signed/i);
   await expect(page.getByLabel("Assessment")).toBeDisabled();
+
+  await page.getByRole("tab", { name: /Medications/ }).click();
+  await expect(page.getByText("Issued", { exact: true })).toBeVisible();
+  await page.goto(firstVisit.replace(/\/doctor\/consultations\//, "/print/prescription/"));
+  await expect(page.getByText("Paracetamol 650 mg")).toBeVisible();
+  await expect(page.getByText(/DRAFT/)).toHaveCount(0);
 
   // Next Patient.
   await page.goto("/doctor/queue");

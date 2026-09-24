@@ -9,6 +9,7 @@ import {
 } from "@/lib/permissions";
 import type { RequestActor } from "@/server/context";
 import { writeAudit } from "./audit";
+import { issueDraftPrescription } from "./prescriptions";
 import { invalidState, notFound } from "./errors";
 import { fireTrigger } from "./workflows";
 
@@ -390,6 +391,9 @@ export async function signConsultation(
         draftSavedAt: null,
       },
     });
+
+    // The prescription is issued with the note it belongs to, or not at all.
+    await issueDraftPrescription(tx, actor, visitId);
 
     await tx.visit.update({
       where: { id: visitId },

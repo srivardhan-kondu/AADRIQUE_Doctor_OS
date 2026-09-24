@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, FlaskConical, Pill, TriangleAlert } from "lucide-react";
+import { ArrowLeft, FlaskConical, TriangleAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,9 +11,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageBody } from "@/components/shell/page-header";
 import { ConsultationEditor } from "@/components/consultation/consultation-editor";
 import { PatientSnapshot } from "@/components/consultation/patient-snapshot";
+import { PrescriptionEditor } from "@/components/consultation/prescription-editor";
 import { PreConsultationBrief } from "@/components/ai/pre-consultation-brief";
 import { requireActor } from "@/server/context";
 import { getConsultationWorkspace } from "@/server/services/consultation";
+import { getPrescription } from "@/server/services/prescriptions";
 import { ServiceError } from "@/server/services/errors";
 
 /**
@@ -55,8 +57,12 @@ export default async function ConsultationPage({
   const { visitId } = await params;
 
   let ws;
+  let prescription;
   try {
-    ws = await loadWorkspace(visitId);
+    [ws, prescription] = await Promise.all([
+      loadWorkspace(visitId),
+      requireActor().then((actor) => getPrescription(actor, visitId)),
+    ]);
   } catch (error) {
     if (error instanceof ServiceError && error.code === "NOT_FOUND") notFound();
     throw error;
@@ -153,7 +159,7 @@ export default async function ConsultationPage({
             </TabsContent>
 
             <TabsContent value="medications">
-              <MedicationsTab prescriptions={ws.prescriptions} />
+              <PrescriptionEditor visitId={ws.visitId} prescription={prescription} />
             </TabsContent>
 
             <TabsContent value="orders">
@@ -214,65 +220,6 @@ function HistoryTab({ history }: { history: Workspace["history"] }) {
               {visit.plan && <Field label="Plan" value={visit.plan} />}
             </CardContent>
           )}
-        </Card>
-      ))}
-    </div>
-  );
-}
-
-function MedicationsTab({
-  prescriptions,
-}: {
-  prescriptions: Workspace["prescriptions"];
-}) {
-  if (prescriptions.length === 0) {
-    return (
-      <Card>
-        <EmptyState
-          icon={Pill}
-          title="No prescription on this visit"
-          description="Prescribing arrives with the medication module in a later part."
-        />
-      </Card>
-    );
-  }
-
-  return (
-    <div className="space-y-3">
-      {prescriptions.map((rx) => (
-        <Card key={rx.id}>
-          <CardHeader>
-            <div>
-              <CardTitle className="font-mono text-[14px]">
-                {rx.prescriptionNo}
-              </CardTitle>
-              <p className="mt-1 text-[12px] text-muted-foreground" data-numeric>
-                {rx.createdAt.toLocaleDateString("en-IN", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
-              </p>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <ul className="divide-y divide-border">
-              {rx.items.map((item) => (
-                <li key={item.id} className="py-2 first:pt-0 last:pb-0">
-                  <p className="text-[13px] font-medium">{item.name}</p>
-                  <p className="mt-0.5 text-[12px] text-muted-foreground">
-                    {[
-                      item.dosage,
-                      item.frequency,
-                      item.durationDays ? `${item.durationDays} days` : null,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
         </Card>
       ))}
     </div>

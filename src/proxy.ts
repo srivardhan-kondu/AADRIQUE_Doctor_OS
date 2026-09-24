@@ -23,6 +23,7 @@ const PROTECTED_PREFIXES = [
   "/design",
   "/display",
   "/account",
+  "/print",
 ];
 
 export const proxy = auth((req) => {
