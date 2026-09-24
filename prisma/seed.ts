@@ -125,6 +125,7 @@ const LAB_REPORT_COUNT = 10;
 const MESSAGE_COUNT = 100;
 
 async function main() {
+  await refuseRealData();
   console.log("Seeding AADRIQUE demo data…");
 
   await reset();
@@ -161,6 +162,30 @@ async function main() {
   await summarise(organizationId);
 }
 
+/**
+ * The seed deletes and recreates the demo organisation. It refuses to run in
+ * production, or against a database that holds a real clinic, unless told
+ * explicitly — a real clinic is set up with `npm run org:create` instead.
+ */
+async function refuseRealData() {
+  if (process.env.ALLOW_DEMO_SEED === "true") return;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Refusing to seed demo data with NODE_ENV=production. Set ALLOW_DEMO_SEED=true if this really is a demo database.");
+  }
+  const real = await prisma.organization.findMany({
+    where: { slug: { not: ORG_SLUG }, NOT: { slug: { startsWith: "itest-" } } },
+    select: { slug: true },
+    take: 5,
+  });
+  if (real.length > 0) {
+    throw new Error(
+      `Refusing to seed: this database also holds ${real.map((o) => o.slug).join(", ")}. ` +
+        "The seed only touches the demo organisation, but it is never meant to run beside real clinics. " +
+        "Set ALLOW_DEMO_SEED=true to override.",
+    );
+  }
+}
+
 /** Removes the demo organisation. Cascades handle everything beneath it. */
 async function reset() {
   const existing = await prisma.organization.findUnique({
@@ -177,7 +202,6 @@ async function reset() {
   });
   await prisma.organization.delete({ where: { id: existing.id } });
   await prisma.fileBlob.deleteMany({ where: { key: { startsWith: `${existing.id}/` } } });
-  await prisma.medication.deleteMany({});
 }
 
 async function seedOrganization() {
@@ -345,10 +369,23 @@ async function seedPeople(
 type Doctor = Awaited<ReturnType<typeof seedPeople>>["doctors"][number];
 type Staff = Awaited<ReturnType<typeof seedPeople>>["staff"][number];
 
+/**
+ * The medicine catalogue is shared by every organisation, so it is added to,
+ * never cleared — prescriptions elsewhere point at it.
+ */
 async function seedFormulary() {
-  const medications = MEDICATIONS.map((m) => ({ ...m, id: id("med") }));
-  await prisma.medication.createMany({ data: medications });
-  return medications;
+  await prisma.medication.createMany({
+    data: MEDICATIONS.map((m) => ({ ...m, id: id("med") })),
+    skipDuplicates: true,
+  });
+  const stored = await prisma.medication.findMany({
+    where: { name: { in: MEDICATIONS.map((m) => m.name) } },
+  });
+  return MEDICATIONS.map((m) => {
+    const row = stored.find((s) => s.name === m.name && s.strength === m.strength && s.form === m.form);
+    if (!row) throw new Error(`Medication ${m.name} ${m.strength} was not stored`);
+    return { ...m, id: row.id };
+  });
 }
 
 type Medication = Awaited<ReturnType<typeof seedFormulary>>[number];
