@@ -18,7 +18,7 @@ export default async function DashboardLayout({
   // A temporary password is replaced before anything else is reachable.
   if (actor.mustChangePassword) redirect("/account/password");
 
-  const { counters, notifications, online } = await getShellData(actor);
+  const { counters, notifications, online, lockedAddOns } = await getShellData(actor);
 
   return (
     <SessionProvider
@@ -34,7 +34,11 @@ export default async function DashboardLayout({
         online,
       }}
     >
-      <AppShell counters={counters} notifications={notifications}>
+      <AppShell
+        counters={counters}
+        notifications={notifications}
+        lockedAddOns={lockedAddOns}
+      >
         {children}
       </AppShell>
     </SessionProvider>

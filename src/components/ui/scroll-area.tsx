@@ -15,7 +15,10 @@ function ScrollArea({
       className={cn("relative overflow-hidden", className)}
       {...props}
     >
-      <ScrollAreaPrimitive.Viewport className="size-full rounded-[inherit] outline-none">
+      {/* `max-h-[inherit]`: a root sized by `max-h-*` has no fixed height for
+          `h-full` to resolve against, so without it the viewport grows to its
+          content, is clipped by the root, and never scrolls. */}
+      <ScrollAreaPrimitive.Viewport className="size-full max-h-[inherit] rounded-[inherit] outline-none">
         {children}
       </ScrollAreaPrimitive.Viewport>
       <ScrollBar />

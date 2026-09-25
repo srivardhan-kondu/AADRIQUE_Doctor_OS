@@ -339,6 +339,8 @@ export interface CallNextResult {
 export async function callNext(
   actor: RequestActor,
   doctorId: string,
+  /** Call this waiting patient instead of the next in line. */
+  queueEntryId?: string,
 ): Promise<CallNextResult | null> {
   assertPermission(actor, Permission.QUEUE_MANAGE);
 
@@ -388,8 +390,14 @@ export async function callNext(
       }
     }
 
+    // A named patient is looked up inside this doctor's queue for today, so
+    // an id from another queue or another tenant finds nothing.
     const next = await tx.queueEntry.findFirst({
-      where: { queueId, status: { in: [...WAITING_STATUSES] } },
+      where: {
+        queueId,
+        status: { in: [...WAITING_STATUSES] },
+        ...(queueEntryId ? { id: queueEntryId } : {}),
+      },
       orderBy: [{ priority: "desc" }, { position: "asc" }],
       include: {
         patient: { select: { id: true, firstName: true, lastName: true, mrn: true } },
@@ -397,7 +405,17 @@ export async function callNext(
       },
     });
 
-    if (!next) return null;
+    if (!next) {
+      // Throwing rolls back the close-out above: asking for a patient who has
+      // gone must not end the consultation that is in progress.
+      if (queueEntryId) {
+        throw invalidState(
+          "That patient is no longer waiting.",
+          "Refresh the queue to see where they are.",
+        );
+      }
+      return null;
+    }
 
     const now = new Date();
 

@@ -1,3 +1,5 @@
+// First, so no date is read before the clinic's zone is in force.
+import "@/lib/time-zone";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/generated/prisma/client";
 

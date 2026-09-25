@@ -9,9 +9,11 @@ import { MetricTile } from "@/components/analytics/metric-tile";
 import { RangeSwitch } from "@/components/analytics/range-switch";
 import { TrendChart } from "@/components/analytics/trend-chart";
 import { NoAccess } from "@/components/shell/no-access";
+import { AddOnLocked } from "@/components/shell/add-on-locked";
 import { Permission, hasPermission } from "@/lib/permissions";
 import { requireActor, requireDoctorId } from "@/server/context";
 import { getDoctorAnalytics } from "@/server/services/analytics";
+import { hasAddOn } from "@/server/services/features";
 
 export const metadata: Metadata = { title: "Analytics" };
 
@@ -43,7 +45,19 @@ async function AnalyticsScreen({ searchParams }: PageProps) {
     return <NoAccess title="Analytics" what="to see OPD analytics" />;
   }
 
-  const doctorId = await requireDoctorId(actor);
+  const [doctorId, unlocked] = await Promise.all([
+    requireDoctorId(actor),
+    hasAddOn(actor, "analytics"),
+  ]);
+
+  if (!unlocked) {
+    return (
+      <>
+        <PageHeader title="Analytics" description="Your OPD, measured over time." />
+        <AddOnLocked addOn="analytics" />
+      </>
+    );
+  }
 
   const requested = Number(params.days);
   const days = RANGES.includes(requested) ? requested : 30;

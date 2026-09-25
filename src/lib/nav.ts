@@ -20,6 +20,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import type { Role } from "@/generated/prisma/enums";
+import type { AddOn } from "@/lib/add-ons";
 import type { Workspace } from "@/types";
 
 export interface NavItem {
@@ -30,6 +31,8 @@ export interface NavItem {
   shortcut?: string;
   /** Marks nav entries whose count is driven by live data. */
   counter?: "queue" | "messages" | "followups" | "notifications";
+  /** Belongs to an add-on; marked with a lock when the clinic has not enabled it. */
+  addOn?: AddOn;
 }
 
 export interface NavSection {
@@ -52,15 +55,15 @@ export const NAV: Record<Workspace, NavSection[]> = {
     {
       label: "Continuity",
       items: [
-        { label: "Follow-ups", href: "/doctor/follow-ups", icon: Repeat2, shortcut: "f", counter: "followups" },
-        { label: "Messages", href: "/doctor/messages", icon: MessageSquare, shortcut: "m", counter: "messages" },
+        { label: "Follow-ups", href: "/doctor/follow-ups", icon: Repeat2, shortcut: "f", counter: "followups", addOn: "followUps" },
+        { label: "Messages", href: "/doctor/messages", icon: MessageSquare, shortcut: "m", counter: "messages", addOn: "messaging" },
       ],
     },
     {
       label: "Insight",
       items: [
-        { label: "Analytics", href: "/doctor/analytics", icon: BarChart3 },
-        { label: "AI Copilot", href: "/doctor/copilot", icon: Sparkles },
+        { label: "Analytics", href: "/doctor/analytics", icon: BarChart3, addOn: "analytics" },
+        { label: "AI Copilot", href: "/doctor/copilot", icon: Sparkles, addOn: "aiCopilot" },
       ],
     },
   ],

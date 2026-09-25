@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Inbox } from "lucide-react";
+import { Inbox, Lock } from "lucide-react";
 import { cn, initials } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
@@ -17,10 +17,13 @@ export function ThreadList({
   threads,
   selectedPatientId,
   hrefFor,
+  hiddenThreads = 0,
 }: {
   threads: ThreadRow[];
   selectedPatientId: string | null;
   hrefFor: (patientId: string) => string;
+  /** Conversations behind the messaging add-on, counted but not loaded. */
+  hiddenThreads?: number;
 }) {
   if (threads.length === 0) {
     return (
@@ -97,6 +100,18 @@ export function ThreadList({
             </li>
           );
         })}
+        {hiddenThreads > 0 && (
+          <li className="flex items-center gap-3 px-4 py-3 text-[12px] text-muted-foreground">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted">
+              <Lock className="size-4" />
+            </span>
+            <span>
+              {hiddenThreads} more{" "}
+              {hiddenThreads === 1 ? "conversation" : "conversations"} with the
+              Messages inbox add-on
+            </span>
+          </li>
+        )}
       </ul>
     </Card>
   );

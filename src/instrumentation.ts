@@ -13,6 +13,14 @@ import { createAlertThrottle, errorReport } from "@/lib/observability/error-repo
 
 const shouldAlert = createAlertThrottle();
 
+/** Runs once as the server starts, before any request is served. */
+export async function register() {
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    const { applyClinicTimeZone } = await import("@/lib/time-zone");
+    applyClinicTimeZone();
+  }
+}
+
 export const onRequestError: Instrumentation.onRequestError = async (error, request, context) => {
   const report = errorReport(error, request, context);
   console.error(JSON.stringify(report));

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import {
+  ArrowRight,
   CheckCircle2,
   LoaderCircle,
   Pause,
@@ -24,6 +25,7 @@ import {
 import { Kbd } from "@/components/ui/kbd";
 import {
   callNextAction,
+  callPatientAction,
   completeAction,
   moveToVitalsAction,
   setQueueStatusAction,
@@ -112,6 +114,51 @@ export function CallNextButton({
           N
         </Kbd>
       )}
+    </Button>
+  );
+}
+
+/**
+ * Spec §18 — starts the day by calling the first patient in, straight into
+ * their consultation. Having done that, the Command Center shows "View
+ * schedule" in its place.
+ */
+export function StartMyDayButton() {
+  const { pending, run } = useAction();
+
+  return (
+    <Button
+      size="lg"
+      variant="accent"
+      disabled={pending}
+      onClick={() => run(callNextAction)}
+    >
+      {pending ? <LoaderCircle className="animate-spin" /> : null}
+      {pending ? "Calling in…" : "Start my day"}
+      {!pending && <ArrowRight />}
+    </Button>
+  );
+}
+
+/** Calls this particular patient in, out of turn. */
+export function StartConsultationButton({
+  queueEntryId,
+  isNext,
+}: {
+  queueEntryId: string;
+  isNext: boolean;
+}) {
+  const { pending, run } = useAction();
+
+  return (
+    <Button
+      variant={isNext ? "accent" : "outline"}
+      size="sm"
+      disabled={pending}
+      onClick={() => run(() => callPatientAction(queueEntryId))}
+    >
+      {pending ? <LoaderCircle className="animate-spin" /> : <Stethoscope />}
+      Start consultation
     </Button>
   );
 }

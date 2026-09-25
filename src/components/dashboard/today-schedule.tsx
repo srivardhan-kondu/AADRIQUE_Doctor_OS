@@ -42,7 +42,8 @@ export function TodaySchedule({ rows }: { rows: ScheduleRow[] }) {
         />
       ) : (
         <ScrollArea className="max-h-[420px] px-2 pb-2">
-          <ul className="space-y-0.5">
+          {/* Room on the right so the scrollbar never sits over a status. */}
+          <ul className="space-y-0.5 pr-2">
             {rows.map((row) => (
               <li key={row.id}>
                 <div

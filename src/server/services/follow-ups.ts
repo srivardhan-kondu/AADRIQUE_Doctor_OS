@@ -7,6 +7,7 @@ import { bookAppointment, startOfDay } from "./appointments";
 import { writeAudit } from "./audit";
 import { sendTemplatedMessage } from "./communication";
 import { ServiceError, invalidState, notFound } from "./errors";
+import { hasAddOn } from "./features";
 import { fireTrigger } from "./workflows";
 
 /**
@@ -56,6 +57,11 @@ export interface ReactivationRow {
 }
 
 export interface FollowUpBoard {
+  /**
+   * The follow-up add-on is not enabled: only what is due today or overdue is
+   * loaded. Upcoming visits, reactivation and completion figures are not read.
+   */
+  limited: boolean;
   overdue: FollowUpRow[];
   dueToday: FollowUpRow[];
   upcoming: FollowUpRow[];
@@ -111,20 +117,22 @@ export async function getFollowUpBoard(
   const ninetyDaysAgo = new Date(today);
   ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
+  const limited = !(await hasAddOn(actor, "followUps"));
+
   const [open, missed, completedThisMonth, settledWindow] = await Promise.all([
     prisma.followUp.findMany({
       where: {
         doctorId,
         ...tenantScope(actor),
         status: { in: [...OPEN_STATUSES] },
-        dueDate: { lt: horizon },
+        dueDate: { lt: limited ? tomorrow : horizon },
       },
       orderBy: { dueDate: "asc" },
       take: 200,
       select: followUpSelect,
     }),
     // Reactivation: due more than a week ago, never chased, never rebooked.
-    prisma.followUp.findMany({
+    limited ? [] : prisma.followUp.findMany({
       where: {
         doctorId,
         ...tenantScope(actor),
@@ -136,7 +144,7 @@ export async function getFollowUpBoard(
       take: 25,
       select: followUpSelect,
     }),
-    prisma.followUp.count({
+    limited ? 0 : prisma.followUp.count({
       where: {
         doctorId,
         ...tenantScope(actor),
@@ -144,7 +152,7 @@ export async function getFollowUpBoard(
         completedAt: { gte: monthStart },
       },
     }),
-    prisma.followUp.groupBy({
+    limited ? [] : prisma.followUp.groupBy({
       by: ["status"],
       where: {
         doctorId,
@@ -169,6 +177,7 @@ export async function getFollowUpBoard(
   const resolved = kept + settledCount("MISSED");
 
   return {
+    limited,
     overdue,
     dueToday,
     upcoming,

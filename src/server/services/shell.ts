@@ -1,5 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/db";
+import { ADD_ON_KEYS, type AddOn } from "@/lib/add-ons";
+import { getFeatures } from "./features";
 import type { RequestActor } from "@/server/context";
 import type { ShellNotification } from "@/components/shell/notification-center";
 import type { NavCounters } from "@/components/shell/sidebar";
@@ -24,6 +26,7 @@ export async function getShellData(actor: RequestActor): Promise<{
   counters: NavCounters;
   notifications: ShellNotification[];
   online: boolean;
+  lockedAddOns: AddOn[];
 }> {
   const start = new Date();
   start.setHours(0, 0, 0, 0);
@@ -32,7 +35,7 @@ export async function getShellData(actor: RequestActor): Promise<{
 
   const doctorFilter = actor.doctorId ? { doctorId: actor.doctorId } : {};
 
-  const [queueCount, followUpCount, unreadMessages, notifications, doctor] =
+  const [queueCount, followUpCount, unreadMessages, notifications, doctor, features] =
     await Promise.all([
       prisma.queueEntry.count({
         where: {
@@ -70,6 +73,7 @@ export async function getShellData(actor: RequestActor): Promise<{
             select: { online: true },
           })
         : null,
+      getFeatures(actor),
     ]);
 
   const unread = notifications.filter((n) => !n.readAt).length;
@@ -91,5 +95,6 @@ export async function getShellData(actor: RequestActor): Promise<{
       href: n.linkHref,
     })),
     online: doctor?.online ?? true,
+    lockedAddOns: ADD_ON_KEYS.filter((key) => !features.addOns[key]),
   };
 }

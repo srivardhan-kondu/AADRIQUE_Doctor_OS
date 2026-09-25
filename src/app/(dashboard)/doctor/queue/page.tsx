@@ -11,6 +11,7 @@ import {
 } from "@/components/queue/queue-actions";
 import { QueueBoardView } from "@/components/queue/queue-board";
 import { requireActor, requireDoctorId } from "@/server/context";
+import { getFeatures } from "@/server/services/features";
 import { getQueueSignal } from "@/server/services/live";
 import { getQueueBoard } from "@/server/services/queue";
 
@@ -31,9 +32,10 @@ export default function QueuePage() {
 async function QueueScreen() {
   const actor = await requireActor();
   const doctorId = await requireDoctorId(actor);
-  const [board, signal] = await Promise.all([
+  const [board, signal, features] = await Promise.all([
     getQueueBoard(actor, doctorId),
     getQueueSignal(actor, doctorId),
+    getFeatures(actor),
   ]);
 
   return (
@@ -73,7 +75,7 @@ async function QueueScreen() {
         </div>
       )}
 
-      <QueueBoardView board={board} />
+      <QueueBoardView board={board} vitalsStep={features.opd.vitalsStep} />
     </>
   );
 }

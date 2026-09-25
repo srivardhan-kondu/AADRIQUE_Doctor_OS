@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { XIcon } from "lucide-react";
+import { Lock, XIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { AddOn } from "@/lib/add-ons";
 import { NAV, isNavItemActive } from "@/lib/nav";
 import type { Workspace } from "@/types";
 import { Logo, Wordmark } from "@/components/shell/logo";
@@ -17,11 +18,13 @@ export function MobileNav({
   onOpenChange,
   workspace,
   counters = {},
+  lockedAddOns = [],
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   workspace: Workspace;
   counters?: NavCounters;
+  lockedAddOns?: AddOn[];
 }) {
   const pathname = usePathname();
 
@@ -97,6 +100,15 @@ export function MobileNav({
                             >
                               {count}
                             </span>
+                          )}
+                          {item.addOn && lockedAddOns.includes(item.addOn) && (
+                            <Lock
+                              aria-label="Add-on"
+                              className={cn(
+                                "size-3.5 shrink-0 text-sidebar-muted",
+                                !(count !== undefined && count > 0) && "ml-auto",
+                              )}
+                            />
                           )}
                         </Link>
                       </li>

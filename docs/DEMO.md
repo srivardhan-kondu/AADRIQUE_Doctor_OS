@@ -22,7 +22,7 @@ Only for a demo deployment, never a real clinic:
 |---|---|
 | `DEMO_MODE=true` | The sign-in page lists the demo accounts — one click to switch role |
 | `PORTAL_DEMO_CODES=true` | The patient portal shows the sign-in code on screen, since no SMS gateway is connected |
-| `TZ=Asia/Kolkata` | "Today" is Indian time |
+| `CLINIC_TIME_ZONE` (optional) | "Today" is Indian time by default; set this for a clinic in another zone |
 
 **Open these before the client joins** (separate browser profiles, or one
 normal and one private window per role, so the sign-ins don't collide):

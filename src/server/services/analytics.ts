@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { Permission, assertPermission, tenantScope } from "@/lib/permissions";
 import type { RequestActor } from "@/server/context";
 import { notFound } from "./errors";
+import { assertAddOn } from "./features";
 
 /**
  * Spec §16 — analytics.
@@ -115,6 +116,7 @@ export async function getDoctorAnalytics(
   days = 30,
 ): Promise<DoctorAnalytics> {
   assertPermission(actor, Permission.ANALYTICS_READ);
+  await assertAddOn(actor, "analytics");
 
   const { start, end, previousStart, previousEnd } = windows(days);
 

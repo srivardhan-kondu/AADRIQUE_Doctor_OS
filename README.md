@@ -49,7 +49,7 @@ short:
 | `DATABASE_URL`, `DIRECT_DATABASE_URL` | Postgres; run `npm run db:deploy` on release |
 | `AUTH_SECRET` | Signs staff sessions, patient portal sessions and patient links |
 | `AUTH_TRUST_HOST=true` | Outside Vercel, so Auth.js accepts the host |
-| `TZ` | The clinic's time zone — "today" is the server's local day |
+| `CLINIC_TIME_ZONE` | The clinic's time zone (default `Asia/Kolkata`) — the app applies it to the server, so "today" is the clinic's day even on a UTC host |
 | `APP_URL` | The public address — token links and password-reset links are built from it |
 | `CRON_SECRET` | Authorises the scheduler that resumes waiting workflows (`/api/jobs/workflows`). On Vercel Hobby, a GitHub Action calls it every 5 minutes — add `APP_URL` and `CRON_SECRET` as GitHub repository secrets too |
 | `WHATSAPP_*`, `MSG91_AUTH_KEY`, `RESEND_*` | Real messaging; each integration names its credential as `env://VARIABLE` |

@@ -18,19 +18,21 @@ import type {
   FollowUpRow,
   ReactivationRow,
 } from "@/server/services/follow-ups";
+import { AddOnLocked } from "@/components/shell/add-on-locked";
 import { FollowUpMenu, RemindButton } from "./follow-up-actions";
 
 /**
  * Spec §42 — the smart follow-up queue.
  *
- * Overdue first and always visible, even when empty, because "nothing is
- * overdue" is the fact the doctor most wants confirmed.
+ * Due today first — it is the day's work — then overdue, always visible even
+ * when empty, because "nothing is overdue" is the fact the doctor most wants
+ * confirmed. Without the follow-up add-on, those two are the whole board.
  */
 export function FollowUpBoardView({ board }: { board: FollowUpBoard }) {
   const nothingAtAll =
     board.counts.open === 0 && board.reactivation.length === 0;
 
-  if (nothingAtAll) {
+  if (nothingAtAll && !board.limited) {
     return (
       <Card className="border-dashed">
         <EmptyState
@@ -45,15 +47,6 @@ export function FollowUpBoardView({ board }: { board: FollowUpBoard }) {
   return (
     <div className="space-y-5">
       <Group
-        icon={AlertTriangle}
-        tone="overdue"
-        title="Overdue"
-        description="These patients should already have come back."
-        rows={board.overdue}
-        emptyText="Nobody is overdue."
-      />
-
-      <Group
         icon={Clock3}
         tone="today"
         title="Due today"
@@ -62,13 +55,30 @@ export function FollowUpBoardView({ board }: { board: FollowUpBoard }) {
       />
 
       <Group
-        icon={CalendarCheck}
-        tone="upcoming"
-        title="Upcoming"
-        description="The next 30 days."
-        rows={board.upcoming}
-        emptyText="Nothing scheduled in the next 30 days."
+        icon={AlertTriangle}
+        tone="overdue"
+        title="Overdue"
+        description="These patients should already have come back."
+        rows={board.overdue}
+        emptyText="Nobody is overdue."
       />
+
+      {board.limited ? (
+        <AddOnLocked
+          addOn="followUps"
+          compact
+          note="Due today and overdue follow-ups stay available on every plan."
+        />
+      ) : (
+        <Group
+          icon={CalendarCheck}
+          tone="upcoming"
+          title="Upcoming"
+          description="The next 30 days."
+          rows={board.upcoming}
+          emptyText="Nothing scheduled in the next 30 days."
+        />
+      )}
 
       {board.reactivation.length > 0 && (
         <ReactivationCard rows={board.reactivation} />

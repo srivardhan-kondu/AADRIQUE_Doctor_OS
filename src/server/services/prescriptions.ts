@@ -289,3 +289,61 @@ export async function getPrintablePrescription(actor: RequestActor, visitId: str
   if (!visit) throw notFound("Visit");
   return visit;
 }
+
+/**
+ * The visit report: what the doctor wrote in the note, the vitals taken and
+ * the prescription, for printing. Only the doctor's own text — anything the
+ * assistant generated is stored apart and is not part of it (spec §10).
+ */
+export async function getPrintableVisitReport(actor: RequestActor, visitId: string) {
+  assertPermission(actor, Permission.CONSULTATION_READ);
+  assertPermission(actor, Permission.PRESCRIPTION_READ);
+  const visit = await prisma.visit.findFirst({
+    where: { id: visitId, ...tenantScope(actor) },
+    select: {
+      visitNumber: true,
+      startedAt: true,
+      facility: { select: { name: true, addressLine: true, city: true, phone: true } },
+      doctor: {
+        select: {
+          qualifications: true,
+          registrationNo: true,
+          user: { select: { name: true } },
+        },
+      },
+      patient: {
+        select: {
+          firstName: true,
+          lastName: true,
+          mrn: true,
+          gender: true,
+          dateOfBirth: true,
+          approximateAge: true,
+          allergies: { where: { active: true }, select: { substance: true } },
+        },
+      },
+      consultation: {
+        select: {
+          chiefComplaint: true,
+          symptoms: true,
+          history: true,
+          examination: true,
+          assessment: true,
+          plan: true,
+          status: true,
+          signedAt: true,
+          signedByName: true,
+        },
+      },
+      vitals: { orderBy: { recordedAt: "desc" }, take: 1 },
+      prescriptions: {
+        where: { status: { in: ["DRAFT", "ISSUED"] } },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        include: { items: { orderBy: { sortOrder: "asc" } } },
+      },
+    },
+  });
+  if (!visit) throw notFound("Visit");
+  return visit;
+}

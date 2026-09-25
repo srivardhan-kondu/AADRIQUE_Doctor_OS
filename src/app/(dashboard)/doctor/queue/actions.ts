@@ -81,6 +81,33 @@ export async function callNextAction(): Promise<ActionResult> {
   }
 }
 
+/** Calls one waiting patient in, rather than whoever is next in line. */
+export async function callPatientAction(queueEntryId: string): Promise<ActionResult> {
+  try {
+    const actor = await requireActor();
+    const doctorId = await requireDoctorId(actor);
+    const result = await callNext(actor, doctorId, idSchema.parse(queueEntryId));
+
+    refresh();
+
+    if (!result) {
+      return {
+        ok: false,
+        message: "That patient is no longer waiting.",
+        action: "The queue has been refreshed.",
+      };
+    }
+
+    return {
+      ok: true,
+      message: `${result.token} · ${result.patientName} is with you now.`,
+      redirectTo: `/doctor/consultations/${result.visitId}`,
+    };
+  } catch (error) {
+    return toResult(error);
+  }
+}
+
 export async function completeAction(queueEntryId: string): Promise<ActionResult> {
   try {
     const actor = await requireActor();

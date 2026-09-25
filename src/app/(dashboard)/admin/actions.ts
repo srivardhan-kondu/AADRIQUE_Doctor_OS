@@ -11,6 +11,7 @@ import {
 import { requireActor } from "@/server/context";
 import { updateDepartmentThresholds } from "@/server/services/admin";
 import { ServiceError } from "@/server/services/errors";
+import { setVitalsStep } from "@/server/services/features";
 import {
   checkIntegration,
   setIntegrationConnected,
@@ -157,6 +158,26 @@ export async function updateThresholdsAction(
       ok: true,
       message: `${result.name} updated.`,
       action: `Queue warnings now fire above ${parsed.waitThresholdMinutes} minutes.`,
+    };
+  } catch (error) {
+    return toResult(error);
+  }
+}
+
+/** Spec §12 — whether patients go through a vitals station before the doctor. */
+export async function setVitalsStepAction(enabled: boolean): Promise<ActionResult> {
+  try {
+    const actor = await requireActor();
+    await setVitalsStep(actor, z.boolean().parse(enabled));
+    revalidatePath("/admin/settings");
+    revalidatePath("/doctor");
+    revalidatePath("/doctor/queue");
+    return {
+      ok: true,
+      message: enabled ? "Vitals step turned on." : "Vitals step turned off.",
+      action: enabled
+        ? "Doctors can send a waiting patient to vitals, and see the patient flow."
+        : "Patients go straight from waiting to the doctor.",
     };
   } catch (error) {
     return toResult(error);

@@ -34,13 +34,21 @@ async function FollowUpScreen() {
         title="Follow-ups"
         description={
           counts.open === 0
-            ? "Nobody is waiting on a return visit."
-            : `${counts.open} open · ${counts.overdue} overdue · ${counts.dueToday} due today`
+            ? board.limited
+              ? "Nothing is due today or overdue."
+              : "Nobody is waiting on a return visit."
+            : `${counts.dueToday} due today · ${counts.overdue} overdue${
+                board.limited ? "" : ` · ${counts.upcoming} upcoming`
+              }`
         }
       />
 
-      {/* Spec §42 — the three numbers, before the list of names. */}
-      <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      {/* Spec §42 — the numbers, before the list of names: what needs doing
+          today, then what has slipped, then what is coming. */}
+      <div
+        className={`mb-5 grid gap-3 sm:grid-cols-2 ${board.limited ? "" : "xl:grid-cols-4"}`}
+      >
+        <Stat label="Due today" value={counts.dueToday} tone="warn" />
         <Stat
           label="Overdue"
           value={counts.overdue}
@@ -49,18 +57,21 @@ async function FollowUpScreen() {
             counts.overdue > 0 ? "Chase these first" : "Nothing has slipped"
           }
         />
-        <Stat label="Due today" value={counts.dueToday} tone="warn" />
-        <Stat label="Upcoming" value={counts.upcoming} tone="calm" />
-        <Stat
-          label="Kept this month"
-          value={counts.completedThisMonth}
-          tone="good"
-          hint={
-            counts.completionRate > 0
-              ? `${counts.completionRate}% completion rate`
-              : undefined
-          }
-        />
+        {!board.limited && (
+          <>
+            <Stat label="Upcoming" value={counts.upcoming} tone="calm" />
+            <Stat
+              label="Kept this month"
+              value={counts.completedThisMonth}
+              tone="good"
+              hint={
+                counts.completionRate > 0
+                  ? `${counts.completionRate}% completion rate`
+                  : undefined
+              }
+            />
+          </>
+        )}
       </div>
 
       <FollowUpBoardView board={board} />

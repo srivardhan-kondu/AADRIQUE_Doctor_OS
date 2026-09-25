@@ -39,6 +39,7 @@ export function SlotPicker({
   }
 
   const open = slots.filter((s) => s.available).length;
+  const past = slots.filter((s) => s.reason === "Past").length;
 
   if (slots.length === 0) {
     return (
@@ -55,8 +56,13 @@ export function SlotPicker({
     <div>
       <p className="text-[12px] font-semibold text-muted-foreground">
         {open === 0
-          ? "Every slot on this day is taken"
+          ? past === slots.length
+            ? "Clinic hours on this day are over"
+            : "Every remaining slot on this day is taken"
           : `${open} open ${open === 1 ? "slot" : "slots"}`}
+        {past > 0 && open > 0 && (
+          <span className="font-normal"> · times already passed are struck out</span>
+        )}
       </p>
 
       <div className="mt-2 grid max-h-56 grid-cols-4 gap-1.5 overflow-y-auto sm:grid-cols-5">

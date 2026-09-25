@@ -15,11 +15,13 @@ import {
   renderTemplate,
   validateAddress,
 } from "@/lib/messaging";
+import { MESSAGING_PREVIEW_LIMIT } from "@/lib/add-ons";
 import { Permission, assertPermission, tenantScope } from "@/lib/permissions";
 import { resolveSecret } from "@/lib/secrets";
 import type { RequestActor } from "@/server/context";
 import { writeAudit } from "./audit";
 import { ServiceError, invalidState, notFound } from "./errors";
+import { hasAddOn } from "./features";
 
 /**
  * Spec §14 — the communication centre.
@@ -65,6 +67,12 @@ export interface InboxFilters {
 }
 
 export interface Inbox {
+  /**
+   * The messaging add-on is not enabled: the inbox is a preview of the most
+   * recent conversation only, and `hiddenThreads` says how many are behind it.
+   */
+  limited: boolean;
+  hiddenThreads: number;
   threads: ThreadRow[];
   counts: {
     total: number;
@@ -240,8 +248,14 @@ export async function getInbox(
 
   const attempted = delivered + read + byStatus("SENT") + failed;
 
+  const all = [...threads.values()].slice(0, limit);
+  const limited = !(await hasAddOn(actor, "messaging"));
+  const shown = limited ? all.slice(0, 1) : all;
+
   return {
-    threads: [...threads.values()].slice(0, limit),
+    limited,
+    hiddenThreads: all.length - shown.length,
+    threads: shown,
     counts: { total, failed, pending, delivered, read },
     deliveryRate: attempted
       ? Math.round(((delivered + read) / attempted) * 100)
@@ -282,6 +296,9 @@ export interface PatientThread {
     preferredLanguage: string;
   };
   messages: ThreadMessage[];
+  /** Without the messaging add-on: only the latest few, and no replying. */
+  limited: boolean;
+  hiddenMessages: number;
 }
 
 /** Spec §14 — the communication timeline for one patient. */
@@ -291,7 +308,7 @@ export async function getPatientThread(
 ): Promise<PatientThread> {
   assertPermission(actor, Permission.COMMUNICATION_READ);
 
-  const [patient, newestFirst] = await Promise.all([
+  const [patient, newestFirst, full] = await Promise.all([
     prisma.patient.findFirst({
       where: { id: patientId, ...tenantScope(actor) },
       select: {
@@ -333,12 +350,15 @@ export async function getPatientThread(
         sentBy: { select: { name: true } },
       },
     }),
+    hasAddOn(actor, "messaging"),
   ]);
 
   if (!patient) throw notFound("Patient");
 
-  // Oldest first on screen, as a conversation reads.
-  const messages = newestFirst.reverse();
+  // Oldest first on screen, as a conversation reads. Without the add-on the
+  // preview is the latest few; the rest never leaves the server.
+  const shown = full ? newestFirst : newestFirst.slice(0, MESSAGING_PREVIEW_LIMIT);
+  const messages = shown.reverse();
 
   return {
     patient: {
@@ -370,6 +390,8 @@ export async function getPatientThread(
       readAt: m.readAt,
       sentByName: m.sentBy?.name ?? null,
     })),
+    limited: !full,
+    hiddenMessages: newestFirst.length - shown.length,
   };
 }
 

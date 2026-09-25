@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, FlaskConical, TriangleAlert } from "lucide-react";
+import { FlaskConical, Printer, TriangleAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageBody } from "@/components/shell/page-header";
+import { BackButton } from "@/components/shell/back-button";
 import { ConsultationEditor } from "@/components/consultation/consultation-editor";
 import { PatientSnapshot } from "@/components/consultation/patient-snapshot";
 import { PrescriptionEditor } from "@/components/consultation/prescription-editor";
@@ -75,11 +76,12 @@ export default async function ConsultationPage({
     <PageBody className="max-w-[1500px]">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon-sm" asChild>
-            <Link href="/doctor/queue" aria-label="Back to queue">
-              <ArrowLeft />
-            </Link>
-          </Button>
+          {/* Back to where the doctor came from: the queue for a patient in
+              front of them, the consultations list for a record looked up. */}
+          <BackButton
+            fallbackHref={ws.status === "SIGNED" ? "/doctor/consultations" : "/doctor/queue"}
+            label="Back"
+          />
           <div>
             <h1 className="font-display text-xl font-bold tracking-tight">
               Consultation
@@ -102,6 +104,13 @@ export default async function ConsultationPage({
             </p>
           </div>
         </div>
+        {/* What the doctor typed, printed as the visit report. */}
+        <Button variant="outline" size="sm" asChild>
+          <Link href={`/print/report/${ws.visitId}`} target="_blank">
+            <Printer />
+            Print report
+          </Link>
+        </Button>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[280px_1fr]">

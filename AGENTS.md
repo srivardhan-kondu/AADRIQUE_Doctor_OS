@@ -71,7 +71,8 @@ before implementing a feature.
   new enum value once it has.
 - "Today" is the server's local day. `Queue.date` is a date column holding
   the UTC calendar date of local midnight; compare it the way it was written
-  (see `getTokenStatus`), and deploy with `TZ` set to the clinic's zone.
+  (see `getTokenStatus`). The zone is `CLINIC_TIME_ZONE`, applied to the
+  process by `src/lib/time-zone.ts` — Vercel runs in UTC and reserves `TZ`.
 - `formData.get` returns `null`, not `undefined`, for a field the form did
   not send — `z.string().optional()` rejects it. Use `.nullish()`.
 - A screen showing live queue state renders `getQueueSignal` and
@@ -95,6 +96,21 @@ before implementing a feature.
 - Public surfaces (`/display`, `/q/…`, `/portal/…`) show token numbers only. Clinical
   content is withheld by the service for anyone without CONSULTATION_READ —
   never only hidden in the UI.
+
+## Add-on rules
+
+- Follow-ups (beyond due today and overdue), the Messages inbox, Analytics
+  and the AI Copilot screen are add-ons, stored as
+  `Organization.modules.addOns` and read through `src/lib/add-ons.ts`.
+  Missing means locked. AADRIQUE turns them on with `npm run org:add-ons`;
+  a clinic's admin cannot.
+- A lock is enforced in the service (`assertAddOn` / `hasAddOn` in
+  `src/server/services/features.ts`) so locked data never leaves the
+  server. `<AddOnLocked>` only explains it.
+- Automated messages (confirmations, reminders, token updates) are core and
+  keep sending without the messaging add-on; only the inbox is locked.
+- Whether patients pass through vitals first is clinic configuration
+  (`Organization.settings.vitalsStep`, off by default), not a licence.
 
 ## Automation rules (spec §28)
 
@@ -221,7 +237,8 @@ unless `DATABASE_URL` is local. Run it when a change touches a screen.
 npm run db:migrate   # create and apply a migration
 npm run db:seed      # reset and reseed the demo organisation (refuses beside a real clinic)
 npm run org:create   # set up a real clinic and its first admin
-npm run db:backup    # verified pg_dump
+npm run db:backup    # verified pg_dump (also runs daily, encrypted: .github/workflows/backup.yml)
+npm run org:add-ons -- <slug> +analytics   # switch a clinic's add-ons on or off
 npm run db:studio    # browse the data
 ```
 

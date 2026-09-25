@@ -3,8 +3,9 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Lock, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { AddOn } from "@/lib/add-ons";
 import { NAV, isNavItemActive, type NavItem } from "@/lib/nav";
 import type { Workspace } from "@/types";
 import { Logo, Wordmark } from "@/components/shell/logo";
@@ -19,6 +20,7 @@ interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
   counters?: NavCounters;
+  lockedAddOns?: AddOn[];
 }
 
 export function Sidebar({
@@ -26,6 +28,7 @@ export function Sidebar({
   collapsed,
   onToggle,
   counters = {},
+  lockedAddOns = [],
 }: SidebarProps) {
   const pathname = usePathname();
   const sections = NAV[workspace];
@@ -74,6 +77,7 @@ export function Sidebar({
                   active={isNavItemActive(item.href, pathname)}
                   collapsed={collapsed}
                   count={item.counter ? counters[item.counter] : undefined}
+                  locked={item.addOn ? lockedAddOns.includes(item.addOn) : false}
                 />
               ))}
             </ul>
@@ -112,11 +116,13 @@ function SidebarLink({
   active,
   collapsed,
   count,
+  locked,
 }: {
   item: NavItem;
   active: boolean;
   collapsed: boolean;
   count?: number;
+  locked: boolean;
 }) {
   const Icon = item.icon;
 
@@ -155,6 +161,15 @@ function SidebarLink({
           {count}
         </span>
       )}
+      {!collapsed && locked && (
+        <Lock
+          aria-label="Add-on"
+          className={cn(
+            "size-3.5 shrink-0 text-sidebar-muted",
+            !(count !== undefined && count > 0) && "ml-auto",
+          )}
+        />
+      )}
       {collapsed && count !== undefined && count > 0 && (
         <span className="absolute right-2 top-1.5 size-1.5 rounded-full bg-accent" />
       )}
@@ -170,6 +185,7 @@ function SidebarLink({
         <TooltipContent side="right">
           {item.label}
           {count !== undefined && count > 0 && ` · ${count}`}
+          {locked && " · add-on"}
         </TooltipContent>
       </Tooltip>
     </li>

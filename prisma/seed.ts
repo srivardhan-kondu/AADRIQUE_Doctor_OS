@@ -226,8 +226,13 @@ async function seedOrganization() {
         analytics: true,
         ai: true,
         integrations: true,
+        // The demo shows every add-on. A real clinic starts with them locked;
+        // `npm run org:add-ons` switches them on.
+        addOns: { followUps: true, messaging: true, analytics: true, aiCopilot: true },
       },
       settings: {
+        // The demo story walks a patient through the vitals station.
+        vitalsStep: true,
         waitAlertMinutes: 20,
         queueCapacityAlert: 6,
         feedbackDelayHours: 2,

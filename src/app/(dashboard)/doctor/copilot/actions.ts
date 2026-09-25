@@ -17,6 +17,7 @@ import {
   type AIOutcome,
 } from "@/server/services/ai";
 import { ServiceError } from "@/server/services/errors";
+import { assertAddOn, hasAddOn } from "@/server/services/features";
 import { searchPatients } from "@/server/services/patients";
 
 /**
@@ -97,6 +98,7 @@ export async function briefAction(visitId: string): Promise<AIActionResult> {
 export async function summaryAction(patientId: string): Promise<AIActionResult> {
   try {
     const actor = await requireActor();
+    await assertAddOn(actor, "aiCopilot");
     return ok(await generatePatientSummary(actor, idSchema.parse(patientId)));
   } catch (error) {
     return toResult(error);
@@ -136,6 +138,7 @@ export async function historySearchAction(
 ): Promise<AIActionResult> {
   try {
     const actor = await requireActor();
+    await assertAddOn(actor, "aiCopilot");
     return ok(
       await searchHistory(
         actor,
@@ -153,6 +156,7 @@ export async function knowledgeAction(
 ): Promise<AIActionResult> {
   try {
     const actor = await requireActor();
+    await assertAddOn(actor, "aiCopilot");
     return ok(await askKnowledgeAssistant(actor, questionSchema.parse(question)));
   } catch (error) {
     return toResult(error);
@@ -211,6 +215,7 @@ export async function findPatientsAction(
   term: string,
 ): Promise<CopilotPatient[]> {
   const actor = await requireActor();
+  if (!(await hasAddOn(actor, "aiCopilot"))) return [];
   const rows = await searchPatients(actor, z.string().max(120).parse(term), 6);
 
   return rows.map((row) => ({

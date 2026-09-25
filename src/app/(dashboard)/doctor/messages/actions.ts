@@ -10,6 +10,7 @@ import {
   sendMessage,
 } from "@/server/services/communication";
 import { ServiceError } from "@/server/services/errors";
+import { assertAddOn } from "@/server/services/features";
 
 /** Communication actions (spec §14). */
 
@@ -66,6 +67,8 @@ export async function sendMessageAction(
 ): Promise<ActionResult> {
   try {
     const actor = await requireActor();
+    // Writing from the inbox is the messaging add-on; automations are not.
+    await assertAddOn(actor, "messaging");
     const parsed = sendSchema.parse(input);
 
     const result = await sendMessage(actor, {
@@ -97,6 +100,8 @@ export async function retryMessageAction(
 ): Promise<ActionResult> {
   try {
     const actor = await requireActor();
+    // Writing from the inbox is the messaging add-on; automations are not.
+    await assertAddOn(actor, "messaging");
     const result = await retryMessage(actor, idSchema.parse(messageId));
 
     refresh();

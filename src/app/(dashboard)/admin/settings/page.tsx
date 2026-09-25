@@ -11,6 +11,9 @@ import { NoAccess } from "@/components/shell/no-access";
 import { Permission, hasPermission } from "@/lib/permissions";
 import { requireActor } from "@/server/context";
 import { getOrganizationSettings } from "@/server/services/admin";
+import { getFeatures } from "@/server/services/features";
+import { ADD_ONS, ADD_ON_KEYS } from "@/lib/add-ons";
+import { VitalsStepToggle } from "@/components/admin/vitals-step-toggle";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -48,7 +51,10 @@ async function SettingsScreen() {
     );
   }
 
-  const settings = await getOrganizationSettings(actor);
+  const [settings, features] = await Promise.all([
+    getOrganizationSettings(actor),
+    getFeatures(actor),
+  ]);
 
   return (
     <>
@@ -77,6 +83,48 @@ async function SettingsScreen() {
             /portal/{settings.slug}
           </Link>
         </Button>
+      </Card>
+
+      {/* Spec §12 — how patients move through the OPD. */}
+      <Card className="mb-5 flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+        <div className="min-w-0">
+          <p className="flex items-center gap-2 text-[14px] font-semibold">
+            Vitals before the doctor
+            <Badge variant={features.opd.vitalsStep ? "success" : "muted"}>
+              {features.opd.vitalsStep ? "On" : "Off"}
+            </Badge>
+          </p>
+          <p className="mt-0.5 text-[13px] text-muted-foreground">
+            {features.opd.vitalsStep
+              ? "Patients can be sent to a vitals station while they wait, and the Command Center shows the patient flow."
+              : "Patients go straight from waiting to the doctor. Turn this on if a nurse records vitals first."}{" "}
+            The Vitals Station can record vitals either way.
+          </p>
+        </div>
+        <VitalsStepToggle enabled={features.opd.vitalsStep} />
+      </Card>
+
+      {/* What this clinic's plan includes. Changed by AADRIQUE, not here. */}
+      <Card className="mb-5 px-5 py-4">
+        <p className="text-[14px] font-semibold">Add-ons</p>
+        <p className="mt-0.5 text-[13px] text-muted-foreground">
+          The OPD core is always included. Contact AADRIQUE to add or remove an add-on.
+        </p>
+        <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+          {ADD_ON_KEYS.map((key) => (
+            <li
+              key={key}
+              className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2"
+            >
+              <span className="min-w-0 truncate text-[13px] font-medium">
+                {ADD_ONS[key].label}
+              </span>
+              <Badge variant={features.addOns[key] ? "success" : "muted"}>
+                {features.addOns[key] ? "Included" : "Not included"}
+              </Badge>
+            </li>
+          ))}
+        </ul>
       </Card>
 
       <div className="grid gap-5 xl:grid-cols-[1fr_1.4fr]">
@@ -198,6 +246,8 @@ function SettingsSkeleton() {
           <Skeleton key={i} className="h-[76px] rounded-xl" />
         ))}
       </div>
+      <Skeleton className="mb-5 h-[76px] rounded-xl" />
+      <Skeleton className="mb-5 h-[150px] rounded-xl" />
       <div className="grid gap-5 xl:grid-cols-[1fr_1.4fr]">
         <Skeleton className="h-80 rounded-xl" />
         <Skeleton className="h-80 rounded-xl" />

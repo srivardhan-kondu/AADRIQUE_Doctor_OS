@@ -2,7 +2,9 @@
 
 import * as React from "react";
 import { usePathname } from "next/navigation";
+import type { AddOn } from "@/lib/add-ons";
 import { workspaceFromPath } from "@/lib/nav";
+import { noteNavigation } from "@/lib/nav-history";
 import { sidebarStore } from "@/lib/sidebar-store";
 import { Sidebar, type NavCounters } from "@/components/shell/sidebar";
 import { MobileNav } from "@/components/shell/mobile-nav";
@@ -24,10 +26,12 @@ export function AppShell({
   children,
   counters,
   notifications = [],
+  lockedAddOns = [],
 }: {
   children: React.ReactNode;
   counters?: NavCounters;
   notifications?: ShellNotification[];
+  lockedAddOns?: AddOn[];
 }) {
   const pathname = usePathname();
   const workspace = workspaceFromPath(pathname);
@@ -37,6 +41,10 @@ export function AppShell({
     sidebarStore.getSnapshot,
     sidebarStore.getServerSnapshot,
   );
+
+  React.useEffect(() => {
+    noteNavigation();
+  }, [pathname]);
 
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
   const [paletteOpen, setPaletteOpen] = React.useState(false);
@@ -62,6 +70,7 @@ export function AppShell({
         collapsed={collapsed}
         onToggle={sidebarStore.toggle}
         counters={counters}
+        lockedAddOns={lockedAddOns}
       />
 
       <MobileNav
@@ -69,6 +78,7 @@ export function AppShell({
         onOpenChange={setMobileNavOpen}
         workspace={workspace}
         counters={counters}
+        lockedAddOns={lockedAddOns}
       />
 
       <div className="flex min-w-0 flex-1 flex-col">

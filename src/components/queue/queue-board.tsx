@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   ArrowRight,
   Inbox,
+  Printer,
   Repeat2,
   Stethoscope,
 } from "lucide-react";
@@ -17,16 +18,24 @@ import {
   CompleteButton,
   MoveToVitalsButton,
   SkipButton,
+  StartConsultationButton,
 } from "@/components/queue/queue-actions";
 import type { QueueBoard, QueueBoardEntry } from "@/server/services/queue";
 
 /** Spec §12 — the queue as a workflow, not a table of rows. */
-export function QueueBoardView({ board }: { board: QueueBoard }) {
+export function QueueBoardView({
+  board,
+  vitalsStep,
+}: {
+  board: QueueBoard;
+  /** The clinic sends patients through a vitals station first. */
+  vitalsStep: boolean;
+}) {
   return (
     <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
       <div className="min-w-0 space-y-5">
         <ActiveCard board={board} />
-        <WaitingList board={board} />
+        <WaitingList board={board} vitalsStep={vitalsStep} />
       </div>
       <div className="min-w-0 space-y-5">
         <PatientDisplayCard board={board} />
@@ -98,12 +107,20 @@ function ActiveCard({ board }: { board: QueueBoard }) {
           )}
         </div>
 
-        <div className="flex shrink-0 flex-wrap items-center gap-2">
+        <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto">
           {active.visitId && (
             <Button asChild>
               <Link href={`/doctor/consultations/${active.visitId}`}>
                 Open consultation
                 <ArrowRight />
+              </Link>
+            </Button>
+          )}
+          {active.visitId && (
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/print/report/${active.visitId}`} target="_blank">
+                <Printer />
+                Print report
               </Link>
             </Button>
           )}
@@ -114,7 +131,13 @@ function ActiveCard({ board }: { board: QueueBoard }) {
   );
 }
 
-function WaitingList({ board }: { board: QueueBoard }) {
+function WaitingList({
+  board,
+  vitalsStep,
+}: {
+  board: QueueBoard;
+  vitalsStep: boolean;
+}) {
   return (
     <Card>
       <CardHeader>
@@ -142,6 +165,8 @@ function WaitingList({ board }: { board: QueueBoard }) {
                 entry={entry}
                 threshold={board.threshold}
                 isNext={index === 0}
+                canCall={!board.paused}
+                vitalsStep={vitalsStep}
               />
             </li>
           ))}
@@ -155,17 +180,21 @@ function QueueEntryRow({
   entry,
   threshold,
   isNext,
+  canCall,
+  vitalsStep,
 }: {
   entry: QueueBoardEntry;
   threshold: number;
   isNext: boolean;
+  canCall: boolean;
+  vitalsStep: boolean;
 }) {
   const overdue = entry.waitMinutes > threshold;
 
   return (
     <div
       className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-muted",
+        "flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg px-3 py-2.5 transition-colors hover:bg-muted",
         isNext && "bg-muted/50",
       )}
     >
@@ -182,7 +211,7 @@ function QueueEntryRow({
 
       <Link
         href={`/doctor/patients/${entry.patientId}`}
-        className="min-w-0 flex-1"
+        className="min-w-0 flex-1 basis-32"
       >
         <span className="flex items-center gap-1.5">
           <span className="truncate text-[13px] font-medium">
@@ -228,8 +257,14 @@ function QueueEntryRow({
         {formatWait(entry.waitMinutes)}
       </span>
 
-      <span className="flex shrink-0 items-center gap-0.5">
-        {entry.status === "WAITING" && (
+      {/* On a phone the actions take their own line under the patient. */}
+      <span className="flex w-full shrink-0 items-center justify-end gap-0.5 sm:w-auto">
+        {/* Spec §12 — any waiting patient can be taken straight in:
+            Waiting → Consultation → Completed, with no step in between. */}
+        {canCall && (
+          <StartConsultationButton queueEntryId={entry.id} isNext={isNext} />
+        )}
+        {vitalsStep && entry.status === "WAITING" && (
           <MoveToVitalsButton queueEntryId={entry.id} />
         )}
         <SkipButton

@@ -108,6 +108,7 @@ async function InboxScreen({ searchParams }: PageProps) {
           threads={inbox.threads}
           selectedPatientId={selectedId}
           hrefFor={hrefFor}
+          hiddenThreads={inbox.hiddenThreads}
         />
 
         <div className="min-h-[32rem] lg:h-[calc(100vh-22rem)] lg:min-h-[34rem]">

@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { AlertCircle, MessagesSquare, ShieldOff } from "lucide-react";
+import { AlertCircle, Lock, MessagesSquare, ShieldOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { AddOnLocked } from "@/components/shell/add-on-locked";
 import type { PatientThread, ThreadMessage } from "@/server/services/communication";
 import { Composer } from "./composer";
 import { ChannelBadge, CHANNEL_LABEL, DeliveryState } from "./delivery";
@@ -75,33 +76,60 @@ export function ThreadView({ thread }: { thread: PatientThread }) {
             description={`Anything you send ${thread.patient.name.split(" ")[0]} will appear here, with its delivery state.`}
           />
         ) : (
-          groups.map((group) => (
+          <>
+          {thread.hiddenMessages > 0 && (
+            <p className="flex items-center justify-center gap-1.5 text-center text-[12px] text-muted-foreground">
+              <Lock className="size-3.5" />
+              {thread.hiddenMessages} earlier{" "}
+              {thread.hiddenMessages === 1 ? "message" : "messages"} in the full inbox
+            </p>
+          )}
+          {groups.map((group) => (
             <div key={group.label}>
               <p className="mb-3 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 {group.label}
               </p>
               <ul className="space-y-3">
                 {group.messages.map((message) => (
-                  <MessageBubble key={message.id} message={message} />
+                  <MessageBubble
+                    key={message.id}
+                    message={message}
+                    canRetry={!thread.limited}
+                  />
                 ))}
               </ul>
             </div>
-          ))
+          ))}
+          </>
         )}
       </div>
 
       <div className="border-t border-border p-4">
-        <Composer
-          patientId={thread.patient.id}
-          patientName={thread.patient.name}
-          consented={consented}
-        />
+        {thread.limited ? (
+          <AddOnLocked
+            addOn="messaging"
+            compact
+            note="Appointment confirmations, reminders and token updates still go out automatically. This preview shows the latest conversation."
+          />
+        ) : (
+          <Composer
+            patientId={thread.patient.id}
+            patientName={thread.patient.name}
+            consented={consented}
+          />
+        )}
       </div>
     </Card>
   );
 }
 
-function MessageBubble({ message }: { message: ThreadMessage }) {
+function MessageBubble({
+  message,
+  canRetry,
+}: {
+  message: ThreadMessage;
+  canRetry: boolean;
+}) {
   const outbound = message.direction === "OUTBOUND";
   const failed = message.status === "FAILED";
 
@@ -167,10 +195,12 @@ function MessageBubble({ message }: { message: ThreadMessage }) {
               {message.failureReason ??
                 `${CHANNEL_LABEL[message.channel]} rejected it`}
             </span>
-            <RetryButton
-              messageId={message.id}
-              attemptCount={message.attemptCount}
-            />
+            {canRetry && (
+              <RetryButton
+                messageId={message.id}
+                attemptCount={message.attemptCount}
+              />
+            )}
           </div>
         )}
       </div>

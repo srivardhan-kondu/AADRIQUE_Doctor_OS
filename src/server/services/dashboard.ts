@@ -81,6 +81,8 @@ export interface DashboardData {
     threshold: number;
   };
   nextPatient: { queueEntryId: string; patientName: string; token: string } | null;
+  /** Someone has been called in today — "Start my day" has done its job. */
+  dayStarted: boolean;
   brief: {
     appointments: number;
     followUps: number;
@@ -299,6 +301,7 @@ export async function getDashboard(
     nextPatient: next
       ? { queueEntryId: next.id, patientName: next.patientName, token: next.token }
       : null,
+    dayStarted: entries.some((e) => e.calledAt !== null || e.status === "COMPLETED"),
     brief: {
       appointments: appointments.length,
       followUps: followUpsDue,
