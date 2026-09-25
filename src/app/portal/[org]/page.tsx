@@ -48,7 +48,7 @@ export default async function PortalHomePage({
     <div className="mb-6 flex items-center justify-between gap-3">
       <div className="flex items-center gap-3">
         <Logo />
-        <p className="font-display font-semibold">{organization.name}</p>
+        <p className="font-display font-medium">{organization.name}</p>
       </div>
       {portal && <PortalSignOut slug={organization.slug} />}
     </div>
@@ -58,7 +58,7 @@ export default async function PortalHomePage({
     return (
       <>
         {header}
-        <h1 className="font-display text-2xl font-bold tracking-tight">Your appointments</h1>
+        <h1 className="font-display text-2xl font-medium tracking-tight">Your appointments</h1>
         <p className="mb-6 mt-1 text-[15px] text-muted-foreground">
           Book, check or cancel an appointment, and follow your token on the day.
         </p>
@@ -73,7 +73,7 @@ export default async function PortalHomePage({
     return (
       <>
         {header}
-        <h1 className="font-display text-2xl font-bold tracking-tight">Who is this for?</h1>
+        <h1 className="font-display text-2xl font-medium tracking-tight">Who is this for?</h1>
         <p className="mb-5 mt-1 text-[15px] text-muted-foreground">
           More than one person is registered with this number.
         </p>
@@ -87,7 +87,7 @@ export default async function PortalHomePage({
   return (
     <>
       {header}
-      <h1 className="font-display text-2xl font-bold tracking-tight">
+      <h1 className="font-display text-2xl font-medium tracking-tight">
         Hello, {portal.patient.firstName}
       </h1>
       {portal.patients.length > 1 && (
@@ -187,7 +187,7 @@ export default async function PortalHomePage({
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="mb-2 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <h2 className="mb-2 text-[13px] font-mediumr text-muted-foreground">
         {title}
       </h2>
       <Card className="p-0">

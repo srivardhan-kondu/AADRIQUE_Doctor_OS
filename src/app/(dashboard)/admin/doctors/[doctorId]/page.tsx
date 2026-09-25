@@ -64,7 +64,7 @@ export default async function AdminDoctorPage({
           <AvatarFallback>{initials(profile.name)}</AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
-          <h1 className="font-display text-xl font-bold tracking-tight">
+          <h1 className="font-display text-xl font-medium tracking-tight">
             {profile.name}
           </h1>
           <p className="mt-0.5 flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">

@@ -257,14 +257,14 @@ function Stat({
   return (
     <Card className="px-4 py-3.5">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+        <p className="text-[12px] font-medium text-muted-foreground">
           {label}
         </p>
         <Icon className="size-4 shrink-0 text-muted-foreground" />
       </div>
       <p
         className={cn(
-          "mt-1 font-display text-2xl font-bold tabular",
+          "mt-1 font-display text-2xl font-medium tabular",
           tone === "warn" && value > 0 && "text-warning",
           tone === "good" && value > 0 && "text-success",
         )}

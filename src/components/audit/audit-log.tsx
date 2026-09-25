@@ -95,7 +95,7 @@ export function AuditLogView({
     <div className="space-y-5">
       {days.map((day) => (
         <Card key={day.label} className="p-0">
-          <p className="border-b border-border px-5 py-2.5 text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="border-b border-border px-5 py-2.5 text-[12px] font-medium text-muted-foreground">
             {day.label}
             <span className="ml-2 font-normal normal-case tabular">
               {day.entries.length}{" "}
@@ -131,7 +131,7 @@ function AuditRow({ entry }: { entry: AuditEntry }) {
         {entry.createdAt.toLocaleTimeString("en-IN", {
           hour: "2-digit",
           minute: "2-digit",
-          hour12: false,
+          hourCycle: "h23",
         })}
       </span>
 

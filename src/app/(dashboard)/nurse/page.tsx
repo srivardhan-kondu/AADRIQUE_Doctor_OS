@@ -85,7 +85,7 @@ function Section({
   if (patients.length === 0) return null;
   return (
     <section>
-      <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+      <h2 className="mb-2 text-[12px] font-medium text-muted-foreground">
         {title}
       </h2>
       <Card className="divide-y divide-border">
@@ -123,7 +123,7 @@ function Section({
                   ))}
                   <span className="text-muted-foreground">
                     {" · "}
-                    {p.vitals.recordedAt.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false })}
+                    {p.vitals.recordedAt.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
                     {p.vitals.recordedBy && ` by ${p.vitals.recordedBy}`}
                   </span>
                 </p>

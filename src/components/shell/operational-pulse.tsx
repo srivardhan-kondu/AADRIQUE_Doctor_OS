@@ -63,7 +63,7 @@ export function OperationalPulse({
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="flex h-9 items-center justify-center rounded-lg bg-sidebar-accent">
+          <div className="flex h-10 items-center justify-center rounded-full bg-sidebar-accent shadow-soft">
             {dot}
           </div>
         </TooltipTrigger>
@@ -79,10 +79,8 @@ export function OperationalPulse({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div className="rounded-lg bg-sidebar-accent px-2.5 py-2 text-left">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-sidebar-muted">
-            OPD Health
-          </p>
+        <div className="rounded-xl bg-sidebar-accent px-3.5 py-2.5 text-left shadow-soft">
+          <p className="text-[12px] font-medium text-sidebar-muted">OPD health</p>
           <p className={cn("mt-1 flex items-center gap-2 text-[13px] font-semibold", meta.text)}>
             {dot}
             {meta.label}

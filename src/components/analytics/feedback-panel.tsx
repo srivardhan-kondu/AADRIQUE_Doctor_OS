@@ -35,7 +35,7 @@ export function FeedbackPanel({
         ) : (
           <>
             <div className="flex items-baseline gap-2">
-              <p className="font-display text-3xl font-bold tabular">
+              <p className="font-display text-3xl font-medium tabular">
                 {feedback.averageRating}
               </p>
               <div

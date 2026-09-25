@@ -173,7 +173,7 @@ export function CopilotWorkspace({
 
         {/* Spec §10 — the product says plainly which engine is answering. */}
         <div className="rounded-lg border border-border bg-card px-3 py-2.5">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="text-[12px] font-medium text-muted-foreground">
             Engine
           </p>
           <p className="mt-1 text-[12px] leading-snug">

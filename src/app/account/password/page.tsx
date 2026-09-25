@@ -23,10 +23,10 @@ export default async function ChangePasswordPage() {
       <div className="w-full max-w-sm">
         <div className="mb-6 flex items-center gap-3">
           <Logo />
-          <p className="font-display font-semibold">{actor.organizationName}</p>
+          <p className="font-display font-medium">{actor.organizationName}</p>
         </div>
         <div className="rounded-xl border border-border bg-card p-6 shadow-soft">
-          <h1 className="font-display text-xl font-bold tracking-tight">
+          <h1 className="font-display text-xl font-medium tracking-tight">
             {forced ? "Choose your password" : "Change password"}
           </h1>
           <p className="mb-5 mt-1 text-[13px] text-muted-foreground">

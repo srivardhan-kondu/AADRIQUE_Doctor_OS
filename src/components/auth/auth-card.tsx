@@ -9,13 +9,13 @@ export function AuthCard({ title, description, children }: { title: string; desc
         <Link href="/sign-in" className="mb-8 flex items-center gap-3">
           <Logo className="size-9" />
           <span className="leading-none">
-            <span className="block font-display text-base font-bold tracking-tight">AADRIQUE</span>
-            <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            <span className="block text-base font-semibold tracking-[0.02em]">AADRIQUE</span>
+            <span className="mt-1 block font-display text-[13px] italic text-muted-foreground">
               Doctor OS
             </span>
           </span>
         </Link>
-        <h1 className="font-display text-2xl font-bold tracking-tight">{title}</h1>
+        <h1 className="font-display text-[32px] font-normal leading-tight">{title}</h1>
         {description && <p className="mt-1.5 text-[14px] text-muted-foreground">{description}</p>}
         <div className="mt-7">{children}</div>
       </div>

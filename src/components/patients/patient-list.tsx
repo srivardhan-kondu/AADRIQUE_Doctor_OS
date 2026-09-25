@@ -102,7 +102,7 @@ export function PatientList({
             </div>
 
             <div className="hidden shrink-0 text-right sm:block">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              <p className="text-[12px] font-mediumr text-muted-foreground">
                 Last visit
               </p>
               <p className="mt-0.5 text-[12px] font-medium">

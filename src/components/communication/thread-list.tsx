@@ -85,7 +85,7 @@ export function ThreadList({
                     <ChannelBadge channel={thread.lastChannel} />
                     <DeliveryState status={thread.lastStatus} />
                     {thread.failedCount > 0 && (
-                      <span className="text-[10px] font-semibold uppercase tracking-wide text-destructive">
+                      <span className="text-[12px] font-medium text-destructive">
                         {thread.failedCount} failed
                       </span>
                     )}

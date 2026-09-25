@@ -49,7 +49,7 @@ export function UserMenu() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg py-1 pl-1 pr-2 transition-colors hover:bg-muted">
+      <DropdownMenuTrigger className="flex items-center gap-2 rounded-full py-1 pl-1 pr-3 transition-colors hover:bg-foreground/[0.05]">
         <span className="relative">
           <Avatar className="size-8">
             <AvatarImage src={user.avatarUrl} alt="" />

@@ -266,7 +266,7 @@ export function ConsultationEditor({
         <div key={section.key}>
           <label
             htmlFor={section.key}
-            className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground"
+            className="mb-1.5 flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground"
           >
             {section.label}
             {section.required && !signed && (
@@ -340,7 +340,7 @@ function SaveIndicator({ state }: { state: SaveState }) {
           {state.at.toLocaleTimeString("en-IN", {
             hour: "2-digit",
             minute: "2-digit",
-            hour12: false,
+            hourCycle: "h23",
           })}
         </span>
       </span>

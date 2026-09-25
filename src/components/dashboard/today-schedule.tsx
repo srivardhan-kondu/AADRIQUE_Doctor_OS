@@ -59,7 +59,7 @@ export function TodaySchedule({ rows }: { rows: ScheduleRow[] }) {
                     {row.time.toLocaleTimeString("en-IN", {
                       hour: "2-digit",
                       minute: "2-digit",
-                      hour12: false,
+                      hourCycle: "h23",
                     })}
                   </span>
                   <span className="min-w-0 flex-1">

@@ -69,7 +69,7 @@ export function Patient360View({
         </Avatar>
 
         <div className="min-w-0 flex-1">
-          <h1 className="font-display text-2xl font-bold uppercase tracking-tight">
+          <h1 className="font-display text-2xl font-medium tracking-tight">
             {patient.name}
           </h1>
           <p className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] text-muted-foreground">
@@ -195,7 +195,7 @@ function Field({
 }) {
   return (
     <div className="min-w-0">
-      <dt className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+      <dt className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground">
         <Icon className="size-3" />
         {label}
       </dt>
@@ -238,11 +238,11 @@ function SummaryCard({
             <div key={stat.label}>
               <dd
                 data-numeric
-                className="font-display text-2xl font-bold leading-none"
+                className="font-display text-2xl font-medium leading-none"
               >
                 {stat.value}
               </dd>
-              <dt className="mt-1 text-[11px] uppercase tracking-wider text-muted-foreground">
+              <dt className="mt-1 text-[12px] font-mediumr text-muted-foreground">
                 {stat.label}
               </dt>
             </div>
@@ -271,7 +271,7 @@ function ClinicalCard({ patient }: { patient: Patient360 }) {
 
         {patient.allergies.length > 0 && (
           <div>
-            <p className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            <p className="mb-2 flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground">
               <AlertTriangle className="size-3" />
               Allergies
             </p>
@@ -304,7 +304,7 @@ function ClinicalCard({ patient }: { patient: Patient360 }) {
 
         {patient.conditions.length > 0 && (
           <div>
-            <p className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            <p className="mb-2 flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground">
               <Activity className="size-3" />
               Chronic conditions
             </p>

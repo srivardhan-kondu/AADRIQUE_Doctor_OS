@@ -64,7 +64,7 @@ function Group({
 }) {
   return (
     <div>
-      <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+      <p className="mb-2 text-[12px] font-medium text-muted-foreground">
         {title}
       </p>
       <ul className="space-y-1">{children}</ul>

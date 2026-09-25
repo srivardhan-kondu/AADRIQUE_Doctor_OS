@@ -19,16 +19,16 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-start justify-between gap-4 pb-6",
+        "flex flex-wrap items-end justify-between gap-4 pb-7",
         className,
       )}
     >
       <div className="min-w-0">
-        <h1 className="font-display text-2xl font-bold tracking-tight">
+        <h1 className="font-display text-[32px] font-normal leading-[1.1]">
           {title}
         </h1>
         {description && (
-          <p className="mt-1.5 max-w-2xl text-[14px] leading-relaxed text-muted-foreground">
+          <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-muted-foreground">
             {description}
           </p>
         )}
@@ -53,7 +53,7 @@ export function PageBody({
   className?: string;
 }) {
   return (
-    <div className={cn("mx-auto w-full max-w-[1400px] px-4 py-6 lg:px-8", className)}>
+    <div className={cn("mx-auto w-full max-w-[1400px] px-4 pb-10 pt-4 lg:px-8", className)}>
       {children}
     </div>
   );

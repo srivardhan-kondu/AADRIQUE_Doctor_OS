@@ -42,18 +42,18 @@ export function DailyBrief({
   const showStart = !dayStarted && nextPatient !== null;
 
   return (
-    <section className="overflow-hidden rounded-xl border border-border bg-navy-900 text-navy-100 shadow-raised">
-      <div className="flex flex-col gap-4 p-5 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
+    <section className="relative overflow-hidden rounded-2xl border border-highlight/60 bg-[linear-gradient(120deg,var(--highlight-soft)_0%,var(--card)_55%)] shadow-soft">
+      <div className="flex flex-col gap-5 p-5 lg:flex-row lg:items-end lg:justify-between lg:gap-8 lg:px-5 lg:py-6">
         <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-navy-400">
+          <p className="font-display text-[15px] italic text-highlight-foreground">
             Your day
           </p>
-          <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] text-navy-300">
+          <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-muted-foreground">
             {brief.firstAppointment && (
               <span className="flex items-center gap-1.5">
-                <Clock className="size-3.5 text-navy-400" />
+                <Clock className="size-3.5" />
                 First appointment{" "}
-                <span data-numeric className="font-semibold text-navy-100">
+                <span data-numeric className="font-semibold text-foreground">
                   {brief.firstAppointment.toLocaleTimeString("en-IN", {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -82,39 +82,37 @@ export function DailyBrief({
           {showStart ? (
             <StartMyDayButton />
           ) : (
-            <Button
-              size="lg"
-              variant="outline"
-              asChild
-              className="border-navy-700 bg-navy-800 text-navy-100 hover:bg-navy-700 hover:text-white"
-            >
+            <Button size="lg" variant="outline" asChild>
               <Link href="/doctor/appointments">View schedule</Link>
             </Button>
           )}
           {nextPatient && (
-            <p className="mt-2 text-[12px] text-navy-400">
+            <p className="mt-2.5 text-[12px] text-muted-foreground">
               Next:{" "}
-              <span className="font-mono text-navy-200">{nextPatient.token}</span>{" "}
+              <span className="font-mono text-foreground">{nextPatient.token}</span>{" "}
               · {nextPatient.patientName}
             </p>
           )}
         </div>
       </div>
 
-      <ul className="grid grid-cols-2 border-t border-navy-800 sm:grid-cols-3 xl:grid-cols-6">
+      <ul className="grid grid-cols-2 border-t border-border/70 sm:grid-cols-3 xl:grid-cols-6">
         {stats.map((stat) => (
-          <li key={stat.label} className="min-w-0">
+          <li
+            key={stat.label}
+            className="min-w-0 border-border/70 [&:not(:first-child)]:xl:border-l"
+          >
             <Link
               href={stat.href}
-              className="group flex h-full flex-col gap-1 px-5 py-3.5 transition-colors hover:bg-navy-800"
+              className="group flex h-full flex-col gap-1.5 px-5 py-4 transition-colors hover:bg-foreground/[0.025]"
             >
               <span
                 data-numeric
-                className="font-display text-2xl font-bold leading-none text-white"
+                className="font-display text-[34px] font-normal leading-none text-foreground"
               >
                 {stat.value}
               </span>
-              <span className="flex items-center gap-0.5 text-[12px] text-navy-300 group-hover:text-navy-100">
+              <span className="flex items-center gap-0.5 text-[13px] text-muted-foreground group-hover:text-foreground">
                 <span className="truncate">{stat.label}</span>
                 <ChevronRight className="size-3 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" />
               </span>

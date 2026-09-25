@@ -46,7 +46,7 @@ export function PatientFlow({ flow }: { flow: DashboardData["flow"] }) {
                     <span
                       data-numeric
                       className={cn(
-                        "font-display text-xl font-bold leading-none",
+                        "font-display text-xl font-medium leading-none",
                         count === 0 && "text-muted-foreground/50",
                       )}
                     >

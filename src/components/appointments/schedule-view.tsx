@@ -380,13 +380,13 @@ function WeekColumn({ day, links }: { day: DayColumn; links: ScheduleLinks }) {
         <p className="flex items-baseline justify-between gap-2">
           <span
             className={cn(
-              "text-[12px] font-semibold uppercase tracking-wide",
+              "text-[12px] font-medium",
               day.isToday ? "text-accent" : "text-muted-foreground",
             )}
           >
             {day.date.toLocaleDateString("en-IN", { weekday: "short" })}
           </span>
-          <span className="font-display text-lg font-bold tabular">
+          <span className="font-display text-lg font-medium tabular">
             {day.date.getDate()}
           </span>
         </p>
@@ -426,7 +426,7 @@ function WeekColumn({ day, links }: { day: DayColumn; links: ScheduleLinks }) {
                 <p className="truncate text-[12px] font-semibold">
                   {appointment.patientName}
                 </p>
-                <p className="truncate text-[10px] uppercase tracking-wide text-muted-foreground">
+                <p className="truncate text-[12px] font-medium text-muted-foreground">
                   {TYPE_LABEL[appointment.type] ?? appointment.type}
                 </p>
               </Link>

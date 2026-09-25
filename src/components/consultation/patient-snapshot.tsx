@@ -44,7 +44,7 @@ export function PatientSnapshot({
             <AvatarFallback>{initials(patient.name)}</AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
-            <p className="truncate font-display text-[15px] font-bold leading-tight">
+            <p className="truncate font-display text-[15px] font-medium leading-tight">
               {patient.name}
             </p>
             <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[11px] text-muted-foreground">
@@ -113,7 +113,7 @@ export function PatientSnapshot({
         >
           <p
             className={cn(
-              "flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em]",
+              "flex items-center gap-1.5 text-[12px] font-medium",
               critical.length > 0 ? "text-destructive" : "text-muted-foreground",
             )}
           >
@@ -144,7 +144,7 @@ export function PatientSnapshot({
 
       {patient.conditions.length > 0 && (
         <div className="rounded-xl border border-border bg-card p-4 shadow-soft">
-          <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          <p className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground">
             <Activity className="size-3" />
             Chronic conditions
           </p>
@@ -165,7 +165,7 @@ export function PatientSnapshot({
 
       {patient.flags.length > 0 && (
         <div className="rounded-xl border border-border bg-card p-4 shadow-soft">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          <p className="text-[12px] font-medium text-muted-foreground">
             Flags
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
@@ -180,7 +180,7 @@ export function PatientSnapshot({
 
       {vitals && (
         <div className="rounded-xl border border-border bg-card p-4 shadow-soft">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          <p className="text-[12px] font-medium text-muted-foreground">
             Vitals
           </p>
           <dl className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-2.5">
@@ -196,7 +196,7 @@ export function PatientSnapshot({
             {vitals.recordedAt.toLocaleTimeString("en-IN", {
               hour: "2-digit",
               minute: "2-digit",
-              hour12: false,
+              hourCycle: "h23",
             })}
             {vitals.recordedBy && ` · ${vitals.recordedBy}`}
           </p>
@@ -249,7 +249,7 @@ function Vital({
 }) {
   return (
     <div>
-      <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
+      <dt className="text-[12px] font-mediumr text-muted-foreground">
         {label}
       </dt>
       <dd data-numeric className="mt-0.5 text-[13px] font-semibold">

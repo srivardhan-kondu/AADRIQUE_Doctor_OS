@@ -148,7 +148,7 @@ export function SignInForm({ next, demo = false }: { next?: string; demo?: boole
 
       {demo && (
         <div className="mt-8 rounded-xl border border-border bg-muted/50 p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          <p className="text-[12px] font-medium text-muted-foreground">
             Demo accounts
           </p>
           <div className="mt-2.5 flex flex-wrap gap-1.5">

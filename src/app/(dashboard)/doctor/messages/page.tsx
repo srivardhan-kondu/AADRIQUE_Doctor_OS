@@ -153,7 +153,7 @@ function ChannelCard({
         <p className="text-[12px] font-semibold text-muted-foreground">
           {row.label}
         </p>
-        <p className="font-display text-lg font-bold tabular">
+        <p className="font-display text-lg font-medium tabular">
           {row.rate === null ? "—" : `${row.rate}%`}
         </p>
       </div>

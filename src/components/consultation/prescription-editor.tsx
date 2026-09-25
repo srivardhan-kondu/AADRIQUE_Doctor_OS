@@ -116,7 +116,7 @@ export function PrescriptionEditor({
     <Card className="p-5">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="flex items-center gap-2 font-display text-[15px] font-semibold">
+          <p className="flex items-center gap-2 font-display text-[15px] font-medium">
             <Pill className="size-4 text-muted-foreground" />
             Prescription
             <Badge variant="muted">Draft</Badge>
@@ -295,7 +295,7 @@ function IssuedPrescription({ visitId, prescription }: { visitId: string; prescr
   return (
     <Card className="p-5">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <p className="flex items-center gap-2 font-display text-[15px] font-semibold">
+        <p className="flex items-center gap-2 font-display text-[15px] font-medium">
           <Pill className="size-4 text-muted-foreground" />
           Prescription
           <Badge variant={prescription.status === "ISSUED" ? "success" : "muted"}>

@@ -6,7 +6,8 @@
 /* =========================================================================
    AADRIQUE Doctor OS — Design Tokens
    Spec §33: warm white / deep navy / orange accent / charcoal / soft neutrals.
-   Orange is an ACCENT. Navy carries structure. Warm white carries surface.
+   Orange is an ACCENT. Navy ink carries structure. Warm linen carries surface,
+   white cards float on it, and an editorial serif sets titles and numbers.
    ========================================================================= */
 
 :root {
@@ -35,146 +36,164 @@
   --navy-900: #12233b;
   --navy-950: #0b1524;
 
-  /* --- Semantic surface tokens --- */
-  --background: #faf8f5;
-  --foreground: #16202e;
+  /* --- Semantic surface tokens ---
+     Warm linen paper under white cards. Ink, not pure black, for type. */
+  --background: #f5f1ea;
+  --foreground: #1d2230;
 
   --card: #ffffff;
-  --card-foreground: #16202e;
+  --card-foreground: #1d2230;
 
   --popover: #ffffff;
-  --popover-foreground: #16202e;
+  --popover-foreground: #1d2230;
 
-  --primary: #12233b;
-  --primary-foreground: #f8fafc;
+  --primary: #1b2536;
+  --primary-foreground: #faf7f2;
 
-  --secondary: #f1ede7;
-  --secondary-foreground: #2f405e;
+  --secondary: #efe9df;
+  --secondary-foreground: #3a4152;
 
-  --muted: #f2eee8;
-  --muted-foreground: #6f6a63;
+  --muted: #f2ede5;
+  --muted-foreground: #736c62;
 
-  --accent: #ea6a26;
+  --accent: #e0662a;
   --accent-foreground: #ffffff;
-  --accent-soft: #fdf1e9;
+  --accent-soft: #fcefe4;
 
-  --destructive: #c0392b;
+  /* Honey: the quiet highlight for "you are here" and "today" — never status. */
+  --highlight: #f6dcaa;
+  --highlight-soft: #fbf2de;
+  --highlight-foreground: #7a4a0c;
+
+  --destructive: #b93a2e;
   --destructive-foreground: #ffffff;
-  --destructive-soft: #fdeceb;
+  --destructive-soft: #fbecea;
 
-  --success: #15803d;
+  --success: #2f7a4a;
   --success-foreground: #ffffff;
-  --success-soft: #eaf6ee;
+  --success-soft: #e9f3ec;
 
-  --warning: #b45309;
+  --warning: #a8590f;
   --warning-foreground: #ffffff;
-  --warning-soft: #fdf3e3;
+  --warning-soft: #fcf1e1;
 
-  --info: #1d4ed8;
+  --info: #2f5aa8;
   --info-foreground: #ffffff;
-  --info-soft: #eaf0fd;
+  --info-soft: #ebf0f9;
 
-  /* AI-generated content is always visually distinct (spec §10) */
-  --ai: #6d4aff;
+  /* AI-generated content is always visually distinct (spec §10) — a calm
+     indigo that marks it without shouting. */
+  --ai: #585ca3;
   --ai-foreground: #ffffff;
-  --ai-soft: #f1edff;
-  --ai-border: #ddd3ff;
+  --ai-soft: #f3f3fa;
+  --ai-border: #dedff0;
 
-  --border: #e7e1d8;
-  --input: #e7e1d8;
-  --ring: #ea6a26;
+  --border: #e9e2d6;
+  --input: #e2dacc;
+  --ring: #e0662a;
 
-  /* Sidebar carries the navy identity */
-  --sidebar: #12233b;
-  --sidebar-foreground: #c9d6e6;
-  --sidebar-muted: #7495bd;
-  --sidebar-accent: #1d3149;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #24384f;
-  --sidebar-ring: #ea6a26;
+  /* The sidebar sits on the same paper as the page; the active item is a
+     white card lifted off it. */
+  --sidebar: #f5f1ea;
+  --sidebar-foreground: #4b4f5c;
+  --sidebar-muted: #968e82;
+  --sidebar-accent: #ffffff;
+  --sidebar-accent-foreground: #1b2536;
+  --sidebar-border: #e6ded1;
+  --sidebar-ring: #e0662a;
 
   /* Clinical queue states — used by queue, timeline and status chips */
-  --state-registered: #64748b;
-  --state-waiting: #b45309;
-  --state-vitals: #0e7490;
-  --state-with-doctor: #ea6a26;
-  --state-completed: #15803d;
-  --state-followup: #6d28d9;
+  --state-registered: #6b7280;
+  --state-waiting: #c27812;
+  --state-vitals: #1f7a8c;
+  --state-with-doctor: #e0662a;
+  --state-completed: #2f7a4a;
+  --state-followup: #7a57a8;
 
-  --radius: 0.75rem;
+  --radius: 1.125rem;
 
-  /* Very soft shadows (spec §33) */
-  --shadow-soft: 0 1px 2px 0 rgb(18 35 59 / 0.04), 0 1px 3px 0 rgb(18 35 59 / 0.06);
-  --shadow-raised: 0 2px 4px -1px rgb(18 35 59 / 0.05), 0 8px 16px -4px rgb(18 35 59 / 0.08);
-  --shadow-overlay: 0 8px 24px -6px rgb(18 35 59 / 0.14), 0 16px 48px -12px rgb(18 35 59 / 0.16);
+  /* The honey brand panel (sign-in). Always light, in either theme, so its
+     ink stays fixed too. */
+  --panel-ink: #2a2118;
+  --panel-muted: #6b5540;
+  --panel-emphasis: #8a3d12;
+
+  /* Warm, diffuse shadows: cards float on paper rather than sit in boxes. */
+  --shadow-soft: 0 1px 2px 0 rgb(72 52 28 / 0.04), 0 2px 10px -4px rgb(72 52 28 / 0.07);
+  --shadow-raised: 0 2px 4px -1px rgb(72 52 28 / 0.05), 0 12px 28px -10px rgb(72 52 28 / 0.14);
+  --shadow-overlay: 0 10px 30px -8px rgb(40 30 18 / 0.18), 0 24px 60px -16px rgb(40 30 18 / 0.2);
 }
 
 .dark {
-  --background: #0b1524;
-  --foreground: #e9eef5;
+  --background: #13120f;
+  --foreground: #ece7de;
 
-  --card: #111e30;
-  --card-foreground: #e9eef5;
+  --card: #1c1a17;
+  --card-foreground: #ece7de;
 
-  --popover: #132236;
-  --popover-foreground: #e9eef5;
+  --popover: #221f1b;
+  --popover-foreground: #ece7de;
 
-  --primary: #e9eef5;
-  --primary-foreground: #0b1524;
+  --primary: #ece7de;
+  --primary-foreground: #13120f;
 
-  --secondary: #1a2a3f;
-  --secondary-foreground: #c9d6e6;
+  --secondary: #262420;
+  --secondary-foreground: #d5cec2;
 
-  --muted: #17263a;
-  --muted-foreground: #8ea3bd;
+  --muted: #23201c;
+  --muted-foreground: #a0988c;
 
-  --accent: #f1793f;
-  --accent-foreground: #17100b;
-  --accent-soft: #2a1a11;
+  --accent: #ef7d42;
+  --accent-foreground: #1a0f08;
+  --accent-soft: #2c1c12;
 
-  --destructive: #ef6a5c;
+  --highlight: #4a3716;
+  --highlight-soft: #2a2215;
+  --highlight-foreground: #f0c878;
+
+  --destructive: #ea6f61;
   --destructive-foreground: #1a0e0c;
   --destructive-soft: #2c1512;
 
-  --success: #4ade80;
+  --success: #6fcf8f;
   --success-foreground: #05190d;
-  --success-soft: #0f2318;
+  --success-soft: #13231a;
 
-  --warning: #f0b429;
+  --warning: #f0b44c;
   --warning-foreground: #1d1305;
-  --warning-soft: #271b0b;
+  --warning-soft: #2a1f0e;
 
-  --info: #7aa2f7;
+  --info: #8aabea;
   --info-foreground: #0a1124;
-  --info-soft: #141f38;
+  --info-soft: #172035;
 
-  --ai: #a894ff;
-  --ai-foreground: #14092e;
-  --ai-soft: #1c1633;
-  --ai-border: #362c5c;
+  --ai: #a7aae6;
+  --ai-foreground: #14142e;
+  --ai-soft: #1d1d2b;
+  --ai-border: #34354f;
 
-  --border: #23344a;
-  --input: #23344a;
-  --ring: #f1793f;
+  --border: #2e2b26;
+  --input: #35312b;
+  --ring: #ef7d42;
 
-  --sidebar: #0a1220;
-  --sidebar-foreground: #a2b9d4;
-  --sidebar-muted: #5476a5;
-  --sidebar-accent: #16253a;
+  --sidebar: #13120f;
+  --sidebar-foreground: #bdb5a8;
+  --sidebar-muted: #80796e;
+  --sidebar-accent: #25221e;
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #1c2c42;
-  --sidebar-ring: #f1793f;
+  --sidebar-border: #26231f;
+  --sidebar-ring: #ef7d42;
 
-  --state-registered: #94a3b8;
-  --state-waiting: #fbbf24;
-  --state-vitals: #22d3ee;
-  --state-with-doctor: #f1793f;
-  --state-completed: #4ade80;
-  --state-followup: #a78bfa;
+  --state-registered: #a3a3a3;
+  --state-waiting: #f0b44c;
+  --state-vitals: #5cc4d6;
+  --state-with-doctor: #ef7d42;
+  --state-completed: #6fcf8f;
+  --state-followup: #b69be0;
 
-  --shadow-soft: 0 1px 2px 0 rgb(0 0 0 / 0.3), 0 1px 3px 0 rgb(0 0 0 / 0.24);
-  --shadow-raised: 0 2px 4px -1px rgb(0 0 0 / 0.3), 0 8px 16px -4px rgb(0 0 0 / 0.4);
-  --shadow-overlay: 0 8px 24px -6px rgb(0 0 0 / 0.5), 0 16px 48px -12px rgb(0 0 0 / 0.55);
+  --shadow-soft: 0 1px 2px 0 rgb(0 0 0 / 0.3), 0 2px 10px -4px rgb(0 0 0 / 0.3);
+  --shadow-raised: 0 2px 4px -1px rgb(0 0 0 / 0.3), 0 12px 28px -10px rgb(0 0 0 / 0.5);
+  --shadow-overlay: 0 10px 30px -8px rgb(0 0 0 / 0.5), 0 24px 60px -16px rgb(0 0 0 / 0.55);
 }
 
 /* =========================================================================
@@ -197,6 +216,12 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent-soft: var(--accent-soft);
+  --color-highlight: var(--highlight);
+  --color-highlight-soft: var(--highlight-soft);
+  --color-highlight-foreground: var(--highlight-foreground);
+  --color-panel-ink: var(--panel-ink);
+  --color-panel-muted: var(--panel-muted);
+  --color-panel-emphasis: var(--panel-emphasis);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-destructive-soft: var(--destructive-soft);
@@ -255,15 +280,17 @@
   --color-navy-900: var(--navy-900);
   --color-navy-950: var(--navy-950);
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-jakarta), var(--font-inter), ui-sans-serif, sans-serif;
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  /* Editorial serif for titles and headline numbers; the UI itself stays sans. */
+  --font-display: var(--font-serif), ui-serif, Georgia, serif;
   --font-mono: var(--font-mono-code), ui-monospace, SFMono-Regular, monospace;
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
+  /* Small controls stay crisp; surfaces get the soft, generous corners. */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: var(--radius);
+  --radius-2xl: calc(var(--radius) + 6px);
 
   --shadow-soft: var(--shadow-soft);
   --shadow-raised: var(--shadow-raised);
@@ -285,7 +312,6 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     text-rendering: optimizeLegibility;
   }
 
@@ -297,8 +323,20 @@
     letter-spacing: -0.01em;
   }
 
-  h1, h2, h3, h4 {
-    @apply font-display tracking-tight text-balance;
+  h1, h2 {
+    @apply font-display text-balance;
+    letter-spacing: -0.012em;
+  }
+
+  /* Card and section titles are working labels, not headlines: they stay in
+     the UI face so dense screens scan quickly. */
+  h3, h4 {
+    @apply tracking-tight text-balance;
+  }
+
+  /* The serif carries weight through size, not boldness. */
+  .font-display {
+    font-optical-sizing: auto;
   }
 
   /* Spec §51: visible focus states everywhere. */
@@ -349,6 +387,11 @@
     0%   { transform: scale(1);   opacity: 0.55; }
     70%  { transform: scale(2.4); opacity: 0; }
     100% { transform: scale(2.4); opacity: 0; }
+  }
+
+  .brand-panel {
+    background: linear-gradient(150deg, #fbecd0 0%, #f6d3a4 48%, #eeaa7a 100%);
+    color: var(--panel-ink);
   }
 
   /* AI surfaces read as clearly non-chart content (spec §10). */

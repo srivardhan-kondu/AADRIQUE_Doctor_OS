@@ -98,7 +98,7 @@ function DoctorRow({
 
       <dl className="hidden shrink-0 grid-cols-3 gap-4 text-right sm:grid">
         <div>
-          <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          <dt className="text-[12px] font-mediumr text-muted-foreground">
             Now
           </dt>
           <dd data-numeric className="font-mono text-[13px] font-semibold">
@@ -106,7 +106,7 @@ function DoctorRow({
           </dd>
         </div>
         <div>
-          <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          <dt className="text-[12px] font-mediumr text-muted-foreground">
             Waiting
           </dt>
           <dd data-numeric className="text-[13px] font-semibold tabular">
@@ -114,7 +114,7 @@ function DoctorRow({
           </dd>
         </div>
         <div>
-          <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          <dt className="text-[12px] font-mediumr text-muted-foreground">
             Avg wait
           </dt>
           <dd

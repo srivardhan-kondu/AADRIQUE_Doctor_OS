@@ -22,10 +22,10 @@ export default async function TwoFactorPage() {
       <div className="w-full max-w-sm">
         <div className="mb-6 flex items-center gap-3">
           <Logo />
-          <p className="font-display font-semibold">{actor.organizationName}</p>
+          <p className="font-display font-medium">{actor.organizationName}</p>
         </div>
         <div className="rounded-xl border border-border bg-card p-6 shadow-soft">
-          <h1 className="mb-4 font-display text-xl font-bold tracking-tight">Two-factor sign-in</h1>
+          <h1 className="mb-4 font-display text-xl font-medium tracking-tight">Two-factor sign-in</h1>
           <TwoFactorForm enabled={enabled} />
         </div>
         <p className="mt-4 text-center text-[13px]">

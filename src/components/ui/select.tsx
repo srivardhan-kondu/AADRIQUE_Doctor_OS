@@ -18,7 +18,7 @@ function SelectTrigger({
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
       className={cn(
-        "flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-card px-3 py-1 text-sm shadow-soft transition-colors",
+        "flex h-9 w-full items-center justify-between gap-2 rounded-lg border border-input bg-card px-3 py-1 text-sm transition-colors hover:border-foreground/20",
         "data-[placeholder]:text-muted-foreground",
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
         "disabled:cursor-not-allowed disabled:opacity-50",
@@ -76,7 +76,7 @@ function SelectLabel({
   return (
     <SelectPrimitive.Label
       className={cn(
-        "px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground",
+        "px-2 py-1.5 text-[12px] font-medium text-muted-foreground",
         className,
       )}
       {...props}

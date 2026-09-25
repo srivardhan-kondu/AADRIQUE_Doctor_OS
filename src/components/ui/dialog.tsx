@@ -17,7 +17,7 @@ function DialogOverlay({
   return (
     <DialogPrimitive.Overlay
       className={cn(
-        "fixed inset-0 z-50 bg-navy-950/40 backdrop-blur-[2px]",
+        "fixed inset-0 z-50 bg-black/30 backdrop-blur-[3px]",
         "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
         className,
       )}
@@ -82,7 +82,7 @@ function DialogTitle({
 }: React.ComponentProps<typeof DialogPrimitive.Title>) {
   return (
     <DialogPrimitive.Title
-      className={cn("font-display text-lg font-semibold tracking-tight", className)}
+      className={cn("font-display text-lg font-medium tracking-tight", className)}
       {...props}
     />
   );

@@ -62,7 +62,7 @@ function DoctorQueue({
       <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
         <div className="min-w-0">
           <p className="flex flex-wrap items-center gap-1.5">
-            <span className="truncate font-display text-[15px] font-semibold">
+            <span className="truncate font-display text-[15px] font-medium">
               {board.doctorName}
             </span>
             {board.paused ? (
@@ -86,7 +86,7 @@ function DoctorQueue({
         </div>
 
         <div className="shrink-0 text-right">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          <p className="text-[12px] font-mediumr text-muted-foreground">
             In the room
           </p>
           <p data-numeric className="font-mono text-xl font-bold text-accent">

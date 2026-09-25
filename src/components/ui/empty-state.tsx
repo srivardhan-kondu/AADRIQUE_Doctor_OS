@@ -32,7 +32,7 @@ export function EmptyState({
           <Icon className="size-5 text-muted-foreground" />
         </span>
       )}
-      <p className="font-display text-[15px] font-semibold">{title}</p>
+      <p className="font-display text-[15px] font-medium">{title}</p>
       {description && (
         <p className="mt-1.5 max-w-sm text-[13px] leading-relaxed text-muted-foreground">
           {description}

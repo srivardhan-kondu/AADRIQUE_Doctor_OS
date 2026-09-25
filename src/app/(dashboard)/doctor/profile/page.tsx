@@ -43,7 +43,7 @@ async function Profile() {
           <AvatarFallback className="text-lg">{initials(profile.name)}</AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
-          <h1 className="font-display text-2xl font-bold tracking-tight">
+          <h1 className="font-display text-2xl font-medium tracking-tight">
             {profile.name}
           </h1>
           <p className="mt-1 flex flex-wrap items-center gap-x-2 text-[13px] text-muted-foreground">
@@ -119,7 +119,7 @@ function Detail({
 }) {
   return (
     <div>
-      <dt className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+      <dt className="text-[12px] font-medium text-muted-foreground">
         {label}
       </dt>
       <dd className={mono ? "mt-0.5 font-mono" : "mt-0.5"}>

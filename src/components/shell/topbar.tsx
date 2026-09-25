@@ -43,7 +43,7 @@ export function Topbar({
   const now = mounted ? new Date() : null;
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-md lg:px-6">
+    <header className="sticky top-0 z-20 flex h-[72px] shrink-0 items-center gap-3 bg-background/85 px-4 backdrop-blur-md lg:px-8">
       <Button
         variant="ghost"
         size="icon"
@@ -59,7 +59,7 @@ export function Topbar({
           <>
             {/* A greeting, not the page's title: the screen's own heading is its
                 one h1 (spec §51), so screen readers land on what the page is. */}
-            <p className="truncate font-display text-[17px] font-semibold leading-tight tracking-tight">
+            <p className="truncate text-[15px] font-semibold leading-tight tracking-[-0.01em]">
               {greeting(now)}, {user.name.replace(/^Dr\.\s*/, "Dr. ")}
             </p>
             <p className="mt-0.5 hidden items-center gap-2 text-[12px] text-muted-foreground sm:flex">
@@ -105,7 +105,7 @@ export function Topbar({
       <button
         type="button"
         onClick={onOpenPalette}
-        className="group hidden h-9 w-64 items-center gap-2.5 rounded-lg border border-border bg-card px-3 text-left text-[13px] text-muted-foreground shadow-soft transition-colors hover:border-navy-200 hover:text-foreground md:flex xl:w-72"
+        className="group hidden h-10 w-64 items-center gap-2.5 rounded-full border border-border/70 bg-card pl-4 pr-2 text-left text-[13px] text-muted-foreground shadow-soft transition-colors hover:border-input hover:text-foreground md:flex xl:w-80"
       >
         <Search className="size-4 shrink-0" />
         <span className="flex-1 truncate">Search patients or actions</span>
@@ -135,7 +135,7 @@ export function Topbar({
             size="sm"
             onClick={onToggleCopilot}
             aria-pressed={copilotOpen}
-            className={cn("gap-1.5", !copilotOpen && "text-ai")}
+            className="gap-1.5"
           >
             <Sparkles className={cn(!copilotOpen && "text-ai")} />
             <span className="hidden sm:inline">AI Copilot</span>

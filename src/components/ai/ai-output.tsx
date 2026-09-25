@@ -44,7 +44,7 @@ export function AIOutputView({
       <div className="flex flex-wrap items-center gap-2 border-b border-ai-border px-4 py-2.5">
         <Sparkles className="size-3.5 shrink-0 text-ai" />
         <Badge variant="ai">AI generated</Badge>
-        <span className="text-[11px] font-semibold uppercase tracking-wide text-ai">
+        <span className="text-[12px] font-medium text-ai">
           Doctor review required
         </span>
 
@@ -65,7 +65,7 @@ export function AIOutputView({
       <div className={cn("space-y-3.5 px-4", compact ? "py-3" : "py-4")}>
         {sections.map((section, index) => (
           <section key={`${section.heading}-${index}`}>
-            <h4 className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+            <h4 className="text-[12px] font-medium text-muted-foreground">
               {section.heading}
             </h4>
 
@@ -169,7 +169,7 @@ export function AIOutputSkeleton({ lines = 4 }: { lines?: number }) {
     <div className="ai-surface rounded-xl">
       <div className="flex items-center gap-2 border-b border-ai-border px-4 py-2.5">
         <Sparkles className="size-3.5 shrink-0 animate-pulse text-ai" />
-        <span className="text-[11px] font-semibold uppercase tracking-wide text-ai">
+        <span className="text-[12px] font-medium text-ai">
           Reading the record…
         </span>
       </div>

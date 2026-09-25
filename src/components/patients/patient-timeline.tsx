@@ -128,7 +128,7 @@ export function PatientTimeline({ events }: { events: TimelineEvent[] }) {
             <section key={group.key} className="mb-6 last:mb-0">
               <h3
                 data-numeric
-                className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground"
+                className="mb-2.5 text-[12px] font-medium text-muted-foreground"
               >
                 {group.label}
               </h3>
@@ -222,7 +222,7 @@ function TimelineItem({ event }: { event: TimelineEvent }) {
         {event.at.toLocaleTimeString("en-IN", {
           hour: "2-digit",
           minute: "2-digit",
-          hour12: false,
+          hourCycle: "h23",
         })}
       </span>
     </div>

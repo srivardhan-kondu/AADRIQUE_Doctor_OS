@@ -31,7 +31,7 @@ export function MobileNav({
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-navy-950/50 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 lg:hidden" />
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/30 backdrop-blur-[3px] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 lg:hidden" />
         <DialogPrimitive.Content
           className={cn(
             "fixed inset-y-0 left-0 z-50 flex w-[272px] flex-col bg-sidebar text-sidebar-foreground shadow-overlay outline-none lg:hidden",
@@ -46,7 +46,7 @@ export function MobileNav({
             Move between the screens of your workspace
           </DialogPrimitive.Description>
 
-          <div className="flex h-16 shrink-0 items-center justify-between border-b border-sidebar-border px-4">
+          <div className="flex h-[72px] shrink-0 items-center justify-between px-5">
             <Link
               href={`/${workspace}`}
               onClick={() => onOpenChange(false)}
@@ -55,21 +55,21 @@ export function MobileNav({
               <Logo className="size-8" />
               <Wordmark className="text-sidebar-accent-foreground" />
             </Link>
-            <DialogPrimitive.Close className="rounded-md p-1.5 text-sidebar-muted transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+            <DialogPrimitive.Close className="rounded-full p-1.5 text-sidebar-muted transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
               <XIcon className="size-4" />
               <span className="sr-only">Close navigation</span>
             </DialogPrimitive.Close>
           </div>
 
-          <nav aria-label="Main" className="flex-1 overflow-y-auto px-2.5 py-4">
+          <nav aria-label="Main" className="flex-1 overflow-y-auto px-3 py-3">
             {NAV[workspace].map((section, i) => (
-              <div key={section.label ?? `section-${i}`} className={cn(i > 0 && "mt-6")}>
+              <div key={section.label ?? `section-${i}`} className={cn(i > 0 && "mt-5")}>
                 {section.label && (
-                  <p className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-sidebar-muted">
+                  <p className="mb-1.5 px-3 text-[12px] font-medium text-sidebar-muted">
                     {section.label}
                   </p>
                 )}
-                <ul className="space-y-0.5">
+                <ul className="space-y-1">
                   {section.items.map((item) => {
                     const active = isNavItemActive(item.href, pathname);
                     const count = item.counter ? counters[item.counter] : undefined;
@@ -80,9 +80,9 @@ export function MobileNav({
                           onClick={() => onOpenChange(false)}
                           aria-current={active ? "page" : undefined}
                           className={cn(
-                            "flex h-10 items-center gap-2.5 rounded-lg px-2.5 text-sm font-medium transition-colors",
+                            "flex h-10 items-center gap-3 rounded-full px-3 text-sm font-medium transition-colors",
                             active
-                              ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                              ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-soft"
                               : "hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
                           )}
                         >
@@ -96,7 +96,7 @@ export function MobileNav({
                           {count !== undefined && count > 0 && (
                             <span
                               data-numeric
-                              className="ml-auto rounded-md bg-sidebar-accent px-1.5 py-0.5 text-[10px] font-bold text-sidebar-accent-foreground"
+                              className="ml-auto min-w-5 rounded-full bg-foreground/[0.06] px-1.5 py-0.5 text-center text-[11px] font-semibold"
                             >
                               {count}
                             </span>
@@ -119,7 +119,7 @@ export function MobileNav({
             ))}
           </nav>
 
-          <div className="shrink-0 border-t border-sidebar-border p-2.5">
+          <div className="shrink-0 p-3">
             <OperationalPulse />
           </div>
         </DialogPrimitive.Content>

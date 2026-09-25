@@ -102,7 +102,7 @@ export default function DesignSystemPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="font-display text-2xl font-bold tracking-tight">
+            <p className="font-display text-2xl font-medium tracking-tight">
               Your OPD. One intelligent workspace.
             </p>
             <p className="text-[14px] leading-relaxed text-muted-foreground">
@@ -111,24 +111,24 @@ export default function DesignSystemPage() {
             </p>
             <div className="flex items-end gap-6 border-t border-border pt-4">
               <div>
-                <p data-numeric className="font-display text-3xl font-bold">
+                <p data-numeric className="font-display text-3xl font-medium">
                   32
                 </p>
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                <p className="text-[12px] font-mediumr text-muted-foreground">
                   Patients today
                 </p>
               </div>
               <div>
-                <p data-numeric className="font-display text-3xl font-bold">
+                <p data-numeric className="font-display text-3xl font-medium">
                   08 min
                 </p>
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                <p className="text-[12px] font-mediumr text-muted-foreground">
                   Average wait
                 </p>
               </div>
               <div>
                 <p className="font-mono text-2xl font-semibold">A018</p>
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                <p className="text-[12px] font-mediumr text-muted-foreground">
                   Token
                 </p>
               </div>

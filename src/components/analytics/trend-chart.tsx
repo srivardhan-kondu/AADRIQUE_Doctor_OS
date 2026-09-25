@@ -227,7 +227,7 @@ export function TrendChart({
             top: Math.max(0, y(active.value) - 52),
           }}
         >
-          <p className="font-display text-[13px] font-bold tabular">
+          <p className="font-display text-[13px] font-medium tabular">
             {active.value}{" "}
             <span className="font-normal text-muted-foreground">
               {valueLabel}

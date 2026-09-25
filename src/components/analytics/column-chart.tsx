@@ -36,7 +36,8 @@ export function ColumnChart({
 
         return (
           <div
-            key={column.label}
+            // Labels repeat (7 AM and 7 PM are both "7"); position is unique.
+            key={`${index}-${column.label}`}
             className="group flex min-w-0 flex-1 flex-col items-center justify-end gap-1.5"
             title={`${column.caption ?? column.label}: ${column.value}`}
           >

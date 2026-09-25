@@ -86,7 +86,7 @@ export function ThreadView({ thread }: { thread: PatientThread }) {
           )}
           {groups.map((group) => (
             <div key={group.label}>
-              <p className="mb-3 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <p className="mb-3 text-center text-[12px] font-medium text-muted-foreground">
                 {group.label}
               </p>
               <ul className="space-y-3">

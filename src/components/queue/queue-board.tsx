@@ -76,16 +76,18 @@ function ActiveCard({ board }: { board: QueueBoard }) {
       </CardHeader>
 
       <div className="flex flex-wrap items-center gap-4 px-5 pb-5">
-        <span className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-accent font-mono text-lg font-bold text-accent-foreground">
+        <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-accent font-mono text-lg font-bold text-accent-foreground shadow-soft">
           {active.token}
         </span>
 
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-lg font-bold tracking-tight">
+        {/* Wide enough to show a name, so the actions wrap below it rather
+            than squeezing it to an ellipsis. */}
+        <div className="min-w-[14rem] flex-1">
+          <p className="truncate font-display text-xl font-medium">
             {active.patientName}
           </p>
           <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] text-muted-foreground">
-            <span data-numeric>{active.patientMrn}</span>
+            <span data-numeric className="whitespace-nowrap">{active.patientMrn}</span>
             {active.age !== null && (
               <>
                 <span aria-hidden>·</span>
@@ -231,7 +233,7 @@ function QueueEntryRow({
           )}
         </span>
         <span className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-          <span data-numeric>{entry.patientMrn}</span>
+          <span data-numeric className="whitespace-nowrap">{entry.patientMrn}</span>
           {entry.reason && (
             <>
               <span aria-hidden>·</span>
@@ -293,8 +295,8 @@ function PatientDisplayCard({ board }: { board: QueueBoard }) {
         </div>
       </CardHeader>
 
-      <div className="mx-5 mb-5 rounded-xl bg-navy-900 p-5 text-center text-navy-100">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-navy-400">
+      <div className="mx-5 mb-5 rounded-2xl bg-navy-900 p-5 text-center text-navy-100">
+        <p className="text-[12px] font-medium text-navy-400">
           Current token
         </p>
         <p
@@ -306,7 +308,7 @@ function PatientDisplayCard({ board }: { board: QueueBoard }) {
 
         <div className="mt-5 grid grid-cols-2 gap-4 border-t border-navy-800 pt-4">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.14em] text-navy-400">
+            <p className="text-[12px] font-medium text-navy-400">
               Next
             </p>
             <p data-numeric className="mt-1 font-mono text-lg font-semibold">
@@ -314,10 +316,10 @@ function PatientDisplayCard({ board }: { board: QueueBoard }) {
             </p>
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-[0.14em] text-navy-400">
+            <p className="text-[12px] font-medium text-navy-400">
               In queue
             </p>
-            <p data-numeric className="mt-1 font-display text-lg font-bold">
+            <p data-numeric className="mt-1 font-display text-lg font-medium">
               {ahead}
             </p>
           </div>

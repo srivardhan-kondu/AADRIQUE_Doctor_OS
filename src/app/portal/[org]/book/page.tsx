@@ -28,7 +28,7 @@ export default async function PortalBookPage({
         <ArrowLeft className="size-4" />
         Back
       </Link>
-      <h1 className="mb-6 font-display text-2xl font-bold tracking-tight">Book an appointment</h1>
+      <h1 className="mb-6 font-display text-2xl font-medium tracking-tight">Book an appointment</h1>
       {doctors.length === 0 ? (
         <p className="text-[15px] text-muted-foreground">
           Online booking is not open yet. Please call the clinic.

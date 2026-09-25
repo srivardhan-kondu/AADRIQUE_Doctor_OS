@@ -150,7 +150,7 @@ async function DoctorsScreen() {
                 )}
 
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  <p className="text-[12px] font-medium text-muted-foreground">
                     Clinic hours
                   </p>
                   {doctor.availability.length === 0 ? (
@@ -183,7 +183,7 @@ async function DoctorsScreen() {
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+      <dt className="text-[12px] font-medium text-muted-foreground">
         {label}
       </dt>
       <dd className="mt-0.5 font-semibold tabular">{value}</dd>

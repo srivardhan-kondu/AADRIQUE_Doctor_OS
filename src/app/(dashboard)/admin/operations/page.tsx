@@ -216,12 +216,12 @@ function Stat({
 }) {
   return (
     <Card className="px-4 py-3.5">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+      <p className="text-[12px] font-medium text-muted-foreground">
         {label}
       </p>
       <p
         className={cn(
-          "mt-1 font-display text-2xl font-bold tabular",
+          "mt-1 font-display text-2xl font-medium tabular",
           tone === "warn" && value > 0 && "text-warning",
           tone === "good" && value > 0 && "text-success",
         )}

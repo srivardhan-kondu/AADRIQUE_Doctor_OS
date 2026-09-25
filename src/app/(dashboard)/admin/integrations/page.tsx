@@ -62,10 +62,10 @@ async function IntegrationsScreen() {
       <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {(Object.keys(STATUS_STYLE) as IntegrationStatus[]).map((status) => (
           <Card key={status} className="px-4 py-3.5">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <p className="text-[12px] font-medium text-muted-foreground">
               {STATUS_LABEL[status]}
             </p>
-            <p className="mt-1 font-display text-2xl font-bold tabular">
+            <p className="mt-1 font-display text-2xl font-medium tabular">
               {counts[status]}
             </p>
           </Card>

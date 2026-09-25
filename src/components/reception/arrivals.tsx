@@ -62,7 +62,7 @@ export function ArrivalsCard({ arrivals }: { arrivals: ArrivalRow[] }) {
           )}
           {finished.length > 0 && (
             <details className="group">
-              <summary className="flex cursor-pointer list-none items-center gap-1.5 bg-muted/50 px-5 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground">
+              <summary className="flex cursor-pointer list-none items-center gap-1.5 bg-muted/50 px-5 py-1.5 text-[12px] font-mediumr text-muted-foreground hover:text-foreground">
                 <ChevronDown className="size-3.5 transition-transform group-open:rotate-180" />
                 Finished · {finished.length}
               </summary>
@@ -84,7 +84,7 @@ export function ArrivalsCard({ arrivals }: { arrivals: ArrivalRow[] }) {
 function Section({ title, rows }: { title: string; rows: ArrivalRow[] }) {
   return (
     <section>
-      <h3 className="bg-muted/50 px-5 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <h3 className="bg-muted/50 px-5 py-1.5 text-[12px] font-mediumr text-muted-foreground">
         {title} · {rows.length}
       </h3>
       <ul className="divide-y divide-border">
@@ -136,7 +136,7 @@ function ArrivalItem({ row }: { row: ArrivalRow }) {
           )}
         </p>
         <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[12px] text-muted-foreground">
-          <span data-numeric>{row.patientMrn}</span>
+          <span data-numeric className="whitespace-nowrap">{row.patientMrn}</span>
           <span aria-hidden>·</span>
           <span>{row.doctorName}</span>
           {row.token && (

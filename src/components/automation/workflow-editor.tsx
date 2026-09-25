@@ -209,7 +209,7 @@ export function WorkflowEditor({
 
       <div className="space-y-4">
         <Card className="p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="text-[12px] font-mediumr text-muted-foreground">
             In plain words
           </p>
           <ol className="mt-3 space-y-2">

@@ -37,15 +37,15 @@ export function Sidebar({
     <aside
       data-collapsed={collapsed}
       className={cn(
-        "sticky top-0 z-30 hidden h-dvh shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-out lg:flex",
-        collapsed ? "w-[68px]" : "w-[236px]",
+        "sticky top-0 z-30 hidden h-dvh shrink-0 flex-col bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-out lg:flex",
+        collapsed ? "w-[76px]" : "w-[248px]",
       )}
     >
       {/* Brand */}
       <div
         className={cn(
-          "flex h-16 shrink-0 items-center gap-2.5 border-b border-sidebar-border",
-          collapsed ? "justify-center px-3" : "px-4",
+          "flex h-[72px] shrink-0 items-center gap-2.5",
+          collapsed ? "justify-center px-3" : "px-5",
         )}
       >
         <Link href={`/${workspace}`} className="flex items-center gap-2.5 rounded-lg">
@@ -57,19 +57,19 @@ export function Sidebar({
       {/* Navigation */}
       <nav
         aria-label="Main"
-        className="flex-1 overflow-y-auto overflow-x-hidden px-2.5 py-4"
+        className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-3"
       >
         {sections.map((section, i) => (
-          <div key={section.label ?? `section-${i}`} className={cn(i > 0 && "mt-6")}>
+          <div key={section.label ?? `section-${i}`} className={cn(i > 0 && "mt-5")}>
             {section.label && !collapsed && (
-              <p className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-sidebar-muted">
+              <p className="mb-1.5 px-3 text-[12px] font-medium text-sidebar-muted">
                 {section.label}
               </p>
             )}
             {section.label && collapsed && (
               <div className="mx-auto mb-2 h-px w-6 bg-sidebar-border" />
             )}
-            <ul className="space-y-0.5">
+            <ul className="space-y-1">
               {section.items.map((item) => (
                 <SidebarLink
                   key={item.href}
@@ -86,14 +86,14 @@ export function Sidebar({
       </nav>
 
       {/* Spec §41-J — Operational Pulse lives permanently in the chrome. */}
-      <div className="shrink-0 border-t border-sidebar-border p-2.5">
+      <div className="shrink-0 p-3">
         <OperationalPulse collapsed={collapsed} />
         <button
           type="button"
           onClick={onToggle}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className={cn(
-            "mt-2 flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-[13px] font-medium text-sidebar-muted transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+            "mt-2 flex h-8 w-full items-center gap-2.5 rounded-full px-3 text-[13px] font-medium text-sidebar-muted transition-colors hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground",
             collapsed && "justify-center px-0",
           )}
         >
@@ -131,22 +131,16 @@ function SidebarLink({
       href={item.href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group relative flex h-9 items-center gap-2.5 rounded-lg text-[13px] font-medium transition-colors",
-        collapsed ? "justify-center px-0" : "px-2.5",
+        "group relative flex h-10 items-center gap-3 rounded-full text-[14px] font-medium transition-[background-color,color,box-shadow]",
+        collapsed ? "justify-center px-0" : "px-3",
         active
-          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+          ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-soft"
           : "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
       )}
     >
-      {active && (
-        // CSS, not an animation library: the shell is on every route, and a
-        // sliding rail is not worth shipping a motion engine to each of them
-        // (spec §52). Motion stays where it aids comprehension (spec §33).
-        <span className="absolute -left-2.5 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-accent animate-in fade-in zoom-in-50 duration-200" />
-      )}
       <Icon
         className={cn(
-          "size-[18px] shrink-0 transition-colors",
+          "size-[18px] shrink-0 transition-colors [stroke-width:1.75]",
           active ? "text-accent" : "text-sidebar-muted group-hover:text-sidebar-foreground",
         )}
       />
@@ -156,7 +150,10 @@ function SidebarLink({
         <span
           key={count}
           data-numeric
-          className="ml-auto rounded-md bg-sidebar-accent px-1.5 py-0.5 text-[10px] font-bold text-sidebar-accent-foreground animate-in fade-in slide-in-from-top-1 duration-200"
+          className={cn(
+            "ml-auto min-w-5 rounded-full px-1.5 py-0.5 text-center text-[11px] font-semibold animate-in fade-in slide-in-from-top-1 duration-200",
+            active ? "bg-highlight text-highlight-foreground" : "bg-foreground/[0.06] text-sidebar-foreground",
+          )}
         >
           {count}
         </span>

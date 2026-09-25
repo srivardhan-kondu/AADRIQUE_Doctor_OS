@@ -219,7 +219,7 @@ export function TemplateEditor({ template }: { template: TemplateEdit }) {
       </Card>
 
       <Card className="h-fit p-5">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <p className="text-[12px] font-mediumr text-muted-foreground">
           What the patient reads
         </p>
         <div className="mt-3 rounded-xl bg-muted/60 p-4">

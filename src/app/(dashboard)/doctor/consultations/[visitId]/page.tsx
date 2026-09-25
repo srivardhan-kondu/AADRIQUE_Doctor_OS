@@ -83,7 +83,7 @@ export default async function ConsultationPage({
             label="Back"
           />
           <div>
-            <h1 className="font-display text-xl font-bold tracking-tight">
+            <h1 className="font-display text-xl font-medium tracking-tight">
               Consultation
             </h1>
             <p className="mt-0.5 flex items-center gap-2 text-[12px] text-muted-foreground">
@@ -294,7 +294,7 @@ function OrdersTab({ labReports }: { labReports: Workspace["labReports"] }) {
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+      <p className="text-[12px] font-medium text-muted-foreground">
         {label}
       </p>
       <p className="mt-0.5 text-[13px] leading-relaxed">{value}</p>

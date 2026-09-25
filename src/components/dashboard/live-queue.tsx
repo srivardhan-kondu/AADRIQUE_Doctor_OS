@@ -65,7 +65,7 @@ export function LiveQueue({
       ) : (
         <div className="px-2 pb-2">
           {/* Column headers, echoing the spec's queue table. */}
-          <div className="grid grid-cols-[60px_1fr_112px_68px] items-center gap-3 px-3 pb-2 pt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          <div className="grid grid-cols-[60px_1fr_112px_68px] items-center gap-3 px-3 pb-2 pt-1 text-[12px] font-medium text-muted-foreground">
             <span>Token</span>
             <span>Patient</span>
             <span>Status</span>
@@ -147,7 +147,7 @@ function QueueRowItem({ row, threshold }: { row: QueueRow; threshold: number }) 
           )}
         </span>
         <span className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-          <span data-numeric>{row.patientMrn}</span>
+          <span data-numeric className="whitespace-nowrap">{row.patientMrn}</span>
           {row.age !== null && (
             <>
               <span aria-hidden>·</span>

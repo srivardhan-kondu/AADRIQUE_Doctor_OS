@@ -98,7 +98,7 @@ async function ScheduleScreen({ searchParams }: PageProps) {
         }
       />
 
-      <p className="pb-5 font-display text-[15px] font-semibold">
+      <p className="pb-5 font-display text-[15px] font-medium">
         {view === "week"
           ? `Week of ${schedule.days[0].date.toLocaleDateString("en-IN", {
               day: "numeric",

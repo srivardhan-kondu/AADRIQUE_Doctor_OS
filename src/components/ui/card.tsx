@@ -14,7 +14,7 @@ function Card({
     <div
       data-slot="card"
       className={cn(
-        "min-w-0 rounded-xl border border-border bg-card text-card-foreground shadow-soft",
+        "min-w-0 rounded-xl border border-border/70 bg-card text-card-foreground shadow-soft",
         interactive &&
           "cursor-pointer transition-[box-shadow,border-color,transform] duration-200 hover:border-border hover:shadow-raised focus-visible:shadow-raised",
         className,
@@ -41,7 +41,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"h3">) {
   return (
     <h3
       data-slot="card-title"
-      className={cn("text-[15px] font-semibold leading-none", className)}
+      className={cn("text-[15px] font-semibold leading-none tracking-[-0.01em]", className)}
       {...props}
     />
   );
@@ -78,7 +78,7 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-footer"
       className={cn(
-        "flex items-center gap-2 border-t border-border px-5 py-3",
+        "flex items-center gap-2 border-t border-border/70 px-5 py-3",
         className,
       )}
       {...props}

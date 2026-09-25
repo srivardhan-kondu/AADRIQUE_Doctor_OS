@@ -208,7 +208,15 @@ before implementing a feature.
 
 - Tokens live in `src/app/globals.css`. Use semantic classes (`bg-card`,
   `text-muted-foreground`), not raw palette scales, in feature code.
-- Orange is an accent, navy carries structure, warm white carries surface.
+- Orange is an accent, navy ink carries structure, warm linen carries surface
+  and white cards float on it. The sidebar sits on the same paper.
+- `font-display` is an editorial serif (Newsreader) for page titles and
+  headline numbers, set at `font-normal`/`font-medium` — never bold. Card and
+  section titles, labels and tables stay in the sans (DM Sans).
+- Labels are sentence case. No uppercase, letter-spaced micro-labels.
+- Honey (`bg-highlight`, `bg-highlight-soft`) marks "you are here" and
+  "today"; it is never a status colour.
+- Buttons, tabs and badges are pills; inputs are `rounded-lg`.
 - Status colour has one vocabulary: `src/components/ui/status.tsx`.
 - Skeletons match the real layout; empty states say something useful.
 

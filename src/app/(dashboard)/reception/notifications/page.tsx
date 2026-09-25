@@ -94,7 +94,7 @@ export default async function NotificationsPage({
                       <span className="flex items-center gap-2">
                         <span
                           className={cn(
-                            "text-[10px] font-semibold uppercase tracking-[0.12em]",
+                            "text-[12px] font-medium",
                             level.text,
                           )}
                         >

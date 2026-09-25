@@ -50,7 +50,7 @@ function CommandDialog({
         <DialogDescription className="sr-only">{description}</DialogDescription>
         <Command
           loop
-          className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.14em] [&_[cmdk-group-heading]]:text-muted-foreground"
+          className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-[12px] [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
         >
           {children}
         </Command>
@@ -146,7 +146,7 @@ function CommandShortcut({ className, ...props }: React.ComponentProps<"span">) 
   return (
     <span
       className={cn(
-        "ml-auto font-mono text-[10px] uppercase tracking-widest text-muted-foreground",
+        "ml-auto font-mono text-[12px] font-mediumst text-muted-foreground",
         className,
       )}
       {...props}

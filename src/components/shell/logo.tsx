@@ -28,10 +28,10 @@ export function Logo({ className }: { className?: string }) {
 export function Wordmark({ className }: { className?: string }) {
   return (
     <div className={cn("flex min-w-0 flex-col leading-none", className)}>
-      <span className="font-display text-[15px] font-bold tracking-tight">
+      <span className="text-[15px] font-semibold tracking-[0.02em]">
         AADRIQUE
       </span>
-      <span className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-sidebar-muted">
+      <span className="mt-1 font-display text-[12px] italic text-sidebar-muted">
         Doctor OS
       </span>
     </div>

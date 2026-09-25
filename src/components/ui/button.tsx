@@ -4,19 +4,19 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-[background-color,color,box-shadow,border-color] duration-150 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-[background-color,color,box-shadow,border-color] duration-150 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-soft hover:bg-primary/90",
+          "bg-primary text-primary-foreground shadow-soft hover:bg-primary/88",
         accent:
           "bg-accent text-accent-foreground shadow-soft hover:bg-brand-600",
         outline:
-          "border border-border bg-card text-foreground shadow-soft hover:bg-muted hover:text-foreground",
+          "border border-input bg-card text-foreground shadow-soft hover:border-foreground/20 hover:bg-card",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "text-foreground hover:bg-muted",
+        ghost: "text-foreground hover:bg-foreground/[0.05]",
         subtle: "bg-muted text-muted-foreground hover:text-foreground",
         destructive:
           "bg-destructive text-destructive-foreground shadow-soft hover:bg-destructive/90",
@@ -24,11 +24,11 @@ const buttonVariants = cva(
         link: "text-accent underline-offset-4 hover:underline",
       },
       size: {
-        sm: "h-8 rounded-md px-3 text-[13px]",
+        sm: "h-8 px-3.5 text-[13px]",
         default: "h-9 px-4",
-        lg: "h-11 rounded-lg px-6 text-[15px]",
+        lg: "h-11 px-6 text-[15px]",
         icon: "size-9",
-        "icon-sm": "size-8 rounded-md",
+        "icon-sm": "size-8",
       },
     },
     defaultVariants: { variant: "default", size: "default" },

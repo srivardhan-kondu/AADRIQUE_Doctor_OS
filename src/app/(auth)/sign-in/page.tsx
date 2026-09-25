@@ -13,42 +13,47 @@ export default async function SignInPage({
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1fr_minmax(420px,44%)]">
-      {/* Brand panel — navy, as the brochure's dark sections are. */}
-      <section className="relative hidden flex-col justify-between bg-navy-900 p-12 text-navy-100 lg:flex">
-        <div className="flex items-center gap-3">
+      {/* Brand panel — warm honey light, inset on the paper like a printed
+          card, so the first screen reads as a clinic's, not a template's. */}
+      <section className="relative m-3 hidden flex-col justify-between overflow-hidden rounded-[28px] brand-panel p-12 lg:flex">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-24 -top-24 size-[420px] rounded-full bg-white/35 blur-3xl"
+        />
+        <div className="relative flex items-center gap-3">
           <Logo className="size-9" />
           <div className="leading-none">
-            <p className="font-display text-base font-bold tracking-tight text-white">
+            <p className="text-base font-semibold tracking-[0.02em]">
               AADRIQUE
             </p>
-            <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-navy-400">
+            <p className="mt-1 font-display text-[13px] italic text-panel-muted">
               Doctor OS
             </p>
           </div>
         </div>
 
-        <div className="max-w-lg">
-          <h1 className="font-display text-4xl font-bold leading-[1.15] tracking-tight text-white text-balance">
+        <div className="relative max-w-lg">
+          <h1 className="font-display text-5xl font-normal leading-[1.08] text-balance">
             Your OPD.
             <br />
-            One intelligent workspace.
+            <em className="text-panel-emphasis">One intelligent workspace.</em>
           </h1>
-          <p className="mt-5 text-[15px] leading-relaxed text-navy-300">
+          <p className="mt-6 text-[15px] leading-relaxed text-panel-muted">
             Appointments, queues, patient records, communication and AI
             assistance — designed around the way doctors actually work.
           </p>
 
-          <dl className="mt-10 grid grid-cols-3 gap-6 border-t border-navy-800 pt-8">
+          <dl className="mt-10 grid grid-cols-3 gap-6 border-t border-panel-ink/15 pt-8">
             {[
               { value: "1 click", label: "to your next patient" },
               { value: "One timeline", label: "for the whole patient story" },
               { value: "Live", label: "queue and OPD health" },
             ].map((item) => (
               <div key={item.label}>
-                <dt className="font-display text-lg font-bold text-accent">
+                <dt className="font-display text-xl font-normal">
                   {item.value}
                 </dt>
-                <dd className="mt-1 text-[12px] leading-snug text-navy-400">
+                <dd className="mt-1 text-[12px] leading-snug text-panel-muted">
                   {item.label}
                 </dd>
               </div>
@@ -56,7 +61,7 @@ export default async function SignInPage({
           </dl>
         </div>
 
-        <p className="text-[12px] text-navy-500">
+        <p className="relative text-[12px] text-panel-muted">
           AADRIQUE Doctor OS
         </p>
       </section>
@@ -66,16 +71,16 @@ export default async function SignInPage({
           <div className="mb-8 flex items-center gap-3 lg:hidden">
             <Logo className="size-9" />
             <div className="leading-none">
-              <p className="font-display text-base font-bold tracking-tight">
+              <p className="text-base font-semibold tracking-[0.02em]">
                 AADRIQUE
               </p>
-              <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              <p className="mt-1 font-display text-[13px] italic text-muted-foreground">
                 Doctor OS
               </p>
             </div>
           </div>
 
-          <h2 className="font-display text-2xl font-bold tracking-tight">
+          <h2 className="font-display text-[32px] font-normal leading-tight">
             Sign in
           </h2>
           <p className="mt-1.5 text-[14px] text-muted-foreground">
