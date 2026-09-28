@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageBody } from "@/components/shell/page-header";
 import { BackButton } from "@/components/shell/back-button";
+import { NoAccess } from "@/components/shell/no-access";
 import { ConsultationEditor } from "@/components/consultation/consultation-editor";
 import { PatientSnapshot } from "@/components/consultation/patient-snapshot";
 import { PrescriptionEditor } from "@/components/consultation/prescription-editor";
@@ -57,20 +58,27 @@ export default async function ConsultationPage({
   params: Promise<{ visitId: string }>;
 }) {
   const { visitId } = await params;
+  const actor = await requireActor();
+
+  // The service refuses this too; checking first shows the refusal as a
+  // screen rather than a 500 for the front desk following an old link.
+  if (!hasPermission(actor, Permission.CONSULTATION_READ)) {
+    return <NoAccess title="Consultation" what="to read consultation notes" />;
+  }
 
   let ws;
   let prescription;
   try {
     [ws, prescription] = await Promise.all([
       loadWorkspace(visitId),
-      requireActor().then((actor) => getPrescription(actor, visitId)),
+      getPrescription(actor, visitId),
     ]);
   } catch (error) {
     if (error instanceof ServiceError && error.code === "NOT_FOUND") notFound();
     throw error;
   }
   const canRecordVitals =
-    ws.status !== "SIGNED" && hasPermission(await requireActor(), Permission.VITALS_RECORD);
+    ws.status !== "SIGNED" && hasPermission(actor, Permission.VITALS_RECORD);
 
   return (
     <PageBody className="max-w-[1500px]">
@@ -142,7 +150,7 @@ export default async function ConsultationPage({
                 )}
               </TabsTrigger>
               <TabsTrigger value="orders">
-                Orders
+                Lab results
                 {ws.labReports.length > 0 && (
                   <span data-numeric className="ml-1 text-muted-foreground">
                     {ws.labReports.length}
@@ -245,8 +253,8 @@ function OrdersTab({ labReports }: { labReports: Workspace["labReports"] }) {
       <Card>
         <EmptyState
           icon={FlaskConical}
-          title="No investigations on this visit"
-          description="Lab ordering arrives with the integrations module in a later part."
+          title="No lab results on this visit"
+          description="A lab report uploaded to this visit from the patient's documents appears here."
         />
       </Card>
     );

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import { NoAccess } from "@/components/shell/no-access";
+import { PermissionError } from "@/lib/permissions";
 import { requireActor } from "@/server/context";
 import { ServiceError } from "@/server/services/errors";
 import { getPrintablePrescription } from "@/server/services/prescriptions";
@@ -29,6 +31,9 @@ export default async function PrintPrescriptionPage({
     visit = await getPrintablePrescription(actor, visitId);
   } catch (error) {
     if (error instanceof ServiceError && error.code === "NOT_FOUND") notFound();
+    if (error instanceof PermissionError) {
+      return <NoAccess title="Prescription" what="to read prescriptions" />;
+    }
     throw error;
   }
 

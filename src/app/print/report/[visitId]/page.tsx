@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import { NoAccess } from "@/components/shell/no-access";
+import { PermissionError } from "@/lib/permissions";
 import { requireActor } from "@/server/context";
 import { ServiceError } from "@/server/services/errors";
 import { getPrintableVisitReport } from "@/server/services/prescriptions";
@@ -28,6 +30,9 @@ export default async function PrintVisitReportPage({
     visit = await getPrintableVisitReport(actor, visitId);
   } catch (error) {
     if (error instanceof ServiceError && error.code === "NOT_FOUND") notFound();
+    if (error instanceof PermissionError) {
+      return <NoAccess title="Visit report" what="to read consultation notes" />;
+    }
     throw error;
   }
 
