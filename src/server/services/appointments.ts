@@ -442,6 +442,21 @@ export async function bookAppointment(
       );
     }
 
+    const sameDay = await findSameDayBooking(tx, {
+      organizationId: actor.organizationId,
+      patientId: patient.id,
+      doctorId: doctor.id,
+      day: start,
+    });
+
+    if (sameDay) {
+      throw new ServiceError(
+        "CONFLICT",
+        `${patient.firstName} is already booked with ${doctor.user.name} at ${formatTime(sameDay.scheduledStart)} that day.`,
+        "Reschedule that appointment instead of booking a second one.",
+      );
+    }
+
     const created = await tx.appointment.create({
       data: {
         organizationId: actor.organizationId,
@@ -576,6 +591,22 @@ export async function rescheduleAppointment(
         "CONFLICT",
         `That slot is taken at ${formatTime(clash.scheduledStart)}.`,
         "Choose another time.",
+      );
+    }
+
+    const sameDay = await findSameDayBooking(tx, {
+      organizationId: actor.organizationId,
+      patientId: existing.patientId,
+      doctorId: existing.doctorId,
+      day: start,
+      excludeId: existing.id,
+    });
+
+    if (sameDay) {
+      throw new ServiceError(
+        "CONFLICT",
+        `${existing.patient.firstName} already has an appointment at ${formatTime(sameDay.scheduledStart)} that day.`,
+        "Move or cancel that one instead.",
       );
     }
 
@@ -811,6 +842,37 @@ export async function markNoShow(
   return {
     patientName: `${appointment.patient.firstName} ${appointment.patient.lastName ?? ""}`.trim(),
   };
+}
+
+/**
+ * The patient's other live booking with this doctor on the same day, if any.
+ *
+ * A patient is seen once per doctor per day: a second booking becomes a
+ * second token, and the doctor calls the same person twice. Read inside the
+ * caller's transaction, beside the slot clash check.
+ */
+export async function findSameDayBooking(
+  tx: Prisma.TransactionClient,
+  input: {
+    organizationId: string;
+    patientId: string;
+    doctorId: string;
+    day: Date;
+    excludeId?: string;
+  },
+): Promise<{ scheduledStart: Date } | null> {
+  const start = startOfDay(input.day);
+  return tx.appointment.findFirst({
+    where: {
+      organizationId: input.organizationId,
+      patientId: input.patientId,
+      doctorId: input.doctorId,
+      status: { in: [...ACTIVE_STATUSES] },
+      scheduledStart: { gte: start, lt: addDays(start, 1) },
+      ...(input.excludeId ? { id: { not: input.excludeId } } : {}),
+    },
+    select: { scheduledStart: true },
+  });
 }
 
 function formatTime(date: Date): string {

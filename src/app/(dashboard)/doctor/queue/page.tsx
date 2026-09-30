@@ -58,9 +58,9 @@ async function QueueScreen() {
       />
 
       {board.paused && (
-        <div className="mb-5 flex items-start gap-3 rounded-xl border border-warning/30 bg-warning-soft px-4 py-3">
-          <PauseCircle className="mt-0.5 size-4 shrink-0 text-warning" />
-          <div>
+        <div className="mb-5 flex items-center gap-3 rounded-xl border border-warning/30 bg-warning-soft px-4 py-3">
+          <PauseCircle className="size-4 shrink-0 text-warning" />
+          <div className="min-w-0 flex-1">
             <p className="text-[13px] font-semibold text-warning">
               Queue is paused
             </p>
@@ -69,7 +69,7 @@ async function QueueScreen() {
                 "No new patients will be called until you resume."}
             </p>
           </div>
-          <Badge variant="warning" className="ml-auto shrink-0">
+          <Badge variant="warning" className="shrink-0">
             Paused
           </Badge>
         </div>

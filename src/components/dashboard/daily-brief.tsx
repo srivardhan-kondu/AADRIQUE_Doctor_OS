@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronRight, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { DayGreeting } from "@/components/dashboard/day-greeting";
 import { StartMyDayButton } from "@/components/queue/queue-actions";
 import type { DashboardData } from "@/server/services/dashboard";
 
@@ -21,15 +22,24 @@ export function DailyBrief({
   pulse,
   nextPatient,
   dayStarted,
-  doctorName,
+  doctor,
 }: {
   brief: DashboardData["brief"];
   metrics: DashboardData["metrics"];
   pulse: DashboardData["pulse"];
   nextPatient: DashboardData["nextPatient"];
   dayStarted: boolean;
-  doctorName: string;
+  doctor: DashboardData["doctor"];
 }) {
+  // A specialisation often repeats the department's name; say it once.
+  const details = [
+    ...new Set(
+      [doctor.specialization, doctor.qualifications, doctor.department, doctor.room].filter(
+        (d): d is string => Boolean(d),
+      ),
+    ),
+  ];
+
   const stats = [
     { value: brief.appointments, label: "Appointments", href: "/doctor/appointments" },
     { value: metrics.total, label: "Patients today", href: "/doctor/patients" },
@@ -48,7 +58,10 @@ export function DailyBrief({
           <p className="font-display text-[15px] italic text-highlight-foreground">
             Your day
           </p>
-          <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-muted-foreground">
+          <div className="mt-2">
+            <DayGreeting name={doctor.name} details={details} online={doctor.online} />
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-muted-foreground">
             {brief.firstAppointment && (
               <span className="flex items-center gap-1.5">
                 <Clock className="size-3.5" />
@@ -121,7 +134,7 @@ export function DailyBrief({
         ))}
       </ul>
 
-      <p className="sr-only">Daily brief for {doctorName}</p>
+      <p className="sr-only">Daily brief for {doctor.name}</p>
     </section>
   );
 }

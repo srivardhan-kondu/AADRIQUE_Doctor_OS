@@ -53,6 +53,8 @@ export interface DashboardData {
   doctor: {
     id: string;
     name: string;
+    specialization: string | null;
+    qualifications: string | null;
     department: string | null;
     room: string | null;
     counter: string | null;
@@ -268,6 +270,8 @@ export async function getDashboard(
     doctor: {
       id: doctor.id,
       name: doctor.user.name,
+      specialization: doctor.specialization,
+      qualifications: doctor.qualifications,
       department: doctor.department?.name ?? null,
       room: queue?.roomLabel ?? null,
       counter: queue?.counterLabel ?? null,

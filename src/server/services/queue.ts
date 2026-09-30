@@ -25,7 +25,7 @@ import {
   waitMinutes,
 } from "@/server/rules/queue";
 import { fireTrigger } from "./workflows";
-import { startOfDay } from "@/server/rules/appointments";
+import { addDays, startOfDay } from "@/server/rules/appointments";
 
 /**
  * Spec §12 — token and queue management.
@@ -118,6 +118,25 @@ export async function issueToken(
     update: {},
     select: { id: true, tokenPrefix: true },
   });
+
+  // One live token per patient per queue: a second one means the doctor
+  // calls the same person twice. Read inside the transaction, so two desks
+  // checking the same patient in at once cannot both pass.
+  const alreadyQueued = await tx.queueEntry.findFirst({
+    where: {
+      queueId: queue.id,
+      patientId: input.patientId,
+      status: { in: [...WAITING_STATUSES, ...ACTIVE_STATUSES] },
+    },
+    select: { token: true },
+  });
+  if (alreadyQueued) {
+    throw new ServiceError(
+      "CONFLICT",
+      `This patient is already in today's queue as ${alreadyQueued.token}.`,
+      "Use the token they already have.",
+    );
+  }
 
   const last = await tx.queueEntry.findFirst({
     where: { queueId: queue.id },
@@ -213,19 +232,41 @@ export async function addWalkIn(
     );
   }
 
-  const alreadyQueued = await prisma.queueEntry.findFirst({
-    where: {
-      patientId: patient.id,
-      status: { in: [...WAITING_STATUSES, ...ACTIVE_STATUSES] },
-      queue: { doctorId: doctor.id, date: day },
-    },
-    select: { token: true },
-  });
+  const [alreadyQueued, booked] = await Promise.all([
+    prisma.queueEntry.findFirst({
+      where: {
+        patientId: patient.id,
+        status: { in: [...WAITING_STATUSES, ...ACTIVE_STATUSES] },
+        queue: { doctorId: doctor.id, date: day },
+      },
+      select: { token: true },
+    }),
+    // Booked for today and not here yet: checking in uses that booking, where
+    // a walk-in would put the same patient in the queue a second time.
+    prisma.appointment.findFirst({
+      where: {
+        organizationId: actor.organizationId,
+        patientId: patient.id,
+        doctorId: doctor.id,
+        status: "SCHEDULED",
+        scheduledStart: { gte: day, lt: addDays(day, 1) },
+      },
+      select: { scheduledStart: true },
+    }),
+  ]);
 
   if (alreadyQueued) {
     throw new ServiceError(
       "CONFLICT",
       `${patient.firstName} is already in the queue as ${alreadyQueued.token}.`,
+    );
+  }
+
+  if (booked) {
+    throw new ServiceError(
+      "CONFLICT",
+      `${patient.firstName} is booked with ${doctor.user.name} at ${booked.scheduledStart.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", hour12: true })} today.`,
+      "Check them in from today's arrivals instead of adding a walk-in.",
     );
   }
 

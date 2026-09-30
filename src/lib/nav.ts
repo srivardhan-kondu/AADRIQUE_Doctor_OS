@@ -19,9 +19,10 @@ import {
   Users,
   UsersRound,
 } from "lucide-react";
-import type { Role } from "@/generated/prisma/enums";
 import type { AddOn } from "@/lib/add-ons";
 import type { Workspace } from "@/types";
+
+export { homeFor, landingFor, workspaceFromPath, workspacesFor } from "@/lib/workspaces";
 
 export interface NavItem {
   label: string;
@@ -153,36 +154,9 @@ export const WORKSPACE_META: Record<
   },
 };
 
-/**
- * Spec §3 — where each role starts its day. The front desk lands on the desk,
- * not on a doctor's command center it has no use for.
- */
-export function homeFor(role: Role): string {
-  switch (role) {
-    case "HOSPITAL_ADMIN":
-    case "SUPER_ADMIN":
-      return "/admin";
-    case "RECEPTIONIST":
-    case "STAFF":
-      return "/reception";
-    case "NURSE":
-      return "/nurse";
-    default:
-      return "/doctor";
-  }
-}
-
 /** Flattened nav, used by the command palette's navigation results. */
 export function flatNav(workspace: Workspace): NavItem[] {
   return NAV[workspace].flatMap((section) => section.items);
-}
-
-/** Resolves which workspace a pathname belongs to. */
-export function workspaceFromPath(pathname: string): Workspace {
-  if (pathname.startsWith("/admin")) return "admin";
-  if (pathname.startsWith("/reception")) return "reception";
-  if (pathname.startsWith("/nurse")) return "nurse";
-  return "doctor";
 }
 
 /**

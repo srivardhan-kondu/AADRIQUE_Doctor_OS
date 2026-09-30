@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { usePathname } from "next/navigation";
 import { Menu, Search, Sparkles } from "lucide-react";
 import { cn, greeting } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,9 @@ export function Topbar({
 }) {
   const user = useSession();
   const mounted = useMounted();
+  // The Command Center greets the doctor in its own "Your day" panel, with
+  // room for the details; saying it twice would crowd the header.
+  const greetsInPage = usePathname() === "/doctor";
 
   // Rendered after mount: the greeting and date depend on the viewer's clock
   // and timezone, which the server cannot know without guessing.
@@ -55,23 +59,23 @@ export function Topbar({
       </Button>
 
       <div className="min-w-0 flex-1">
-        {now ? (
+        {greetsInPage ? null : now ? (
           <>
             {/* A greeting, not the page's title: the screen's own heading is its
                 one h1 (spec §51), so screen readers land on what the page is. */}
-            <p className="truncate text-[15px] font-semibold leading-tight tracking-[-0.01em]">
+            <p className="truncate text-[16px] font-semibold leading-tight tracking-[-0.01em]">
               {greeting(now)}, {user.name.replace(/^Dr\.\s*/, "Dr. ")}
             </p>
-            <p className="mt-0.5 hidden items-center gap-2 text-[12px] text-muted-foreground sm:flex">
+            <p className="mt-1 hidden min-w-0 items-center gap-2 text-[13px] text-muted-foreground sm:flex">
               {user.department && (
                 <>
-                  <span className="truncate">{user.department}</span>
-                  <span aria-hidden className="text-border">
+                  <span className="min-w-0 truncate">{user.department}</span>
+                  <span aria-hidden className="shrink-0 text-border">
                     •
                   </span>
                 </>
               )}
-              <span data-numeric>
+              <span data-numeric className="shrink-0 whitespace-nowrap">
                 {now.toLocaleDateString("en-IN", {
                   weekday: "long",
                   day: "numeric",
@@ -79,13 +83,13 @@ export function Topbar({
                   year: "numeric",
                 })}
               </span>
-              <span aria-hidden className="text-border">
+              <span aria-hidden className="shrink-0 text-border">
                 •
               </span>
-              <span className="inline-flex items-center gap-1.5">
+              <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap">
                 <span
                   className={cn(
-                    "size-1.5 rounded-full",
+                    "size-2 rounded-full",
                     user.online ? "bg-success" : "bg-muted-foreground",
                   )}
                 />

@@ -27,7 +27,7 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "@/components/ui/command";
-import { flatNav, WORKSPACE_META } from "@/lib/nav";
+import { flatNav, WORKSPACE_META, workspacesFor } from "@/lib/nav";
 import { useSession } from "@/lib/session";
 import type { Workspace } from "@/types";
 import {
@@ -57,6 +57,9 @@ export function CommandPalette({
   const { setTheme, resolvedTheme } = useTheme();
   const user = useSession();
   const navItems = React.useMemo(() => flatNav(workspace), [workspace]);
+  // Only the workspaces this role works in: a doctor is not offered the
+  // front desk or the vitals station.
+  const otherWorkspaces = workspacesFor(user.role).filter((w) => w !== workspace);
 
   const run = React.useCallback(
     (fn: () => void) => {
@@ -93,7 +96,9 @@ export function CommandPalette({
   }, [term]);
 
   const patients = term.length >= 2 && found.query === term ? found.rows : [];
-  const patientBase = `/${workspace}/patients`;
+  // The vitals station has no patient list of its own; a nurse reads the
+  // record where the doctor does.
+  const patientBase = workspace === "nurse" ? "/doctor/patients" : `/${workspace}/patients`;
 
   /** Spec §41-B — the next patient, one keystroke from anywhere. */
   const callNext = () =>
@@ -173,19 +178,21 @@ export function CommandPalette({
               <span>Walk-in token</span>
             </CommandItem>
           )}
-          <CommandItem
-            onSelect={() =>
-              go(
-                workspace === "reception"
-                  ? "/reception?open=register"
-                  : `${patientBase}?open=register`,
-              )
-            }
-            keywords={["register", "add", "new patient"]}
-          >
-            <UserPlus className="text-muted-foreground" />
-            <span>Register a patient</span>
-          </CommandItem>
+          {workspace !== "nurse" && (
+            <CommandItem
+              onSelect={() =>
+                go(
+                  workspace === "reception"
+                    ? "/reception?open=register"
+                    : `${patientBase}?open=register`,
+                )
+              }
+              keywords={["register", "add", "new patient"]}
+            >
+              <UserPlus className="text-muted-foreground" />
+              <span>Register a patient</span>
+            </CommandItem>
+          )}
           {workspace !== "admin" && (
             <CommandItem
               onSelect={() =>
@@ -237,26 +244,27 @@ export function CommandPalette({
           ))}
         </CommandGroup>
 
-        <CommandSeparator />
-
-        <CommandGroup heading="Workspace">
-          {(Object.keys(WORKSPACE_META) as Workspace[])
-            .filter((w) => w !== workspace)
-            .map((w) => {
-              const meta = WORKSPACE_META[w];
-              return (
-                <CommandItem
-                  key={w}
-                  onSelect={() => run(() => router.push(meta.href))}
-                  keywords={[meta.label, meta.description]}
-                >
-                  <meta.icon className="text-muted-foreground" />
-                  <span>Switch to {meta.label}</span>
-                  <ArrowRight className="ml-auto size-3.5 text-muted-foreground" />
-                </CommandItem>
-              );
-            })}
-        </CommandGroup>
+        {otherWorkspaces.length > 0 && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Workspace">
+              {otherWorkspaces.map((w) => {
+                const meta = WORKSPACE_META[w];
+                return (
+                  <CommandItem
+                    key={w}
+                    onSelect={() => run(() => router.push(meta.href))}
+                    keywords={[meta.label, meta.description]}
+                  >
+                    <meta.icon className="text-muted-foreground" />
+                    <span>Switch to {meta.label}</span>
+                    <ArrowRight className="ml-auto size-3.5 text-muted-foreground" />
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </>
+        )}
 
         <CommandSeparator />
 

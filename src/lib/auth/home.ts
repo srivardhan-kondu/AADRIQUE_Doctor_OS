@@ -1,6 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/db";
-import { homeFor } from "@/lib/nav";
+import { landingFor } from "@/lib/workspaces";
 
 /**
  * Where a sign-in lands (spec §3), resolved before the sign-in itself.
@@ -9,10 +9,16 @@ import { homeFor } from "@/lib/nav";
  * to "/" for a second redirect by role. The membership chosen matches
  * `authorize` — the first active one in an active organization.
  *
+ * A return link (`next`) is kept only when it is in one of that role's own
+ * workspaces — see `landingFor`.
+ *
  * The answer is only used after the credentials are accepted, so it reveals
  * nothing about which accounts exist.
  */
-export async function homeForEmail(email: string): Promise<string> {
+export async function landingForEmail(
+  email: string,
+  next: string | null | undefined,
+): Promise<string> {
   const membership = await prisma.membership.findFirst({
     where: {
       active: true,
@@ -22,5 +28,5 @@ export async function homeForEmail(email: string): Promise<string> {
     orderBy: { createdAt: "asc" },
     select: { role: true },
   });
-  return membership ? homeFor(membership.role) : "/doctor";
+  return landingFor(membership?.role ?? "DOCTOR", next);
 }

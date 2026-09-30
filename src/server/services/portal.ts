@@ -23,6 +23,7 @@ import {
   startOfDay,
 } from "@/server/rules/appointments";
 import { WAITING_STATUSES } from "@/server/rules/queue";
+import { findSameDayBooking } from "./appointments";
 import { gatewayRoute } from "./communication";
 import { ServiceError, invalidState, notFound } from "./errors";
 import { automationActor, fireTrigger } from "./workflows";
@@ -447,6 +448,19 @@ export async function portalBook(
       select: { id: true },
     });
     if (clash) throw invalidState("That time was just taken.", "Choose another time.");
+
+    const sameDay = await findSameDayBooking(tx, {
+      organizationId,
+      patientId: patient.id,
+      doctorId: doctor.id,
+      day: start,
+    });
+    if (sameDay) {
+      throw invalidState(
+        `You already have an appointment with ${doctor.user.name} that day.`,
+        "Choose another day, or cancel the one you have.",
+      );
+    }
 
     const created = await tx.appointment.create({
       data: {

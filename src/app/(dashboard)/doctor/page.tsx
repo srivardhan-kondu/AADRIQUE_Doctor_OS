@@ -65,7 +65,7 @@ async function Dashboard() {
           pulse={data.pulse}
           nextPatient={data.nextPatient}
           dayStarted={data.dayStarted}
-          doctorName={data.doctor.name}
+          doctor={data.doctor}
         />
 
         {/* Only for a clinic that sends patients through vitals first. */}
@@ -90,7 +90,7 @@ function DashboardSkeleton() {
         <Skeleton className="mt-2 h-4 w-80" />
       </div>
       <div className="space-y-5">
-        <Skeleton className="h-[172px] rounded-xl" />
+        <Skeleton className="h-[260px] rounded-2xl" />
         <div className="grid gap-5 xl:grid-cols-[1.35fr_1fr]">
           <Skeleton className="h-[420px] rounded-xl" />
           <Skeleton className="h-[420px] rounded-xl" />

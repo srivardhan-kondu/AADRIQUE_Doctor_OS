@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { AuthError, CredentialsSignin } from "next-auth";
 import { z } from "zod";
 import { signIn } from "@/lib/auth";
-import { homeForEmail } from "@/lib/auth/home";
+import { landingForEmail } from "@/lib/auth/home";
 import {
   SIGN_IN_ACCOUNT_LIMIT,
   SIGN_IN_ADDRESS_LIMIT,
@@ -87,12 +87,10 @@ export async function signInAction(
     };
   }
 
-  // Only same-origin paths — a `next` of "https://elsewhere" must not redirect.
-  // With none, the person lands in their own role's workspace.
-  const redirectTo =
-    next && next.startsWith("/") && !next.startsWith("//")
-      ? next
-      : await homeForEmail(email);
+  // Only same-origin paths in the person's own workspaces — a `next` of
+  // "https://elsewhere" must not redirect, and one left by the last person on
+  // this computer must not drop a doctor on the front desk.
+  const redirectTo = await landingForEmail(email, next);
 
   try {
     await signIn("credentials", { email, password, ...(code ? { code } : {}), redirectTo });

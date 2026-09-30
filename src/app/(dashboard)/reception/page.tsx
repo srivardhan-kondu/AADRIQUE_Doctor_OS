@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { CalendarPlus, UserPlus } from "lucide-react";
+import Link from "next/link";
+import { CalendarPlus, ChevronRight, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Kbd } from "@/components/ui/kbd";
@@ -128,10 +129,10 @@ async function Desk({ searchParams }: PageProps) {
       </div>
 
       <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Expected today" value={day.counts.expected} />
-        <Stat label="Arrived" value={day.counts.arrived} />
-        <Stat label="Still to come" value={day.counts.stillToCome} />
-        <Stat label="Registered today" value={day.counts.registered} />
+        <Stat label="Expected today" value={day.counts.expected} href="/reception/appointments" />
+        <Stat label="Arrived" value={day.counts.arrived} href="/reception/queue" />
+        <Stat label="Still to come" value={day.counts.stillToCome} href="/reception/appointments" />
+        <Stat label="Registered today" value={day.counts.registered} href="/reception/patients" />
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1.5fr_1fr]">
@@ -142,15 +143,19 @@ async function Desk({ searchParams }: PageProps) {
   );
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+/** Each number is also the way to the patients it counts. */
+function Stat({ label, value, href }: { label: string; value: number; href: string }) {
   return (
-    <Card className="px-4 py-3.5">
-      <p className="text-[12px] font-medium text-muted-foreground">
-        {label}
-      </p>
-      <p data-numeric className="mt-1 font-display text-2xl font-medium tabular">
-        {value}
-      </p>
+    <Card className="transition-colors hover:border-input">
+      <Link href={href} className="group block px-4 py-3.5">
+        <p className="flex items-center gap-0.5 text-[12px] font-medium text-muted-foreground group-hover:text-foreground">
+          {label}
+          <ChevronRight className="size-3 opacity-0 transition-opacity group-hover:opacity-100" />
+        </p>
+        <p data-numeric className="mt-1 font-display text-2xl font-medium tabular">
+          {value}
+        </p>
+      </Link>
     </Card>
   );
 }
