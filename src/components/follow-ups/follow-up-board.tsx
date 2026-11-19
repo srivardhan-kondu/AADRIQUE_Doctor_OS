@@ -118,7 +118,7 @@ function Group({
             <span className="text-muted-foreground tabular">{rows.length}</span>
           </CardTitle>
           {description && (
-            <p className="mt-0.5 text-[12px] text-muted-foreground">
+            <p className="mt-0.5 text-[13px] text-muted-foreground">
               {description}
             </p>
           )}
@@ -126,7 +126,7 @@ function Group({
       </CardHeader>
 
       {rows.length === 0 ? (
-        <p className="px-5 pb-5 text-[13px] text-muted-foreground">
+        <p className="px-5 pb-5 text-[14px] text-muted-foreground">
           {emptyText}
         </p>
       ) : (
@@ -157,13 +157,13 @@ function FollowUpRowView({
       <div className="w-24 shrink-0">
         <p
           className={cn(
-            "text-[13px] font-bold",
+            "text-[14px] font-bold",
             tone === "overdue" ? "text-destructive" : "",
           )}
         >
           {dueLabel(row.daysUntilDue)}
         </p>
-        <p className="text-[11px] text-muted-foreground tabular">
+        <p className="text-[12px] text-muted-foreground tabular">
           {row.dueDate.toLocaleDateString("en-IN", {
             day: "numeric",
             month: "short",
@@ -175,7 +175,7 @@ function FollowUpRowView({
         <p className="flex flex-wrap items-center gap-2">
           <Link
             href={`/doctor/patients/${row.patientId}`}
-            className="truncate text-[14px] font-semibold hover:text-accent hover:underline"
+            className="truncate text-[14px] font-semibold hover:text-accent-ink hover:underline"
           >
             {row.patientName}
           </Link>
@@ -201,7 +201,7 @@ function FollowUpRowView({
           )}
         </p>
 
-        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[12px] text-muted-foreground">
+        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[13px] text-muted-foreground">
           <span data-numeric>{row.patientMrn}</span>
           {row.age !== null && (
             <>
@@ -217,7 +217,7 @@ function FollowUpRowView({
         </p>
 
         {row.reason && (
-          <p className="mt-1 truncate text-[13px]">{row.reason}</p>
+          <p className="mt-1 truncate text-[14px]">{row.reason}</p>
         )}
       </div>
 
@@ -225,7 +225,7 @@ function FollowUpRowView({
         {row.visitId && (
           <Link
             href={`/doctor/consultations/${row.visitId}`}
-            className="text-[13px] font-semibold text-accent hover:underline"
+            className="text-[14px] font-semibold text-accent-ink hover:underline"
           >
             Last visit
           </Link>
@@ -257,7 +257,7 @@ function ReactivationCard({ rows }: { rows: ReactivationRow[] }) {
           Worth reaching out to
           <Badge variant="ai">{rows.length}</Badge>
         </CardTitle>
-        <p className="mt-0.5 text-[12px] text-muted-foreground">
+        <p className="mt-0.5 text-[13px] text-muted-foreground">
           A follow-up was promised, the date passed, and nobody rebooked them.
         </p>
       </CardHeader>
@@ -271,11 +271,11 @@ function ReactivationCard({ rows }: { rows: ReactivationRow[] }) {
             <div className="min-w-0 flex-1">
               <Link
                 href={`/doctor/patients/${row.patientId}`}
-                className="truncate text-[14px] font-semibold hover:text-accent hover:underline"
+                className="truncate text-[14px] font-semibold hover:text-accent-ink hover:underline"
               >
                 {row.patientName}
               </Link>
-              <p className="mt-0.5 text-[12px] text-muted-foreground">
+              <p className="mt-0.5 text-[13px] text-muted-foreground">
                 <span data-numeric>{row.patientMrn}</span>
                 <span aria-hidden> · </span>
                 missed{" "}
@@ -297,7 +297,7 @@ function ReactivationCard({ rows }: { rows: ReactivationRow[] }) {
                 )}
               </p>
               {row.reason && (
-                <p className="mt-1 truncate text-[13px]">{row.reason}</p>
+                <p className="mt-1 truncate text-[14px]">{row.reason}</p>
               )}
             </div>
 

@@ -31,7 +31,7 @@ export function Wordmark({ className }: { className?: string }) {
       <span className="text-[15px] font-semibold tracking-[0.02em]">
         AADRIQUE
       </span>
-      <span className="mt-1 font-display text-[12px] italic text-sidebar-muted">
+      <span className="mt-1 font-display text-[13px] italic text-sidebar-muted">
         Doctor OS
       </span>
     </div>

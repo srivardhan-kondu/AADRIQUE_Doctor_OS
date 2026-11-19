@@ -34,7 +34,7 @@ export function EmptyState({
       )}
       <p className="font-display text-[15px] font-medium">{title}</p>
       {description && (
-        <p className="mt-1.5 max-w-sm text-[13px] leading-relaxed text-muted-foreground">
+        <p className="mt-1.5 max-w-sm text-[14px] leading-relaxed text-muted-foreground">
           {description}
         </p>
       )}

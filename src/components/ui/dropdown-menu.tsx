@@ -72,7 +72,7 @@ function DropdownMenuRadioItem({
     >
       <span className="absolute left-2.5 flex size-3.5 items-center justify-center">
         <DropdownMenuPrimitive.ItemIndicator>
-          <CheckIcon className="size-3.5 text-accent" />
+          <CheckIcon className="size-3.5 text-accent-ink" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
       {children}
@@ -91,7 +91,7 @@ function DropdownMenuLabel({
     <DropdownMenuPrimitive.Label
       data-inset={inset}
       className={cn(
-        "px-2.5 py-1.5 text-[12px] font-mediumr text-muted-foreground data-[inset]:pl-8",
+        "px-2.5 py-1.5 text-[13px] font-medium text-muted-foreground data-[inset]:pl-8",
         className,
       )}
       {...props}
@@ -118,7 +118,7 @@ function DropdownMenuShortcut({
   return (
     <span
       className={cn(
-        "ml-auto font-mono text-[10px] tracking-widest text-muted-foreground",
+        "ml-auto font-mono text-[12px] tracking-widest text-muted-foreground",
         className,
       )}
       {...props}

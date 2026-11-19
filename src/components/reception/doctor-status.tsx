@@ -28,7 +28,7 @@ export function DoctorStatusList({
       <CardHeader>
         <div>
           <CardTitle>Doctors</CardTitle>
-          <p className="mt-1 text-[13px] text-muted-foreground">
+          <p className="mt-1 text-[14px] text-muted-foreground">
             {boards.filter((b) => b.online).length} of {boards.length} on duty
           </p>
         </div>
@@ -71,7 +71,7 @@ function DoctorRow({
 
       <div className="min-w-0 flex-1">
         <p className="flex flex-wrap items-center gap-1.5">
-          <span className="truncate text-[13px] font-semibold">
+          <span className="truncate text-[14px] font-semibold">
             {board.doctorName}
           </span>
           {board.paused ? (
@@ -85,7 +85,7 @@ function DoctorRow({
             <Badge variant="muted">Away</Badge>
           )}
         </p>
-        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[12px] text-muted-foreground">
+        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[13px] text-muted-foreground">
           {board.department && <span>{board.department}</span>}
           {board.room && (
             <>
@@ -98,29 +98,29 @@ function DoctorRow({
 
       <dl className="hidden shrink-0 grid-cols-3 gap-4 text-right sm:grid">
         <div>
-          <dt className="text-[12px] font-mediumr text-muted-foreground">
+          <dt className="text-[13px] font-medium text-muted-foreground">
             Now
           </dt>
-          <dd data-numeric className="font-mono text-[13px] font-semibold">
+          <dd data-numeric className="font-mono text-[14px] font-semibold">
             {board.currentToken ?? "—"}
           </dd>
         </div>
         <div>
-          <dt className="text-[12px] font-mediumr text-muted-foreground">
+          <dt className="text-[13px] font-medium text-muted-foreground">
             Waiting
           </dt>
-          <dd data-numeric className="text-[13px] font-semibold tabular">
+          <dd data-numeric className="text-[14px] font-semibold tabular">
             {waiting}
           </dd>
         </div>
         <div>
-          <dt className="text-[12px] font-mediumr text-muted-foreground">
+          <dt className="text-[13px] font-medium text-muted-foreground">
             Avg wait
           </dt>
           <dd
             data-numeric
             className={cn(
-              "text-[13px] tabular",
+              "text-[14px] tabular",
               slow ? "font-semibold text-destructive" : "text-muted-foreground",
             )}
           >

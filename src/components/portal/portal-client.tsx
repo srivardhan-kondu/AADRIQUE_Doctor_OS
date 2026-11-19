@@ -68,7 +68,7 @@ export function PortalSignIn({ slug }: { slug: string }) {
           maxLength={20}
           required
         />
-        <p className="mt-1.5 text-[13px] text-muted-foreground">
+        <p className="mt-1.5 text-[14px] text-muted-foreground">
           The one you gave the clinic. We&apos;ll send a six-digit code.
         </p>
       </div>
@@ -82,7 +82,7 @@ export function PortalSignIn({ slug }: { slug: string }) {
     <form onSubmit={verify} className="space-y-4">
       {message && <p className="text-[14px] text-muted-foreground">{message}</p>}
       {demoCode && (
-        <p className="rounded-lg border border-info/30 bg-info-soft px-3 py-2 text-[13px] text-info">
+        <p className="rounded-lg border border-info/30 bg-info-soft px-3 py-2 text-[14px] text-info">
           Demo: no SMS gateway is connected, so your code is{" "}
           <strong data-testid="demo-code" className="font-mono tracking-widest">
             {demoCode}
@@ -114,7 +114,7 @@ export function PortalSignIn({ slug }: { slug: string }) {
       </Button>
       <button
         type="button"
-        className="w-full text-center text-[13px] text-muted-foreground underline-offset-4 hover:underline"
+        className="w-full text-center text-[14px] text-muted-foreground underline-offset-4 hover:underline"
         onClick={() => {
           setStage("phone");
           setCode("");
@@ -154,7 +154,7 @@ export function PatientChooser({
             className="flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-3.5 text-left transition-colors hover:bg-muted"
           >
             <span className="text-[16px] font-semibold">{p.name}</span>
-            <span className="font-mono text-[12px] text-muted-foreground">{p.mrn}</span>
+            <span className="font-mono text-[13px] text-muted-foreground">{p.mrn}</span>
           </button>
         </li>
       ))}
@@ -233,7 +233,7 @@ export function RateVisit({
             <Star
               className={cn(
                 "size-8 transition-colors",
-                n <= rating ? "fill-accent text-accent" : "text-muted-foreground/40",
+                n <= rating ? "fill-accent text-accent-ink" : "text-muted-foreground/40",
               )}
             />
           </button>
@@ -277,7 +277,7 @@ export function PortalSignOut({ slug }: { slug: string }) {
   return (
     <button
       type="button"
-      className="text-[13px] text-muted-foreground underline-offset-4 hover:underline"
+      className="text-[14px] text-muted-foreground underline-offset-4 hover:underline"
       onClick={async () => {
         await portalSignOutAction(slug);
         router.refresh();

@@ -119,7 +119,7 @@ function DayList({
               <CardTitle>
                 {session.label ?? sessionName(session.startMinute)}
               </CardTitle>
-              <p className="mt-0.5 text-[12px] text-muted-foreground tabular">
+              <p className="mt-0.5 text-[13px] text-muted-foreground tabular">
                 {formatMinute(session.startMinute)} –{" "}
                 {formatMinute(session.endMinute)}
               </p>
@@ -136,7 +136,7 @@ function DayList({
           {session.appointments.length === 0 ? (
             <div className="flex items-center gap-3 px-5 pb-5">
               <Coffee className="size-4 shrink-0 text-muted-foreground" />
-              <p className="text-[13px] text-muted-foreground">
+              <p className="text-[14px] text-muted-foreground">
                 Nothing booked in this session yet.
               </p>
               <BookAppointmentDialog
@@ -146,7 +146,7 @@ function DayList({
                 trigger={
                   <button
                     type="button"
-                    className="ml-auto text-[13px] font-semibold text-accent hover:underline"
+                    className="ml-auto text-[14px] font-semibold text-accent-ink hover:underline"
                   >
                     Book someone in
                   </button>
@@ -172,7 +172,7 @@ function DayList({
         <Card>
           <CardHeader>
             <CardTitle>Outside clinic hours</CardTitle>
-            <p className="mt-0.5 text-[12px] text-muted-foreground">
+            <p className="mt-0.5 text-[13px] text-muted-foreground">
               Booked when availability was different, or added by hand.
             </p>
           </CardHeader>
@@ -203,7 +203,7 @@ function SessionLoad({
 
   return (
     <div className="shrink-0 text-right">
-      <p className="text-[12px] font-semibold tabular">
+      <p className="text-[13px] font-semibold tabular">
         {booked}
         <span className="text-muted-foreground">/{capacity}</span>
       </p>
@@ -244,10 +244,10 @@ function AppointmentRowView({
       )}
     >
       <div className="w-16 shrink-0">
-        <p className="font-mono text-[13px] font-bold tabular">
+        <p className="font-mono text-[14px] font-bold tabular">
           {formatTime(appointment.start)}
         </p>
-        <p className="text-[11px] text-muted-foreground tabular">
+        <p className="text-[12px] text-muted-foreground tabular">
           {appointment.durationMinutes} min
         </p>
       </div>
@@ -256,7 +256,7 @@ function AppointmentRowView({
         <p className="flex items-center gap-2">
           <Link
             href={`${links.patientBase}/${appointment.patientId}`}
-            className="truncate text-[14px] font-semibold hover:text-accent hover:underline"
+            className="truncate text-[14px] font-semibold hover:text-accent-ink hover:underline"
           >
             {appointment.patientName}
           </Link>
@@ -274,7 +274,7 @@ function AppointmentRowView({
           )}
         </p>
 
-        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[12px] text-muted-foreground">
+        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[13px] text-muted-foreground">
           <span data-numeric>{appointment.patientMrn}</span>
           {appointment.age !== null && (
             <>
@@ -298,7 +298,7 @@ function AppointmentRowView({
         </p>
 
         {appointment.reason && (
-          <p className="mt-1 truncate text-[13px]">{appointment.reason}</p>
+          <p className="mt-1 truncate text-[14px]">{appointment.reason}</p>
         )}
       </div>
 
@@ -313,7 +313,7 @@ function AppointmentRowView({
         {links.showConsultations && appointment.visitId && (
           <Link
             href={`/doctor/consultations/${appointment.visitId}`}
-            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-accent hover:underline"
+            className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-accent-ink hover:underline"
           >
             <Stethoscope className="size-3.5" />
             Consultation
@@ -380,8 +380,8 @@ function WeekColumn({ day, links }: { day: DayColumn; links: ScheduleLinks }) {
         <p className="flex items-baseline justify-between gap-2">
           <span
             className={cn(
-              "text-[12px] font-medium",
-              day.isToday ? "text-accent" : "text-muted-foreground",
+              "text-[13px] font-medium",
+              day.isToday ? "text-accent-ink" : "text-muted-foreground",
             )}
           >
             {day.date.toLocaleDateString("en-IN", { weekday: "short" })}
@@ -392,9 +392,9 @@ function WeekColumn({ day, links }: { day: DayColumn; links: ScheduleLinks }) {
         </p>
 
         {closed ? (
-          <p className="mt-0.5 text-[11px] text-muted-foreground">Closed</p>
+          <p className="mt-0.5 text-[12px] text-muted-foreground">Closed</p>
         ) : (
-          <p className="mt-0.5 text-[11px] text-muted-foreground tabular">
+          <p className="mt-0.5 text-[12px] text-muted-foreground tabular">
             {day.booked}/{day.capacity} booked
           </p>
         )}
@@ -406,7 +406,7 @@ function WeekColumn({ day, links }: { day: DayColumn; links: ScheduleLinks }) {
         </div>
       ) : day.appointments.length === 0 ? (
         <div className="flex flex-1 items-center justify-center px-3 py-6">
-          <p className="text-[11px] text-muted-foreground">Nothing booked</p>
+          <p className="text-[12px] text-muted-foreground">Nothing booked</p>
         </div>
       ) : (
         <ul className="flex-1 space-y-1 p-2">
@@ -420,13 +420,13 @@ function WeekColumn({ day, links }: { day: DayColumn; links: ScheduleLinks }) {
                   appointment.status === "CANCELLED" && "opacity-55",
                 )}
               >
-                <p className="font-mono text-[11px] font-bold tabular">
+                <p className="font-mono text-[12px] font-bold tabular">
                   {formatTime(appointment.start)}
                 </p>
-                <p className="truncate text-[12px] font-semibold">
+                <p className="truncate text-[13px] font-semibold">
                   {appointment.patientName}
                 </p>
-                <p className="truncate text-[12px] font-medium text-muted-foreground">
+                <p className="truncate text-[13px] font-medium text-muted-foreground">
                   {TYPE_LABEL[appointment.type] ?? appointment.type}
                 </p>
               </Link>

@@ -25,7 +25,7 @@ export function SlotPicker({
   if (loading || slots === null) {
     return (
       <div>
-        <p className="flex items-center gap-2 text-[12px] font-semibold text-muted-foreground">
+        <p className="flex items-center gap-2 text-[13px] font-semibold text-muted-foreground">
           <LoaderCircle className="size-3.5 animate-spin" />
           Finding open slots
         </p>
@@ -45,7 +45,7 @@ export function SlotPicker({
     return (
       <div className="flex items-center gap-3 rounded-lg border border-dashed border-border px-4 py-5">
         <CalendarOff className="size-4 shrink-0 text-muted-foreground" />
-        <p className="text-[13px] text-muted-foreground">
+        <p className="text-[14px] text-muted-foreground">
           No clinic hours on this day. Pick another date.
         </p>
       </div>
@@ -54,7 +54,7 @@ export function SlotPicker({
 
   return (
     <div>
-      <p className="text-[12px] font-semibold text-muted-foreground">
+      <p className="text-[13px] font-semibold text-muted-foreground">
         {open === 0
           ? past === slots.length
             ? "Clinic hours on this day are over"
@@ -78,7 +78,7 @@ export function SlotPicker({
               title={slot.reason ?? undefined}
               onClick={() => onSelect(slot.start)}
               className={cn(
-                "rounded-md border px-2 py-2 text-[12px] font-semibold tabular transition-colors",
+                "rounded-md border px-2 py-2 text-[13px] font-semibold tabular transition-colors",
                 slot.available
                   ? "border-border bg-card hover:border-accent/50 hover:bg-accent-soft"
                   : "cursor-not-allowed border-transparent bg-muted text-muted-foreground/60 line-through decoration-1",

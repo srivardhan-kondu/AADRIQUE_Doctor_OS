@@ -82,7 +82,7 @@ export function PatientList({
                   </Badge>
                 ))}
               </div>
-              <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[12px] text-muted-foreground">
+              <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[13px] text-muted-foreground">
                 <span data-numeric className="font-mono">
                   {patient.mrn}
                 </span>
@@ -102,10 +102,10 @@ export function PatientList({
             </div>
 
             <div className="hidden shrink-0 text-right sm:block">
-              <p className="text-[12px] font-mediumr text-muted-foreground">
+              <p className="text-[13px] font-medium text-muted-foreground">
                 Last visit
               </p>
-              <p className="mt-0.5 text-[12px] font-medium">
+              <p className="mt-0.5 text-[13px] font-medium">
                 {relativeDay(patient.lastVisitAt)}
               </p>
             </div>

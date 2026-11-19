@@ -46,7 +46,7 @@ async function Profile() {
           <h1 className="font-display text-2xl font-medium tracking-tight">
             {profile.name}
           </h1>
-          <p className="mt-1 flex flex-wrap items-center gap-x-2 text-[13px] text-muted-foreground">
+          <p className="mt-1 flex flex-wrap items-center gap-x-2 text-[14px] text-muted-foreground">
             {[profile.department?.name, profile.specialization]
               .filter(Boolean)
               .join(" · ") || "No department set"}
@@ -61,7 +61,7 @@ async function Profile() {
       </header>
 
       {!own && (
-        <p className="mb-5 rounded-lg bg-muted px-4 py-2.5 text-[13px] text-muted-foreground">
+        <p className="mb-5 rounded-lg bg-muted px-4 py-2.5 text-[14px] text-muted-foreground">
           You are viewing {profile.name}&apos;s profile.
           {profile.canEdit
             ? " As an administrator you can change it."
@@ -75,7 +75,7 @@ async function Profile() {
             <CardHeader>
               <CardTitle>Details</CardTitle>
             </CardHeader>
-            <dl className="space-y-3 px-5 pb-5 text-[13px]">
+            <dl className="space-y-3 px-5 pb-5 text-[14px]">
               <Detail label="Email" value={profile.email} />
               <Detail label="Qualifications" value={profile.qualifications} />
               <Detail label="Registration no." value={profile.registrationNo} mono />
@@ -119,7 +119,7 @@ function Detail({
 }) {
   return (
     <div>
-      <dt className="text-[12px] font-medium text-muted-foreground">
+      <dt className="text-[13px] font-medium text-muted-foreground">
         {label}
       </dt>
       <dd className={mono ? "mt-0.5 font-mono" : "mt-0.5"}>

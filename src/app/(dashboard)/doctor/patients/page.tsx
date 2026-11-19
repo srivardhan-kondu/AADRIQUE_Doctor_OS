@@ -28,7 +28,7 @@ export default async function PatientsPage({
         description="Search by name, mobile number or patient ID. Results appear as you type."
         actions={
           <>
-            <span className="hidden items-center gap-1.5 text-[12px] text-muted-foreground sm:flex">
+            <span className="hidden items-center gap-1.5 text-[13px] text-muted-foreground sm:flex">
               Focus search <Kbd>/</Kbd>
             </span>
             {hasPermission(actor, Permission.PATIENT_CREATE) && (
@@ -58,7 +58,7 @@ async function Results({ query }: { query: string }) {
   return (
     <>
       <div className="border-b border-border px-5 py-2.5">
-        <p className="text-[12px] text-muted-foreground">
+        <p className="text-[13px] text-muted-foreground">
           {query
             ? `${patients.length} ${patients.length === 1 ? "match" : "matches"}`
             : "Recently seen"}

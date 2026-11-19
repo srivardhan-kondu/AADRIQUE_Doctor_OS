@@ -99,7 +99,7 @@ export function LiveRefresh({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground",
+        "inline-flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground",
         className,
       )}
       title={

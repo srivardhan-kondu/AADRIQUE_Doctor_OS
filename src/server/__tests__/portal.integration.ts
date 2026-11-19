@@ -83,6 +83,31 @@ describe("Patient portal", { skip: !configured && "DATABASE_URL is not set" }, (
     assert.match(locked.message, /expired/, "even the right code is refused once locked");
   });
 
+  it("allows only five guesses even when they arrive all at once", async () => {
+    const t = clinic!;
+    const { demoCode } = await requestSignInCode(t.organizationId, "Clinic", "9811100001", "1.1.1.4");
+    const wrong = demoCode === "000000" ? "111111" : "000000";
+    await Promise.allSettled(
+      Array.from({ length: 20 }, () => verifySignInCode(t.organizationId, "9811100001", wrong)),
+    );
+    const otp = await prisma.portalOtp.findFirstOrThrow({ where: { organizationId: t.organizationId } });
+    assert.equal(otp.attempts, 5, "no guess got past the limit by racing another");
+    const locked = await rejection(verifySignInCode(t.organizationId, "9811100001", demoCode!));
+    assert.match(locked.message, /expired/);
+  });
+
+  it("does not take a number from another country for a patient's", async () => {
+    const t = clinic!;
+    // Same last ten digits as the patient's +91 number, different country.
+    const result = await requestSignInCode(t.organizationId, "Clinic", "+1 98111 00001", "1.1.1.5");
+    assert.deepEqual(result, {});
+    assert.equal(
+      await prisma.portalOtp.count({ where: { organizationId: t.organizationId, phone: { not: "+919811100001" } } }),
+      0,
+      "no code was issued to the foreign number",
+    );
+  });
+
   it("signs a family's shared number in, then asks whose record", async () => {
     const t = clinic!;
     const { demoCode } = await requestSignInCode(t.organizationId, "Clinic", "+91 98111 00001", "1.1.1.3");

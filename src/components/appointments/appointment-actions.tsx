@@ -188,7 +188,7 @@ export function AppointmentMenu({
           <div className="px-6">
             <label
               htmlFor={`cancel-reason-${appointmentId}`}
-              className="text-[12px] font-semibold text-muted-foreground"
+              className="text-[13px] font-semibold text-muted-foreground"
             >
               Reason (optional)
             </label>
@@ -273,7 +273,7 @@ function RescheduleDialog({
           <div>
             <label
               htmlFor={`reschedule-date-${appointmentId}`}
-              className="text-[12px] font-semibold text-muted-foreground"
+              className="text-[13px] font-semibold text-muted-foreground"
             >
               New date
             </label>

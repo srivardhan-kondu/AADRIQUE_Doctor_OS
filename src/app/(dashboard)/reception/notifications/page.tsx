@@ -52,7 +52,7 @@ export default async function NotificationsPage({
         actions={unread > 0 ? <MarkAllReadButton /> : undefined}
       />
 
-      <div className="mb-3 flex gap-1 text-[13px]">
+      <div className="mb-3 flex gap-1 text-[14px]">
         <FilterLink href="/reception/notifications" active={!unreadOnly}>
           All
         </FilterLink>
@@ -94,7 +94,7 @@ export default async function NotificationsPage({
                       <span className="flex items-center gap-2">
                         <span
                           className={cn(
-                            "text-[12px] font-medium",
+                            "text-[13px] font-medium",
                             level.text,
                           )}
                         >
@@ -102,7 +102,7 @@ export default async function NotificationsPage({
                         </span>
                         <span
                           data-numeric
-                          className="ml-auto text-[11px] text-muted-foreground"
+                          className="ml-auto text-[12px] text-muted-foreground"
                         >
                           {n.createdAt.toLocaleString("en-IN", {
                             day: "numeric",
@@ -116,7 +116,7 @@ export default async function NotificationsPage({
                       <span className="mt-1 block text-[14px] font-medium">
                         {n.title}
                       </span>
-                      <span className="mt-0.5 block text-[13px] text-muted-foreground">
+                      <span className="mt-0.5 block text-[14px] text-muted-foreground">
                         {n.body}
                       </span>
                     </span>

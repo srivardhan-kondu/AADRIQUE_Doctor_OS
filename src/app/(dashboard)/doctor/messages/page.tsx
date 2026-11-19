@@ -150,7 +150,7 @@ function ChannelCard({
   return (
     <Card className="px-4 py-3">
       <div className="flex items-baseline justify-between gap-2">
-        <p className="text-[12px] font-semibold text-muted-foreground">
+        <p className="text-[13px] font-semibold text-muted-foreground">
           {row.label}
         </p>
         <p className="font-display text-lg font-medium tabular">
@@ -173,7 +173,7 @@ function ChannelCard({
         />
       </div>
 
-      <p className="mt-1.5 text-[11px] text-muted-foreground tabular">
+      <p className="mt-1.5 text-[12px] text-muted-foreground tabular">
         {row.delivered} delivered
         {row.failed > 0 && (
           <span className="text-destructive"> · {row.failed} failed</span>

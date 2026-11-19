@@ -2,22 +2,20 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import {
-  Permission,
-  PermissionError,
-  TenantError,
-  assertPermission,
-} from "@/lib/permissions";
+import { PermissionError, TenantError } from "@/lib/permissions";
 import { requireActor } from "@/server/context";
 import { updateDepartmentThresholds } from "@/server/services/admin";
 import { ServiceError } from "@/server/services/errors";
 import { setVitalsStep } from "@/server/services/features";
 import {
+  addKnowledgeDocument,
+  removeKnowledgeDocument,
+} from "@/server/services/knowledge";
+import {
   checkIntegration,
   setIntegrationConnected,
-  syncIntegration,
 } from "@/server/services/integrations";
-import { processDueRuns, setWorkflowEnabled } from "@/server/services/workflows";
+import { setWorkflowEnabled } from "@/server/services/workflows";
 
 /** Administration actions (spec §21, §28, §29). */
 
@@ -58,8 +56,8 @@ function refresh() {
   revalidatePath("/admin");
   revalidatePath("/admin/integrations");
   revalidatePath("/admin/communications");
-  revalidatePath("/admin/operations");
   revalidatePath("/admin/departments");
+  revalidatePath("/admin/ai");
 }
 
 export async function toggleWorkflowAction(
@@ -95,23 +93,6 @@ export async function checkIntegrationAction(
     const result = await checkIntegration(actor, idSchema.parse(integrationId));
     refresh();
     return { ok: true, message: `${result.name}: ${result.status.replace(/_/g, " ").toLowerCase()}.`, action: result.detail };
-  } catch (error) {
-    return toResult(error);
-  }
-}
-
-export async function syncIntegrationAction(
-  integrationId: string,
-): Promise<ActionResult> {
-  try {
-    const actor = await requireActor();
-    const result = await syncIntegration(actor, idSchema.parse(integrationId));
-    refresh();
-    return {
-      ok: true,
-      message: `${result.name} synced.`,
-      action: result.detail,
-    };
   } catch (error) {
     return toResult(error);
   }
@@ -184,23 +165,49 @@ export async function setVitalsStepAction(enabled: boolean): Promise<ActionResul
   }
 }
 
-/** Spec §28 — resume waiting runs by hand, for when a demo cannot wait. */
-export async function runDueWorkflowsAction(): Promise<ActionResult> {
+const knowledgeSchema = z.object({
+  title: z.string().trim().min(2, "Give the document a title.").max(120),
+  category: z
+    .string()
+    .trim()
+    .max(40)
+    .nullish()
+    .transform((v) => v || null),
+  text: z.string().trim().min(1, "Paste the document's text, or choose a file."),
+});
+
+/** Spec §9 — a clinic document the knowledge assistant can answer from. */
+export async function addKnowledgeDocumentAction(input: {
+  title: string;
+  category?: string | null;
+  text: string;
+}): Promise<ActionResult> {
   try {
     const actor = await requireActor();
-    // The same permission the automation screen itself needs.
-    assertPermission(actor, Permission.COMMUNICATION_TEMPLATE_MANAGE);
-
-    const result = await processDueRuns();
+    const parsed = knowledgeSchema.safeParse(input);
+    if (!parsed.success) {
+      return { ok: false, message: parsed.error.issues[0]?.message ?? "Check the form." };
+    }
+    const result = await addKnowledgeDocument(actor, parsed.data);
     refresh();
-
     return {
       ok: true,
-      message:
-        result.resumed === 0 && result.abandoned === 0
-          ? "Nothing is due yet."
-          : `${result.resumed} resumed, ${result.abandoned} abandoned.`,
+      message: `${parsed.data.title} added.`,
+      action: `The assistant can now answer from its ${result.passages} ${result.passages === 1 ? "passage" : "passages"}.`,
     };
+  } catch (error) {
+    return toResult(error);
+  }
+}
+
+export async function removeKnowledgeDocumentAction(
+  documentId: string,
+): Promise<ActionResult> {
+  try {
+    const actor = await requireActor();
+    const result = await removeKnowledgeDocument(actor, idSchema.parse(documentId));
+    refresh();
+    return { ok: true, message: `${result.title} removed.` };
   } catch (error) {
     return toResult(error);
   }

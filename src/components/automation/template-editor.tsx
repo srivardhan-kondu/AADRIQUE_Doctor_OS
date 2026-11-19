@@ -156,20 +156,20 @@ export function TemplateEditor({ template }: { template: TemplateEdit }) {
         </Field>
 
         <div>
-          <p className="text-[12px] font-semibold text-muted-foreground">Insert a detail</p>
+          <p className="text-[13px] font-semibold text-muted-foreground">Insert a detail</p>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {KNOWN_VARIABLES.map((name) => (
               <button
                 key={name}
                 type="button"
                 onClick={() => insert(name)}
-                className="rounded-md border border-border bg-muted/50 px-2 py-0.5 font-mono text-[11px] hover:bg-muted"
+                className="rounded-md border border-border bg-muted/50 px-2 py-0.5 font-mono text-[12px] hover:bg-muted"
               >
                 {`{{${name}}}`}
               </button>
             ))}
           </div>
-          <p className="mt-1.5 text-[11px] text-muted-foreground">
+          <p className="mt-1.5 text-[12px] text-muted-foreground">
             A workflow can only send a template whose details its trigger knows — the workflow editor says which.
           </p>
         </div>
@@ -193,7 +193,7 @@ export function TemplateEditor({ template }: { template: TemplateEdit }) {
           </Field>
         )}
 
-        <label className="flex items-center gap-2 text-[13px]">
+        <label className="flex items-center gap-2 text-[14px]">
           <input
             type="checkbox"
             className="size-4 accent-[var(--accent)]"
@@ -204,7 +204,7 @@ export function TemplateEditor({ template }: { template: TemplateEdit }) {
         </label>
 
         {(error || unknown.length > 0) && (
-          <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-[13px] text-destructive">
+          <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-[14px] text-destructive">
             {error ?? `Nothing fills ${unknown.map((p) => `{{${p}}}`).join(", ")} — pick from the details above.`}
           </p>
         )}
@@ -219,18 +219,18 @@ export function TemplateEditor({ template }: { template: TemplateEdit }) {
       </Card>
 
       <Card className="h-fit p-5">
-        <p className="text-[12px] font-mediumr text-muted-foreground">
+        <p className="text-[13px] font-medium text-muted-foreground">
           What the patient reads
         </p>
         <div className="mt-3 rounded-xl bg-muted/60 p-4">
           {form.channel === "EMAIL" && form.subject && (
-            <p className="mb-2 text-[13px] font-semibold">{renderTemplate(form.subject, SAMPLE)}</p>
+            <p className="mb-2 text-[14px] font-semibold">{renderTemplate(form.subject, SAMPLE)}</p>
           )}
-          <p className="whitespace-pre-wrap text-[13px] leading-relaxed">
+          <p className="whitespace-pre-wrap text-[14px] leading-relaxed">
             {form.body ? renderTemplate(form.body, SAMPLE) : <span className="text-muted-foreground">Start writing…</span>}
           </p>
         </div>
-        <p className="mt-2 text-[11px] text-muted-foreground">Sample values; the real ones are filled when it is sent.</p>
+        <p className="mt-2 text-[12px] text-muted-foreground">Sample values; the real ones are filled when it is sent.</p>
       </Card>
     </div>
   );
@@ -249,11 +249,11 @@ function Field({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="text-[12px] font-semibold text-muted-foreground">
+      <label htmlFor={id} className="text-[13px] font-semibold text-muted-foreground">
         {label}
       </label>
       <div className="mt-1.5">{children}</div>
-      {hint && <p className="mt-1 text-[11px] text-muted-foreground">{hint}</p>}
+      {hint && <p className="mt-1 text-[12px] text-muted-foreground">{hint}</p>}
     </div>
   );
 }

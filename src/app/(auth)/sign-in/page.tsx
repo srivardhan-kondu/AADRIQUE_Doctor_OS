@@ -26,7 +26,7 @@ export default async function SignInPage({
             <p className="text-base font-semibold tracking-[0.02em]">
               AADRIQUE
             </p>
-            <p className="mt-1 font-display text-[13px] italic text-panel-muted">
+            <p className="mt-1 font-display text-[14px] italic text-panel-muted">
               Doctor OS
             </p>
           </div>
@@ -53,7 +53,7 @@ export default async function SignInPage({
                 <dt className="font-display text-xl font-normal">
                   {item.value}
                 </dt>
-                <dd className="mt-1 text-[12px] leading-snug text-panel-muted">
+                <dd className="mt-1 text-[13px] leading-snug text-panel-muted">
                   {item.label}
                 </dd>
               </div>
@@ -61,7 +61,7 @@ export default async function SignInPage({
           </dl>
         </div>
 
-        <p className="relative text-[12px] text-panel-muted">
+        <p className="relative text-[13px] text-panel-muted">
           AADRIQUE Doctor OS
         </p>
       </section>
@@ -74,7 +74,7 @@ export default async function SignInPage({
               <p className="text-base font-semibold tracking-[0.02em]">
                 AADRIQUE
               </p>
-              <p className="mt-1 font-display text-[13px] italic text-muted-foreground">
+              <p className="mt-1 font-display text-[14px] italic text-muted-foreground">
                 Doctor OS
               </p>
             </div>
@@ -92,7 +92,7 @@ export default async function SignInPage({
             // change to their access knows it was deliberate, not a fault.
             <p
               role="status"
-              className="mt-4 rounded-lg border border-warning/30 bg-warning-soft px-3 py-2 text-[13px] text-warning"
+              className="mt-4 rounded-lg border border-warning/30 bg-warning-soft px-3 py-2 text-[14px] text-warning"
             >
               You were signed out because your password or your access changed.
               Sign in again to continue.

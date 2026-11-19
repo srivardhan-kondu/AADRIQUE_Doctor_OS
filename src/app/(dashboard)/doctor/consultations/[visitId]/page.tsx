@@ -17,7 +17,8 @@ import { PrescriptionEditor } from "@/components/consultation/prescription-edito
 import { PreConsultationBrief } from "@/components/ai/pre-consultation-brief";
 import { Permission, hasPermission } from "@/lib/permissions";
 import { requireActor } from "@/server/context";
-import { getConsultationWorkspace } from "@/server/services/consultation";
+import { getConsultationWorkspace, recentDiagnoses } from "@/server/services/consultation";
+import { getFavourites } from "@/server/services/favourites";
 import { getPrescription } from "@/server/services/prescriptions";
 import { ServiceError } from "@/server/services/errors";
 
@@ -51,6 +52,10 @@ export const dynamic = "force-dynamic";
  * Three panels: patient snapshot, the note, and the AI Copilot (which lives in
  * the shell so it keeps its context across screens). The doctor never has to
  * leave this page to see history, vitals, medications or orders.
+ *
+ * The note, the prescription, the follow-up and the signature are one
+ * scroll on one tab — the order a visit happens in — so finishing a patient
+ * never needs a tab switch.
  */
 export default async function ConsultationPage({
   params,
@@ -68,10 +73,14 @@ export default async function ConsultationPage({
 
   let ws;
   let prescription;
+  let favourites;
+  let diagnosisPicks;
   try {
-    [ws, prescription] = await Promise.all([
+    [ws, prescription, favourites, diagnosisPicks] = await Promise.all([
       loadWorkspace(visitId),
       getPrescription(actor, visitId),
+      getFavourites(actor),
+      recentDiagnoses(actor),
     ]);
   } catch (error) {
     if (error instanceof ServiceError && error.code === "NOT_FOUND") notFound();
@@ -94,7 +103,7 @@ export default async function ConsultationPage({
             <h1 className="font-display text-xl font-medium tracking-tight">
               Consultation
             </h1>
-            <p className="mt-0.5 flex items-center gap-2 text-[12px] text-muted-foreground">
+            <p className="mt-0.5 flex items-center gap-2 text-[13px] text-muted-foreground">
               <span data-numeric className="font-mono">
                 {ws.visitNumber}
               </span>
@@ -141,14 +150,6 @@ export default async function ConsultationPage({
                   </span>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="medications">
-                Medications
-                {ws.prescriptions.length > 0 && (
-                  <span data-numeric className="ml-1 text-muted-foreground">
-                    {ws.prescriptions.length}
-                  </span>
-                )}
-              </TabsTrigger>
               <TabsTrigger value="orders">
                 Lab results
                 {ws.labReports.length > 0 && (
@@ -172,15 +173,23 @@ export default async function ConsultationPage({
                 signedAt={ws.signedAt}
                 signedByName={ws.signedByName}
                 draftSavedAt={ws.draftSavedAt}
-              />
+                inRoom={ws.inRoom}
+                diagnoses={ws.diagnoses}
+                recentDiagnoses={diagnosisPicks}
+                followUp={ws.followUp}
+                favourites={favourites}
+              >
+                <PrescriptionEditor
+                  visitId={ws.visitId}
+                  prescription={prescription}
+                  allergies={ws.patient.allergies.map((a) => a.substance)}
+                  previous={ws.previousPrescriptions}
+                />
+              </ConsultationEditor>
             </TabsContent>
 
             <TabsContent value="history">
               <HistoryTab history={ws.history} />
-            </TabsContent>
-
-            <TabsContent value="medications">
-              <PrescriptionEditor visitId={ws.visitId} prescription={prescription} />
             </TabsContent>
 
             <TabsContent value="orders">
@@ -217,7 +226,7 @@ function HistoryTab({ history }: { history: Workspace["history"] }) {
               <CardTitle className="text-[14px]">
                 {visit.chiefComplaint ?? "Consultation"}
               </CardTitle>
-              <p className="mt-1 flex flex-wrap items-center gap-x-2 text-[12px] text-muted-foreground">
+              <p className="mt-1 flex flex-wrap items-center gap-x-2 text-[13px] text-muted-foreground">
                 <span data-numeric>
                   {visit.at.toLocaleDateString("en-IN", {
                     day: "numeric",
@@ -233,8 +242,17 @@ function HistoryTab({ history }: { history: Workspace["history"] }) {
               {visit.status === "SIGNED" ? "Signed" : "Draft"}
             </Badge>
           </CardHeader>
-          {(visit.assessment || visit.plan) && (
+          {(visit.assessment || visit.plan || visit.diagnoses.length > 0) && (
             <CardContent className="space-y-2.5 pt-0">
+              {visit.diagnoses.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {visit.diagnoses.map((name) => (
+                    <Badge key={name} variant="muted">
+                      {name}
+                    </Badge>
+                  ))}
+                </div>
+              )}
               {visit.assessment && (
                 <Field label="Assessment" value={visit.assessment} />
               )}
@@ -267,7 +285,7 @@ function OrdersTab({ labReports }: { labReports: Workspace["labReports"] }) {
           <CardHeader>
             <div className="min-w-0">
               <CardTitle className="text-[14px]">{lab.testName}</CardTitle>
-              <p className="mt-1 flex items-center gap-2 text-[12px] text-muted-foreground">
+              <p className="mt-1 flex items-center gap-2 text-[13px] text-muted-foreground">
                 {lab.panel && <span>{lab.panel}</span>}
                 <span aria-hidden>·</span>
                 <span data-numeric>
@@ -290,7 +308,7 @@ function OrdersTab({ labReports }: { labReports: Workspace["labReports"] }) {
           </CardHeader>
           {lab.summary && (
             <CardContent className="pt-0">
-              <p className="text-[13px] leading-relaxed">{lab.summary}</p>
+              <p className="text-[14px] leading-relaxed">{lab.summary}</p>
             </CardContent>
           )}
         </Card>
@@ -302,10 +320,10 @@ function OrdersTab({ labReports }: { labReports: Workspace["labReports"] }) {
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[12px] font-medium text-muted-foreground">
+      <p className="text-[13px] font-medium text-muted-foreground">
         {label}
       </p>
-      <p className="mt-0.5 text-[13px] leading-relaxed">{value}</p>
+      <p className="mt-0.5 text-[14px] leading-relaxed">{value}</p>
     </div>
   );
 }

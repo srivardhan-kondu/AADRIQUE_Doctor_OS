@@ -55,6 +55,11 @@ export function AppShell({
   const showShortcuts = React.useCallback(() => setShortcutsOpen(true), []);
   const openMobileNav = React.useCallback(() => setMobileNavOpen(true), []);
   const toggleCopilot = React.useCallback(() => setCopilotOpen((v) => !v), []);
+
+  // The Copilot is a doctor's tool, and an add-on: nobody else is offered a
+  // button that only leads to a locked screen.
+  const copilotAvailable =
+    workspace === "doctor" && !lockedAddOns.includes("aiCopilot");
   const closeCopilot = React.useCallback(() => setCopilotOpen(false), []);
 
   useGlobalShortcuts({
@@ -85,14 +90,14 @@ export function AppShell({
         <Topbar
           onOpenPalette={openPalette}
           onOpenMobileNav={openMobileNav}
-          onToggleCopilot={toggleCopilot}
-          copilotOpen={copilotOpen}
+          onToggleCopilot={copilotAvailable ? toggleCopilot : undefined}
+          copilotOpen={copilotAvailable && copilotOpen}
           notifications={notifications}
         />
 
         <div className="flex min-h-0 flex-1">
           <main className="min-w-0 flex-1">{children}</main>
-          {copilotOpen && <CopilotDock onClose={closeCopilot} />}
+          {copilotAvailable && copilotOpen && <CopilotDock onClose={closeCopilot} />}
         </div>
       </div>
 

@@ -47,7 +47,7 @@ export default async function TokenPage({
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-navy-400">
         Your token
       </p>
-      <p data-numeric className="mt-1 font-mono text-6xl font-bold text-accent">
+      <p data-numeric className="mt-1 font-mono text-6xl font-bold text-accent-ink">
         {status.token}
       </p>
       <p className="mt-2 text-navy-300">

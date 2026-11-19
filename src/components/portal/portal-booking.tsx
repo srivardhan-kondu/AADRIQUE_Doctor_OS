@@ -78,7 +78,7 @@ export function PortalBooking({
               />
               <span>
                 <span className="block text-[15px] font-semibold">{d.name}</span>
-                <span className="block text-[13px] text-muted-foreground">
+                <span className="block text-[14px] text-muted-foreground">
                   {[d.department, d.specialization].filter(Boolean).join(" · ")}
                 </span>
               </span>

@@ -6,11 +6,9 @@ import { z } from "zod";
 import { signIn } from "@/lib/auth";
 import { landingForEmail } from "@/lib/auth/home";
 import {
-  SIGN_IN_ACCOUNT_LIMIT,
-  SIGN_IN_ADDRESS_LIMIT,
   callerAddress,
   peekRateLimit,
-  signInKeys,
+  signInBuckets,
 } from "@/lib/security/rate-limit";
 
 const schema = z.object({
@@ -69,15 +67,12 @@ export async function signInAction(
    */
   const requestHeaders = await headers();
   const address = callerAddress(requestHeaders) ?? "unknown";
-  const keys = signInKeys(address, email);
+  const peeks = await Promise.all(
+    signInBuckets(address, email).map((bucket) => peekRateLimit(bucket.key, bucket.options)),
+  );
 
-  const [byAddress, byAccount] = await Promise.all([
-    peekRateLimit(keys.address, SIGN_IN_ADDRESS_LIMIT),
-    peekRateLimit(keys.account, SIGN_IN_ACCOUNT_LIMIT),
-  ]);
-
-  if (!byAddress.allowed || !byAccount.allowed) {
-    const retryAfter = Math.max(byAddress.retryAfter, byAccount.retryAfter);
+  if (peeks.some((peek) => !peek.allowed)) {
+    const retryAfter = Math.max(...peeks.map((peek) => peek.retryAfter));
     const minutes = Math.ceil(retryAfter / 60);
 
     return {

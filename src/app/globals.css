@@ -54,11 +54,14 @@
   --secondary-foreground: #3a4152;
 
   --muted: #f2ede5;
-  --muted-foreground: #736c62;
+  --muted-foreground: #6a6359;
 
   --accent: #e0662a;
   --accent-foreground: #ffffff;
   --accent-soft: #fcefe4;
+  /* Orange as TEXT: the accent darkened to pass 4.5:1 on white, paper and
+     its own soft tint. The bright accent is for fills, rings and icons. */
+  --accent-ink: #ad4515;
 
   /* Honey: the quiet highlight for "you are here" and "today" — never status. */
   --highlight: #f6dcaa;
@@ -73,7 +76,7 @@
   --success-foreground: #ffffff;
   --success-soft: #e9f3ec;
 
-  --warning: #a8590f;
+  --warning: #9f530c;
   --warning-foreground: #ffffff;
   --warning-soft: #fcf1e1;
 
@@ -96,16 +99,16 @@
      white card lifted off it. */
   --sidebar: #f5f1ea;
   --sidebar-foreground: #4b4f5c;
-  --sidebar-muted: #968e82;
+  --sidebar-muted: #756d62;
   --sidebar-accent: #ffffff;
   --sidebar-accent-foreground: #1b2536;
   --sidebar-border: #e6ded1;
   --sidebar-ring: #e0662a;
 
   /* Clinical queue states — used by queue, timeline and status chips */
-  --state-registered: #6b7280;
-  --state-waiting: #c27812;
-  --state-vitals: #1f7a8c;
+  --state-registered: #646b78;
+  --state-waiting: #9a5c06;
+  --state-vitals: #1b6f80;
   --state-with-doctor: #e0662a;
   --state-completed: #2f7a4a;
   --state-followup: #7a57a8;
@@ -146,6 +149,7 @@
   --accent: #ef7d42;
   --accent-foreground: #1a0f08;
   --accent-soft: #2c1c12;
+  --accent-ink: #ef7d42;
 
   --highlight: #4a3716;
   --highlight-soft: #2a2215;
@@ -178,7 +182,7 @@
 
   --sidebar: #13120f;
   --sidebar-foreground: #bdb5a8;
-  --sidebar-muted: #80796e;
+  --sidebar-muted: #8f877b;
   --sidebar-accent: #25221e;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #26231f;
@@ -216,6 +220,7 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
   --color-highlight: var(--highlight);
   --color-highlight-soft: var(--highlight-soft);
   --color-highlight-foreground: var(--highlight-foreground);

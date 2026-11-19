@@ -92,15 +92,35 @@ export function peekRateLimit(key: string, options: RateLimitOptions) {
   return store.peek(key, options);
 }
 
-/** The two buckets that guard sign-in (spec §31). */
+/**
+ * The three buckets that guard sign-in (spec §31).
+ *
+ * Guessing is held back per caller and per account-from-that-caller, which
+ * is tight. The account-wide bucket is a looser backstop against guesses
+ * spread over many addresses — loose on purpose: a limit anyone can fill
+ * from one address is a way to lock a doctor out of the clinic all day.
+ */
 export const SIGN_IN_ADDRESS_LIMIT = { limit: 10, windowMs: 60_000 } as const;
-export const SIGN_IN_ACCOUNT_LIMIT = { limit: 5, windowMs: 300_000 } as const;
+export const SIGN_IN_ACCOUNT_ADDRESS_LIMIT = { limit: 5, windowMs: 300_000 } as const;
+export const SIGN_IN_ACCOUNT_LIMIT = { limit: 20, windowMs: 900_000 } as const;
 
 export function signInKeys(address: string, email: string) {
+  const account = email.toLowerCase();
   return {
     address: `signin:ip:${address}`,
-    account: `signin:acct:${email.toLowerCase()}`,
+    accountAddress: `signin:acct-ip:${account}:${address}`,
+    account: `signin:acct:${account}`,
   };
+}
+
+/** Every sign-in bucket with its limit, in the order they are checked. */
+export function signInBuckets(address: string, email: string) {
+  const keys = signInKeys(address, email);
+  return [
+    { key: keys.address, options: SIGN_IN_ADDRESS_LIMIT },
+    { key: keys.accountAddress, options: SIGN_IN_ACCOUNT_ADDRESS_LIMIT },
+    { key: keys.account, options: SIGN_IN_ACCOUNT_LIMIT },
+  ];
 }
 
 /** Clears a key after a success, so one good sign-in resets the counter. */

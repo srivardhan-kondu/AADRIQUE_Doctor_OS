@@ -26,20 +26,20 @@ export function ResetForm({ token }: { token: string }) {
     <form action={action} className="space-y-4">
       <input type="hidden" name="token" value={token} />
       <div>
-        <label htmlFor="password" className="mb-1.5 block text-[13px] font-medium">
+        <label htmlFor="password" className="mb-1.5 block text-[14px] font-medium">
           New password
         </label>
         <Input id="password" name="password" type="password" autoComplete="new-password" required minLength={10} />
-        <p className="mt-1.5 text-[12px] text-muted-foreground">At least 10 characters, not easy to guess.</p>
+        <p className="mt-1.5 text-[13px] text-muted-foreground">At least 10 characters, not easy to guess.</p>
       </div>
       <div>
-        <label htmlFor="confirm" className="mb-1.5 block text-[13px] font-medium">
+        <label htmlFor="confirm" className="mb-1.5 block text-[14px] font-medium">
           Type it again
         </label>
         <Input id="confirm" name="confirm" type="password" autoComplete="new-password" required />
       </div>
       {state.error && (
-        <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2.5 text-[13px] text-destructive">
+        <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2.5 text-[14px] text-destructive">
           {state.error}
         </p>
       )}

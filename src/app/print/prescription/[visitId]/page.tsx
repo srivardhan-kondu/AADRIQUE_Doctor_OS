@@ -46,7 +46,7 @@ export default async function PrintPrescriptionPage({
       : null);
 
   return (
-    <main className="mx-auto max-w-[780px] bg-white p-10 text-[13px] text-neutral-900 print:p-0">
+    <main className="mx-auto max-w-[780px] bg-white p-10 text-[14px] text-neutral-900 print:p-0">
       <div className="mb-6 flex justify-end print:hidden">
         <PrintButton />
       </div>
@@ -114,7 +114,7 @@ export default async function PrintPrescriptionPage({
       )}
 
       <footer className="mt-16 flex items-end justify-between">
-        <p className="text-[11px] text-neutral-500">
+        <p className="text-[12px] text-neutral-500">
           {rx?.prescriptionNo}
           {rx?.issuedAt ? ` · issued ${rx.issuedAt.toLocaleString("en-IN")}` : ""}
         </p>

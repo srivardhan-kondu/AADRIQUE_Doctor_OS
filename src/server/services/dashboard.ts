@@ -30,6 +30,8 @@ export interface QueueRow {
   age: number | null;
   gender: string;
   status: "WAITING" | "VITALS" | "CALLED" | "IN_CONSULTATION";
+  /** The open visit, once the patient has been called in. */
+  visitId: string | null;
   priority: "NORMAL" | "PRIORITY" | "EMERGENCY";
   waitMinutes: number;
   reason: string | null;
@@ -67,6 +69,8 @@ export interface DashboardData {
     completed: number;
     followUpsDue: number;
     newPatients: number;
+    /** Finished visits whose note this doctor has not signed. */
+    unsignedNotes: number;
   };
   flow: Record<
     "REGISTERED" | "WAITING" | "VITALS" | "WITH_DOCTOR" | "COMPLETED" | "FOLLOW_UP",
@@ -136,6 +140,7 @@ export async function getDashboard(
                 },
               },
               appointment: { select: { reason: true, type: true } },
+              visit: { select: { id: true } },
             },
             orderBy: [{ priority: "desc" }, { position: "asc" }],
           },
@@ -186,11 +191,20 @@ export async function getDashboard(
       orderBy: { scheduledStart: "asc" },
       select: { scheduledStart: true },
     }),
+    // A visit closed with its note still a draft — unfinished clinical work.
+    prisma.consultation.count({
+      where: {
+        doctorId,
+        organizationId: actor.organizationId,
+        status: { in: ["DRAFT", "REVIEWED"] },
+        visit: { status: "COMPLETED" },
+      },
+    }),
   ]);
 
   // The day's queries are scoped by doctor and organization themselves, so
   // they run alongside the doctor lookup instead of after it.
-  const [doctor, [appointments, followUpsDue, newPatients, firstAppointment]] =
+  const [doctor, [appointments, followUpsDue, newPatients, firstAppointment, unsignedNotes]] =
     await Promise.all([doctorQuery, dayQueries]);
 
   if (!doctor) throw notFound("Doctor");
@@ -211,6 +225,7 @@ export async function getDashboard(
     age: ageFrom(entry.patient.dateOfBirth, entry.patient.approximateAge),
     gender: entry.patient.gender,
     status: entry.status as QueueRow["status"],
+    visitId: entry.visit?.id ?? null,
     priority: entry.priority as QueueRow["priority"],
     // Recomputed from the clock rather than trusting the stored value, so a
     // wait time never looks frozen on a page that has been open a while.
@@ -284,6 +299,7 @@ export async function getDashboard(
       completed,
       followUpsDue,
       newPatients,
+      unsignedNotes,
     },
     flow: {
       REGISTERED: entries.filter((e) => e.status === "WAITING" && !e.vitalsAt).length,

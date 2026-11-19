@@ -10,7 +10,7 @@ export function AuthCard({ title, description, children }: { title: string; desc
           <Logo className="size-9" />
           <span className="leading-none">
             <span className="block text-base font-semibold tracking-[0.02em]">AADRIQUE</span>
-            <span className="mt-1 block font-display text-[13px] italic text-muted-foreground">
+            <span className="mt-1 block font-display text-[14px] italic text-muted-foreground">
               Doctor OS
             </span>
           </span>

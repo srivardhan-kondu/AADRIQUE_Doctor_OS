@@ -72,7 +72,7 @@ export function Patient360View({
           <h1 className="font-display text-2xl font-medium tracking-tight">
             {patient.name}
           </h1>
-          <p className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] text-muted-foreground">
+          <p className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[14px] text-muted-foreground">
             <span data-numeric className="font-mono">
               {patient.mrn}
             </span>
@@ -145,12 +145,12 @@ export function Patient360View({
         <div className="mb-5 flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive-soft px-4 py-3">
           <ShieldAlert className="mt-0.5 size-4 shrink-0 text-destructive" />
           <div className="min-w-0">
-            <p className="text-[13px] font-semibold text-destructive">
+            <p className="text-[14px] font-semibold text-destructive">
               {criticalAllergies.length === 1
                 ? "Recorded allergy"
                 : "Recorded allergies"}
             </p>
-            <p className="mt-0.5 text-[12px] text-destructive/90">
+            <p className="mt-0.5 text-[13px] text-destructive/90">
               {criticalAllergies
                 .map((a) => (a.reaction ? `${a.substance} (${a.reaction})` : a.substance))
                 .join(" · ")}
@@ -170,7 +170,7 @@ export function Patient360View({
           <CardHeader>
             <div>
               <CardTitle>Timeline</CardTitle>
-              <p className="mt-1 text-[13px] text-muted-foreground">
+              <p className="mt-1 text-[14px] text-muted-foreground">
                 The whole patient story, newest first
               </p>
             </div>
@@ -195,13 +195,13 @@ function Field({
 }) {
   return (
     <div className="min-w-0">
-      <dt className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground">
+      <dt className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground">
         <Icon className="size-3" />
         {label}
       </dt>
       <dd
         {...(numeric ? { "data-numeric": true } : {})}
-        className="mt-0.5 truncate text-[13px]"
+        className="mt-0.5 truncate text-[14px]"
       >
         {value}
       </dd>
@@ -242,7 +242,7 @@ function SummaryCard({
               >
                 {stat.value}
               </dd>
-              <dt className="mt-1 text-[12px] font-mediumr text-muted-foreground">
+              <dt className="mt-1 text-[13px] font-medium text-muted-foreground">
                 {stat.label}
               </dt>
             </div>
@@ -264,14 +264,14 @@ function ClinicalCard({ patient }: { patient: Patient360 }) {
       </CardHeader>
       <CardContent className="space-y-4">
         {hasNothing && (
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-[14px] text-muted-foreground">
             No allergies or chronic conditions recorded.
           </p>
         )}
 
         {patient.allergies.length > 0 && (
           <div>
-            <p className="mb-2 flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground">
+            <p className="mb-2 flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground">
               <AlertTriangle className="size-3" />
               Allergies
             </p>
@@ -287,11 +287,11 @@ function ClinicalCard({ patient }: { patient: Patient360 }) {
                     )}
                   />
                   <span className="min-w-0">
-                    <span className="block text-[13px] font-medium">
+                    <span className="block text-[14px] font-medium">
                       {allergy.substance}
                     </span>
                     {allergy.reaction && (
-                      <span className="block text-[11px] text-muted-foreground">
+                      <span className="block text-[12px] text-muted-foreground">
                         {allergy.reaction} · {allergy.severity.toLowerCase()}
                       </span>
                     )}
@@ -304,17 +304,17 @@ function ClinicalCard({ patient }: { patient: Patient360 }) {
 
         {patient.conditions.length > 0 && (
           <div>
-            <p className="mb-2 flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground">
+            <p className="mb-2 flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground">
               <Activity className="size-3" />
               Chronic conditions
             </p>
             <ul className="space-y-1.5">
               {patient.conditions.map((condition) => (
                 <li key={condition.id}>
-                  <span className="block text-[13px] font-medium">
+                  <span className="block text-[14px] font-medium">
                     {condition.name}
                   </span>
-                  <span className="block text-[11px] text-muted-foreground">
+                  <span className="block text-[12px] text-muted-foreground">
                     {condition.code && <span className="font-mono">{condition.code}</span>}
                     {condition.code && condition.since && " · "}
                     {condition.since && `since ${condition.since.getFullYear()}`}

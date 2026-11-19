@@ -50,12 +50,12 @@ export function PatientDataRights({ patientId, mrn, canErase }: { patientId: str
                 first if they asked for a copy.
               </DialogDescription>
             </DialogHeader>
-            <label className="block text-[13px] font-medium">
+            <label className="block text-[14px] font-medium">
               Type the patient ID, <span className="font-mono">{mrn}</span>, to confirm
               <Input value={confirm} onChange={(e) => setConfirm(e.target.value)} className="mt-1.5 font-mono" />
             </label>
             {error && (
-              <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-[13px] text-destructive">
+              <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-[14px] text-destructive">
                 {error}
               </p>
             )}

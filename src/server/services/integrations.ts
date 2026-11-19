@@ -6,6 +6,7 @@ import type {
 import { prisma } from "@/lib/db";
 import {
   CATEGORY_LABEL,
+  SUPPORTED_CATEGORIES,
   adapterFor,
   redactConfig,
   type IntegrationContext,
@@ -58,7 +59,7 @@ export async function listIntegrations(
   assertPermission(actor, Permission.INTEGRATION_MANAGE);
 
   const integrations = await prisma.integration.findMany({
-    where: tenantScope(actor),
+    where: { ...tenantScope(actor), category: { in: [...SUPPORTED_CATEGORIES] } },
     orderBy: [{ category: "asc" }, { name: "asc" }],
   });
 

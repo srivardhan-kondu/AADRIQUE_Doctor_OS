@@ -21,7 +21,6 @@ const PROTECTED_PREFIXES = [
   "/reception",
   "/nurse",
   "/admin",
-  "/design",
   "/display",
   "/account",
   "/print",

@@ -22,7 +22,7 @@ export function ColumnChart({
 
   if (max === 0) {
     return (
-      <p className="px-5 py-8 text-center text-[13px] text-muted-foreground">
+      <p className="px-5 py-8 text-center text-[14px] text-muted-foreground">
         {emptyText}
       </p>
     );
@@ -43,7 +43,7 @@ export function ColumnChart({
           >
             <span
               className={cn(
-                "text-[10px] font-bold tabular transition-opacity",
+                "text-[12px] font-bold tabular transition-opacity",
                 isPeak
                   ? "text-foreground"
                   : "text-muted-foreground opacity-0 group-hover:opacity-100",
@@ -64,7 +64,7 @@ export function ColumnChart({
 
             <span
               className={cn(
-                "w-full truncate text-center text-[10px] tabular",
+                "w-full truncate text-center text-[12px] tabular",
                 isPeak
                   ? "font-bold text-foreground"
                   : "text-muted-foreground",

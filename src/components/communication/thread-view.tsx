@@ -35,12 +35,12 @@ export function ThreadView({ thread }: { thread: PatientThread }) {
           <CardTitle className="truncate">
             <Link
               href={`/doctor/patients/${thread.patient.id}`}
-              className="hover:text-accent hover:underline"
+              className="hover:text-accent-ink hover:underline"
             >
               {thread.patient.name}
             </Link>
           </CardTitle>
-          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[13px] text-muted-foreground">
             <span data-numeric>{thread.patient.mrn}</span>
             <span aria-hidden>·</span>
             <span data-numeric>{thread.patient.phone}</span>
@@ -78,7 +78,7 @@ export function ThreadView({ thread }: { thread: PatientThread }) {
         ) : (
           <>
           {thread.hiddenMessages > 0 && (
-            <p className="flex items-center justify-center gap-1.5 text-center text-[12px] text-muted-foreground">
+            <p className="flex items-center justify-center gap-1.5 text-center text-[13px] text-muted-foreground">
               <Lock className="size-3.5" />
               {thread.hiddenMessages} earlier{" "}
               {thread.hiddenMessages === 1 ? "message" : "messages"} in the full inbox
@@ -86,7 +86,7 @@ export function ThreadView({ thread }: { thread: PatientThread }) {
           )}
           {groups.map((group) => (
             <div key={group.label}>
-              <p className="mb-3 text-center text-[12px] font-medium text-muted-foreground">
+              <p className="mb-3 text-center text-[13px] font-medium text-muted-foreground">
                 {group.label}
               </p>
               <ul className="space-y-3">
@@ -138,7 +138,7 @@ function MessageBubble({
       <div className={cn("max-w-[82%] min-w-0", outbound && "text-right")}>
         <div
           className={cn(
-            "inline-block rounded-xl px-3.5 py-2.5 text-left text-[13px] leading-relaxed",
+            "inline-block rounded-xl px-3.5 py-2.5 text-left text-[14px] leading-relaxed",
             outbound
               ? failed
                 ? "bg-destructive-soft text-foreground ring-1 ring-destructive/30"
@@ -149,7 +149,7 @@ function MessageBubble({
           {message.subject && (
             <p
               className={cn(
-                "mb-1 text-[12px] font-bold",
+                "mb-1 text-[13px] font-bold",
                 outbound && !failed
                   ? "text-primary-foreground"
                   : "text-foreground",
@@ -168,7 +168,7 @@ function MessageBubble({
           )}
         >
           <ChannelBadge channel={message.channel} />
-          <span className="text-[11px] text-muted-foreground tabular">
+          <span className="text-[12px] text-muted-foreground tabular">
             {message.createdAt.toLocaleTimeString("en-IN", {
               hour: "numeric",
               minute: "2-digit",
@@ -177,7 +177,7 @@ function MessageBubble({
           </span>
           {outbound && <DeliveryState status={message.status} />}
           {message.templateName && (
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-[12px] text-muted-foreground">
               {message.templateName}
             </span>
           )}
@@ -190,7 +190,7 @@ function MessageBubble({
               outbound ? "justify-end" : "justify-start",
             )}
           >
-            <span className="inline-flex items-center gap-1.5 text-[12px] text-destructive">
+            <span className="inline-flex items-center gap-1.5 text-[13px] text-destructive">
               <AlertCircle className="size-3.5 shrink-0" />
               {message.failureReason ??
                 `${CHANNEL_LABEL[message.channel]} rejected it`}

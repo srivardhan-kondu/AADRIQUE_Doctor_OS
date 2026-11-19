@@ -157,10 +157,10 @@ export function CopilotWorkspace({
                       )}
                     />
                     <span className="min-w-0">
-                      <span className="block text-[13px] font-semibold">
+                      <span className="block text-[14px] font-semibold">
                         {option.label}
                       </span>
-                      <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground">
+                      <span className="mt-0.5 block text-[12px] leading-snug text-muted-foreground">
                         {option.blurb}
                       </span>
                     </span>
@@ -173,10 +173,10 @@ export function CopilotWorkspace({
 
         {/* Spec §10 — the product says plainly which engine is answering. */}
         <div className="rounded-lg border border-border bg-card px-3 py-2.5">
-          <p className="text-[12px] font-medium text-muted-foreground">
+          <p className="text-[13px] font-medium text-muted-foreground">
             Engine
           </p>
-          <p className="mt-1 text-[12px] leading-snug">
+          <p className="mt-1 text-[13px] leading-snug">
             {modelConfigured ? (
               <>
                 <span className="font-semibold">Claude</span> writes the answer,
@@ -185,9 +185,10 @@ export function CopilotWorkspace({
               </>
             ) : (
               <>
-                No model is configured, so answers are{" "}
+                Answers are{" "}
                 <span className="font-semibold">assembled from the records</span>{" "}
-                themselves. Nothing is generated, and nothing can be invented.
+                themselves, without an AI writing model. Nothing is generated,
+                and nothing can be invented.
               </>
             )}
           </p>
@@ -205,7 +206,7 @@ export function CopilotWorkspace({
               <div>
                 <label
                   htmlFor="copilot-question"
-                  className="text-[12px] font-semibold text-muted-foreground"
+                  className="text-[13px] font-semibold text-muted-foreground"
                 >
                   Your question
                 </label>
@@ -216,13 +217,13 @@ export function CopilotWorkspace({
                   onChange={(e) => setQuestion(e.target.value)}
                   placeholder={active.placeholder}
                   maxLength={500}
-                  className="mt-1.5 resize-none text-[13px]"
+                  className="mt-1.5 resize-none text-[14px]"
                 />
               </div>
             )}
 
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-[12px] text-muted-foreground">
+              <p className="text-[13px] text-muted-foreground">
                 {active.needsPatient && !patient
                   ? "Choose a patient first."
                   : "Nothing you do here changes a record."}
@@ -367,10 +368,10 @@ function PatientField({
   if (patient) {
     return (
       <div className="flex items-center gap-3 rounded-lg border border-accent/40 bg-accent-soft/40 px-3 py-2">
-        <UserRound className="size-4 shrink-0 text-accent" />
+        <UserRound className="size-4 shrink-0 text-accent-ink" />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] font-semibold">{patient.name}</p>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="truncate text-[14px] font-semibold">{patient.name}</p>
+          <p className="text-[12px] text-muted-foreground">
             <span data-numeric>{patient.mrn}</span>
             {patient.age !== null && (
               <>
@@ -396,7 +397,7 @@ function PatientField({
     <div>
       <label
         htmlFor="copilot-patient"
-        className="text-[12px] font-semibold text-muted-foreground"
+        className="text-[13px] font-semibold text-muted-foreground"
       >
         Patient
       </label>
@@ -420,7 +421,7 @@ function PatientField({
             ))}
           </div>
         ) : rows.length === 0 ? (
-          <p className="px-3 py-5 text-center text-[12px] text-muted-foreground">
+          <p className="px-3 py-5 text-center text-[13px] text-muted-foreground">
             {term ? `Nobody matches “${term}”.` : "Start typing to find a patient."}
           </p>
         ) : (
@@ -433,10 +434,10 @@ function PatientField({
                   className="flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:outline-none"
                 >
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[13px] font-semibold">
+                    <span className="block truncate text-[14px] font-semibold">
                       {row.name}
                     </span>
-                    <span className="block text-[11px] text-muted-foreground">
+                    <span className="block text-[12px] text-muted-foreground">
                       <span data-numeric>{row.mrn}</span>
                     </span>
                   </span>

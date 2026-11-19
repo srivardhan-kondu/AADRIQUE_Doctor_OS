@@ -1,13 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
-import { DM_Sans, JetBrains_Mono, Newsreader } from "next/font/google";
+import { IBM_Plex_Sans, JetBrains_Mono, Newsreader } from "next/font/google";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
-const body = DM_Sans({
+// Plex Sans: I, l and 1 are distinct shapes, which matters in drug names and doses.
+const body = IBM_Plex_Sans({
   subsets: ["latin"],
   variable: "--font-body",
-  axes: ["opsz"],
   display: "swap",
 });
 

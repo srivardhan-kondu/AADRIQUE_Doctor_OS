@@ -67,7 +67,7 @@ export default async function AdminDoctorPage({
           <h1 className="font-display text-xl font-medium tracking-tight">
             {profile.name}
           </h1>
-          <p className="mt-0.5 flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
+          <p className="mt-0.5 flex flex-wrap items-center gap-2 text-[14px] text-muted-foreground">
             {profile.email}
             <Badge variant="muted" className="font-mono">
               Tokens {profile.tokenPrefix}

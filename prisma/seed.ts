@@ -481,7 +481,11 @@ async function seedTemplatesAndIntegrations(organizationId: string) {
     })),
   });
 
-  /** Spec §29 — each integration behind an adapter, with a visible status. */
+  /**
+   * Spec §29 — the messaging channels. The demo holds no vendor account, so
+   * each is honestly Not configured and its messages go through the
+   * simulated gateway; connecting one is a Check away once a key is set.
+   */
   await prisma.integration.createMany({
     data: [
       {
@@ -490,11 +494,7 @@ async function seedTemplatesAndIntegrations(organizationId: string) {
         category: IntegrationCategory.WHATSAPP,
         provider: "meta-cloud-api",
         name: "WhatsApp Business",
-        status: IntegrationStatus.CONNECTED,
-        config: { phoneNumberId: "demo-phone-id", wabaId: "demo-waba" },
-        credentialRef: "secret://demo/whatsapp",
-        lastHealthCheckAt: minutesAfter(new Date(), -12),
-        lastSyncAt: minutesAfter(new Date(), -12),
+        status: IntegrationStatus.NOT_CONFIGURED,
       },
       {
         id: id("int"),
@@ -502,10 +502,7 @@ async function seedTemplatesAndIntegrations(organizationId: string) {
         category: IntegrationCategory.SMS,
         provider: "msg91",
         name: "SMS Gateway",
-        status: IntegrationStatus.CONNECTED,
-        config: { senderId: "AADRIQ" },
-        credentialRef: "secret://demo/sms",
-        lastHealthCheckAt: minutesAfter(new Date(), -25),
+        status: IntegrationStatus.NOT_CONFIGURED,
       },
       {
         id: id("int"),
@@ -513,40 +510,7 @@ async function seedTemplatesAndIntegrations(organizationId: string) {
         category: IntegrationCategory.EMAIL,
         provider: "resend",
         name: "Transactional Email",
-        status: IntegrationStatus.CONNECTED,
-        config: { fromAddress: "care@aadrique.demo" },
-        credentialRef: "secret://demo/email",
-        lastHealthCheckAt: minutesAfter(new Date(), -40),
-      },
-      {
-        id: id("int"),
-        organizationId,
-        category: IntegrationCategory.LAB,
-        provider: "thyrocare",
-        name: "Lab Information System",
-        status: IntegrationStatus.NEEDS_ATTENTION,
-        config: { centreCode: "HYD-114" },
-        credentialRef: "secret://demo/lab",
-        lastHealthCheckAt: minutesAfter(new Date(), -180),
-        lastError: "Result webhook returned 401 for the last 3 deliveries",
-      },
-      {
-        id: id("int"),
-        organizationId,
-        category: IntegrationCategory.PHARMACY,
-        provider: "internal-pharmacy",
-        name: "Pharmacy",
         status: IntegrationStatus.NOT_CONFIGURED,
-      },
-      {
-        id: id("int"),
-        organizationId,
-        category: IntegrationCategory.HMS,
-        provider: "legacy-hms",
-        name: "Hospital Management System",
-        status: IntegrationStatus.DISCONNECTED,
-        config: { baseUrl: "https://hms.internal.demo" },
-        lastError: "Connection refused",
       },
     ],
   });

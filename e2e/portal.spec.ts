@@ -48,7 +48,12 @@ test("a patient signs in with a code, books and cancels", async ({ browser }) =>
     d.setDate(d.getDate() + ahead);
     const offset = d.getTimezoneOffset() * 60_000;
     await day.fill(new Date(d.getTime() - offset).toISOString().slice(0, 10));
-    if (await firstSlot.isVisible({ timeout: 5_000 }).catch(() => false)) break;
+    // `isVisible` does not wait; the slots arrive after the day changes.
+    const shown = await firstSlot
+      .waitFor({ state: "visible", timeout: 5_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (shown) break;
   }
   await firstSlot.click();
   await patient.getByLabel(/What is it about/).fill("Routine check");

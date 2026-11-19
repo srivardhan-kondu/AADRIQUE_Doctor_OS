@@ -28,7 +28,7 @@ export default async function TwoFactorPage() {
           <h1 className="mb-4 font-display text-xl font-medium tracking-tight">Two-factor sign-in</h1>
           <TwoFactorForm enabled={enabled} />
         </div>
-        <p className="mt-4 text-center text-[13px]">
+        <p className="mt-4 text-center text-[14px]">
           <Link href={homeFor(actor.role)} className="text-muted-foreground hover:text-foreground">
             Back to your workspace
           </Link>

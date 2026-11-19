@@ -76,34 +76,34 @@ function DoctorQueue({
               <Badge variant="muted">Away</Badge>
             )}
           </p>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-[13px] text-muted-foreground">
             {[board.department, board.room].filter(Boolean).join(" · ") ||
               "OPD"}
           </p>
           {board.paused && board.pauseReason && (
-            <p className="mt-1 text-[12px] text-warning">{board.pauseReason}</p>
+            <p className="mt-1 text-[13px] text-warning">{board.pauseReason}</p>
           )}
         </div>
 
         <div className="shrink-0 text-right">
-          <p className="text-[12px] font-mediumr text-muted-foreground">
+          <p className="text-[13px] font-medium text-muted-foreground">
             In the room
           </p>
-          <p data-numeric className="font-mono text-xl font-bold text-accent">
+          <p data-numeric className="font-mono text-xl font-bold text-accent-ink">
             {board.currentToken ?? "—"}
           </p>
         </div>
       </div>
 
       {board.active && (
-        <p className="border-b border-border bg-accent-soft/30 px-5 py-2 text-[12px]">
+        <p className="border-b border-border bg-accent-soft/30 px-5 py-2 text-[13px]">
           <span className="font-semibold">{board.active.patientName}</span>{" "}
           <span className="text-muted-foreground">is with the doctor</span>
         </p>
       )}
 
       {board.waiting.length === 0 ? (
-        <p className="flex-1 px-5 py-8 text-center text-[13px] text-muted-foreground">
+        <p className="flex-1 px-5 py-8 text-center text-[14px] text-muted-foreground">
           Nobody waiting.
         </p>
       ) : (
@@ -120,7 +120,7 @@ function DoctorQueue({
               >
                 <span
                   data-numeric
-                  className="w-11 shrink-0 font-mono text-[13px] font-semibold"
+                  className="w-11 shrink-0 font-mono text-[14px] font-semibold"
                 >
                   {entry.token}
                 </span>
@@ -129,7 +129,7 @@ function DoctorQueue({
                   className="min-w-0 flex-1"
                 >
                   <span className="flex items-center gap-1.5">
-                    <span className="truncate text-[13px] font-medium hover:text-accent">
+                    <span className="truncate text-[14px] font-medium hover:text-accent-ink">
                       {entry.patientName}
                     </span>
                     {index === 0 && <Badge variant="accent">Next</Badge>}
@@ -139,7 +139,7 @@ function DoctorQueue({
                       </Badge>
                     )}
                   </span>
-                  <span className="block truncate text-[11px] text-muted-foreground">
+                  <span className="block truncate text-[12px] text-muted-foreground">
                     {entry.reason ?? entry.patientMrn}
                   </span>
                 </Link>
@@ -151,7 +151,7 @@ function DoctorQueue({
                 <span
                   data-numeric
                   className={cn(
-                    "w-14 shrink-0 text-right text-[12px] tabular-nums",
+                    "w-14 shrink-0 text-right text-[13px] tabular-nums",
                     overdue
                       ? "font-semibold text-destructive"
                       : "text-muted-foreground",
@@ -179,7 +179,7 @@ function DoctorQueue({
         </ul>
       )}
 
-      <div className="flex items-center justify-between gap-2 border-t border-border px-5 py-2.5 text-[12px] text-muted-foreground">
+      <div className="flex items-center justify-between gap-2 border-t border-border px-5 py-2.5 text-[13px] text-muted-foreground">
         <span>
           {board.waiting.length} waiting · {board.done.length} done
           {board.waiting.length > 0 &&

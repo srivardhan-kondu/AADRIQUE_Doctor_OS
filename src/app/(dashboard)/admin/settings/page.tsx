@@ -73,7 +73,7 @@ async function SettingsScreen() {
       <Card className="mb-5 flex flex-wrap items-center justify-between gap-3 px-5 py-4">
         <div>
           <p className="text-[14px] font-semibold">Patient portal</p>
-          <p className="mt-0.5 text-[13px] text-muted-foreground">
+          <p className="mt-0.5 text-[14px] text-muted-foreground">
             Patients sign in with a code sent to their mobile to book, cancel,
             follow their token and rate a visit. Share this address.
           </p>
@@ -94,7 +94,7 @@ async function SettingsScreen() {
               {features.opd.vitalsStep ? "On" : "Off"}
             </Badge>
           </p>
-          <p className="mt-0.5 text-[13px] text-muted-foreground">
+          <p className="mt-0.5 text-[14px] text-muted-foreground">
             {features.opd.vitalsStep
               ? "Patients can be sent to a vitals station while they wait, and the Command Center shows the patient flow."
               : "Patients go straight from waiting to the doctor. Turn this on if a nurse records vitals first."}{" "}
@@ -107,7 +107,7 @@ async function SettingsScreen() {
       {/* What this clinic's plan includes. Changed by AADRIQUE, not here. */}
       <Card className="mb-5 px-5 py-4">
         <p className="text-[14px] font-semibold">Add-ons</p>
-        <p className="mt-0.5 text-[13px] text-muted-foreground">
+        <p className="mt-0.5 text-[14px] text-muted-foreground">
           The OPD core is always included. Contact AADRIQUE to add or remove an add-on.
         </p>
         <ul className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -116,7 +116,7 @@ async function SettingsScreen() {
               key={key}
               className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2"
             >
-              <span className="min-w-0 truncate text-[13px] font-medium">
+              <span className="min-w-0 truncate text-[14px] font-medium">
                 {ADD_ONS[key].label}
               </span>
               <Badge variant={features.addOns[key] ? "success" : "muted"}>
@@ -140,13 +140,13 @@ async function SettingsScreen() {
             {settings.facilities.map((facility) => (
               <li key={facility.id} className="px-5 py-3">
                 <p className="flex flex-wrap items-center gap-2">
-                  <span className="text-[13px] font-semibold">{facility.name}</span>
+                  <span className="text-[14px] font-semibold">{facility.name}</span>
                   <Badge variant="muted" className="font-mono">
                     {facility.code}
                   </Badge>
                   {!facility.active && <Badge variant="outline">Inactive</Badge>}
                 </p>
-                <p className="mt-0.5 text-[12px] text-muted-foreground">
+                <p className="mt-0.5 text-[13px] text-muted-foreground">
                   {[facility.city, facility.phone].filter(Boolean).join(" · ") ||
                     "No address on record"}
                   <span aria-hidden> · </span>
@@ -164,10 +164,8 @@ async function SettingsScreen() {
               <Lock className="size-4 text-muted-foreground" />
               Roles and permissions
             </CardTitle>
-            <p className="mt-0.5 text-[12px] text-muted-foreground">
-              What each role can actually do here, after this organization&rsquo;s
-              overrides. The check that matters runs on the server — hiding a
-              button is never the control.
+            <p className="mt-0.5 text-[13px] text-muted-foreground">
+              What each role can do in this clinic.
             </p>
           </CardHeader>
 
@@ -176,15 +174,15 @@ async function SettingsScreen() {
               <li key={role.role} className="px-5 py-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="flex items-center gap-2">
-                    <span className="text-[13px] font-semibold">
+                    <span className="text-[14px] font-semibold">
                       {roleLabel(role.role)}
                     </span>
-                    <span className="text-[11px] text-muted-foreground tabular">
+                    <span className="text-[12px] text-muted-foreground tabular">
                       {role.memberCount}{" "}
                       {role.memberCount === 1 ? "member" : "members"}
                     </span>
                   </p>
-                  <span className="text-[12px] font-semibold tabular text-muted-foreground">
+                  <span className="text-[13px] font-semibold tabular text-muted-foreground">
                     {role.held.length} permissions
                   </span>
                 </div>
@@ -212,7 +210,7 @@ async function SettingsScreen() {
       {/* Spec §22 — tenancy stated where an administrator can read it. */}
       <div className="mt-5 flex items-start gap-3 rounded-xl border border-border bg-card px-4 py-3">
         <ShieldCheck className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-        <p className="text-[12px] leading-relaxed text-muted-foreground">
+        <p className="text-[13px] leading-relaxed text-muted-foreground">
           Every record in this product carries its organization, and every query
           is filtered by the one on your session. Nothing here can read or write
           another organization&rsquo;s data, and a record id from elsewhere
@@ -226,7 +224,7 @@ async function SettingsScreen() {
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <Card className="px-4 py-3.5">
-      <p className="text-[12px] font-medium text-muted-foreground">
+      <p className="text-[13px] font-medium text-muted-foreground">
         {label}
       </p>
       <p className="mt-1 font-display text-2xl font-medium tabular">{value}</p>

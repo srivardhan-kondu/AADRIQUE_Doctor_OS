@@ -100,7 +100,7 @@ export function VitalsDialog({
         <form onSubmit={submit} className="space-y-4">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {FIELDS.map((f) => (
-              <label key={f.key} className="text-[12px] font-medium text-muted-foreground">
+              <label key={f.key} className="text-[13px] font-medium text-muted-foreground">
                 {f.label} <span className="font-normal">({f.unit})</span>
                 <Input
                   type="number"
@@ -115,7 +115,7 @@ export function VitalsDialog({
               </label>
             ))}
           </div>
-          <label className="block text-[12px] font-medium text-muted-foreground">
+          <label className="block text-[13px] font-medium text-muted-foreground">
             Notes
             <Input
               value={notes}
@@ -126,7 +126,7 @@ export function VitalsDialog({
             />
           </label>
           {error && (
-            <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-[13px] text-destructive">
+            <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-[14px] text-destructive">
               {error}
             </p>
           )}

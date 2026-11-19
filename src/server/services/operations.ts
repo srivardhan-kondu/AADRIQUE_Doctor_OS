@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/db";
+import { SUPPORTED_CATEGORIES } from "@/lib/integrations";
 import { Permission, assertPermission, tenantScope } from "@/lib/permissions";
 import type { RequestActor } from "@/server/context";
 
@@ -114,6 +115,7 @@ export async function getOperations(
       prisma.integration.findMany({
         where: {
           ...tenantScope(actor),
+          category: { in: [...SUPPORTED_CATEGORIES] },
           status: { in: ["NEEDS_ATTENTION", "DISCONNECTED"] },
         },
         select: { name: true, lastError: true, status: true },
@@ -193,7 +195,7 @@ export async function getOperations(
       severity: "ATTENTION",
       title: `${load.name} is over its wait threshold`,
       detail: `Longest wait is ${load.longestWaitMinutes} min against a ${load.thresholdMinutes} min threshold, with ${load.waiting} waiting.`,
-      action: { label: "Open the queue", href: "/admin/operations" },
+      action: { label: "Open the queue", href: "/reception/queue" },
     });
   }
 

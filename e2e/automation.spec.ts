@@ -36,7 +36,7 @@ test("an administrator writes a template and builds a workflow that sends it", a
   await expect(page.getByText(templateName)).toBeVisible();
 
   // Build a workflow that sends it when a patient is registered.
-  await page.getByRole("link", { name: "New workflow" }).click();
+  await page.getByRole("link", { name: "Custom automation" }).click();
   await page.getByLabel("Name", { exact: true }).fill(workflowName);
   await page.getByRole("combobox", { name: "When" }).click();
   await page.getByRole("option", { name: "A patient is registered" }).click();

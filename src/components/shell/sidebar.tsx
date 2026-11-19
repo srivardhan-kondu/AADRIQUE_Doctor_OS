@@ -62,7 +62,7 @@ export function Sidebar({
         {sections.map((section, i) => (
           <div key={section.label ?? `section-${i}`} className={cn(i > 0 && "mt-5")}>
             {section.label && !collapsed && (
-              <p className="mb-1.5 px-3 text-[12px] font-medium text-sidebar-muted">
+              <p className="mb-1.5 px-3 text-[13px] font-medium text-sidebar-muted">
                 {section.label}
               </p>
             )}
@@ -93,7 +93,7 @@ export function Sidebar({
           onClick={onToggle}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className={cn(
-            "mt-2 flex h-8 w-full items-center gap-2.5 rounded-full px-3 text-[13px] font-medium text-sidebar-muted transition-colors hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground",
+            "mt-2 flex h-8 w-full items-center gap-2.5 rounded-full px-3 text-[14px] font-medium text-sidebar-muted transition-colors hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground",
             collapsed && "justify-center px-0",
           )}
         >
@@ -141,7 +141,7 @@ function SidebarLink({
       <Icon
         className={cn(
           "size-[18px] shrink-0 transition-colors [stroke-width:1.75]",
-          active ? "text-accent" : "text-sidebar-muted group-hover:text-sidebar-foreground",
+          active ? "text-accent-ink" : "text-sidebar-muted group-hover:text-sidebar-foreground",
         )}
       />
       {!collapsed && <span className="truncate">{item.label}</span>}
@@ -151,7 +151,7 @@ function SidebarLink({
           key={count}
           data-numeric
           className={cn(
-            "ml-auto min-w-5 rounded-full px-1.5 py-0.5 text-center text-[11px] font-semibold animate-in fade-in slide-in-from-top-1 duration-200",
+            "ml-auto min-w-5 rounded-full px-1.5 py-0.5 text-center text-[12px] font-semibold animate-in fade-in slide-in-from-top-1 duration-200",
             active ? "bg-highlight text-highlight-foreground" : "bg-foreground/[0.06] text-sidebar-foreground",
           )}
         >

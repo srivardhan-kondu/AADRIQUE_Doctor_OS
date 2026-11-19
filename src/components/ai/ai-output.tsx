@@ -44,11 +44,11 @@ export function AIOutputView({
       <div className="flex flex-wrap items-center gap-2 border-b border-ai-border px-4 py-2.5">
         <Sparkles className="size-3.5 shrink-0 text-ai" />
         <Badge variant="ai">AI generated</Badge>
-        <span className="text-[12px] font-medium text-ai">
+        <span className="text-[13px] font-medium text-ai">
           Doctor review required
         </span>
 
-        <span className="ml-auto text-[11px] text-muted-foreground">
+        <span className="ml-auto text-[12px] text-muted-foreground">
           {grounded
             ? "Assembled from this patient's records"
             : `Written by ${model ?? provider ?? "a model"}, checked against the record`}
@@ -56,7 +56,7 @@ export function AIOutputView({
       </div>
 
       {note && (
-        <p className="flex items-start gap-2 border-b border-ai-border/60 px-4 py-2 text-[12px] text-muted-foreground">
+        <p className="flex items-start gap-2 border-b border-ai-border/60 px-4 py-2 text-[13px] text-muted-foreground">
           <CircleAlert className="mt-0.5 size-3.5 shrink-0" />
           {note}
         </p>
@@ -65,7 +65,7 @@ export function AIOutputView({
       <div className={cn("space-y-3.5 px-4", compact ? "py-3" : "py-4")}>
         {sections.map((section, index) => (
           <section key={`${section.heading}-${index}`}>
-            <h4 className="text-[12px] font-medium text-muted-foreground">
+            <h4 className="text-[13px] font-medium text-muted-foreground">
               {section.heading}
             </h4>
 
@@ -77,7 +77,7 @@ export function AIOutputView({
                   <li
                     key={lineIndex}
                     className={cn(
-                      "text-[13px] leading-relaxed",
+                      "text-[14px] leading-relaxed",
                       section.lines.length > 1 && "flex gap-2",
                     )}
                   >
@@ -144,14 +144,14 @@ function Citations({
               <Link
                 href={source.href}
                 title={source.detail}
-                className="inline-flex items-center gap-1 rounded-md border border-ai-border bg-card/70 px-1.5 py-0.5 text-[10px] font-semibold text-ai transition-colors hover:bg-card"
+                className="inline-flex items-center gap-1 rounded-md border border-ai-border bg-card/70 px-1.5 py-0.5 text-[12px] font-semibold text-ai transition-colors hover:bg-card"
               >
                 {label}
               </Link>
             ) : (
               <span
                 title={source.detail}
-                className="inline-flex items-center gap-1 rounded-md border border-ai-border bg-card/70 px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground"
+                className="inline-flex items-center gap-1 rounded-md border border-ai-border bg-card/70 px-1.5 py-0.5 text-[12px] font-semibold text-muted-foreground"
               >
                 {label}
               </span>
@@ -169,7 +169,7 @@ export function AIOutputSkeleton({ lines = 4 }: { lines?: number }) {
     <div className="ai-surface rounded-xl">
       <div className="flex items-center gap-2 border-b border-ai-border px-4 py-2.5">
         <Sparkles className="size-3.5 shrink-0 animate-pulse text-ai" />
-        <span className="text-[12px] font-medium text-ai">
+        <span className="text-[13px] font-medium text-ai">
           Reading the record…
         </span>
       </div>

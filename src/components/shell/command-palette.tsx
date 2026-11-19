@@ -105,8 +105,17 @@ export function CommandPalette({
     run(async () => {
       const result = await callNextAction();
       if (!result.ok) {
+        // An unsigned note: offer the note itself, where "Sign & call next"
+        // finishes the visit and brings the next patient in one step.
+        const unsigned = result.unsigned;
         toast.error(result.message ?? "Could not call the next patient.", {
           description: result.action,
+          action: unsigned
+            ? {
+                label: "Open note",
+                onClick: () => router.push(`/doctor/consultations/${unsigned.visitId}`),
+              }
+            : undefined,
         });
         return;
       }
@@ -130,7 +139,7 @@ export function CommandPalette({
           <p className="font-medium text-foreground">
             {searching ? "Searching…" : "No matches"}
           </p>
-          <p className="mt-1 text-[13px]">
+          <p className="mt-1 text-[14px]">
             Try a patient name, a mobile number or a patient ID.
           </p>
         </CommandEmpty>
@@ -149,7 +158,7 @@ export function CommandPalette({
                 >
                   <UserRound className="text-muted-foreground" />
                   <span className="truncate">{patient.name}</span>
-                  <span className="ml-auto font-mono text-[11px] text-muted-foreground">
+                  <span className="ml-auto font-mono text-[12px] text-muted-foreground">
                     {patient.mrn}
                   </span>
                 </CommandItem>
@@ -165,7 +174,7 @@ export function CommandPalette({
               onSelect={callNext}
               keywords={["next", "consultation", "start", "call"]}
             >
-              <PlayCircle className="text-accent" />
+              <PlayCircle className="text-accent-ink" />
               <span>Call next patient</span>
             </CommandItem>
           )}
@@ -174,7 +183,7 @@ export function CommandPalette({
               onSelect={() => go("/reception?open=walk-in")}
               keywords={["token", "walk in", "queue", "add"]}
             >
-              <Ticket className="text-accent" />
+              <Ticket className="text-accent-ink" />
               <span>Walk-in token</span>
             </CommandItem>
           )}

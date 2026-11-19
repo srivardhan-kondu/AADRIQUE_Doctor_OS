@@ -37,7 +37,7 @@ export function ArrivalsCard({ arrivals }: { arrivals: ArrivalRow[] }) {
       <CardHeader>
         <div>
           <CardTitle>Today&apos;s arrivals</CardTitle>
-          <p className="mt-1 text-[13px] text-muted-foreground">
+          <p className="mt-1 text-[14px] text-muted-foreground">
             {arrivals.length === 0
               ? "Nothing booked today"
               : `${expected.length} expected · ${here.length} in the building · ${finished.length} finished`}
@@ -56,13 +56,13 @@ export function ArrivalsCard({ arrivals }: { arrivals: ArrivalRow[] }) {
           {expected.length > 0 && <Section title="Expected" rows={expected} />}
           {here.length > 0 && <Section title="In the building" rows={here} />}
           {expected.length === 0 && here.length === 0 && (
-            <p className="px-5 py-6 text-center text-[13px] text-muted-foreground">
+            <p className="px-5 py-6 text-center text-[14px] text-muted-foreground">
               Everyone booked today has been seen.
             </p>
           )}
           {finished.length > 0 && (
             <details className="group">
-              <summary className="flex cursor-pointer list-none items-center gap-1.5 bg-muted/50 px-5 py-1.5 text-[12px] font-mediumr text-muted-foreground hover:text-foreground">
+              <summary className="flex cursor-pointer list-none items-center gap-1.5 bg-muted/50 px-5 py-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground">
                 <ChevronDown className="size-3.5 transition-transform group-open:rotate-180" />
                 Finished · {finished.length}
               </summary>
@@ -84,7 +84,7 @@ export function ArrivalsCard({ arrivals }: { arrivals: ArrivalRow[] }) {
 function Section({ title, rows }: { title: string; rows: ArrivalRow[] }) {
   return (
     <section>
-      <h3 className="bg-muted/50 px-5 py-1.5 text-[12px] font-mediumr text-muted-foreground">
+      <h3 className="bg-muted/50 px-5 py-1.5 text-[13px] font-medium text-muted-foreground">
         {title} · {rows.length}
       </h3>
       <ul className="divide-y divide-border">
@@ -111,20 +111,20 @@ function ArrivalItem({ row }: { row: ArrivalRow }) {
       <div className="w-16 shrink-0">
         <p
           className={cn(
-            "font-mono text-[13px] font-bold tabular",
+            "font-mono text-[14px] font-bold tabular",
             late && "text-destructive",
           )}
         >
           {time}
         </p>
-        {late && <p className="text-[11px] text-destructive">Running late</p>}
+        {late && <p className="text-[12px] text-destructive">Running late</p>}
       </div>
 
       <div className="min-w-0 flex-1">
         <p className="flex items-center gap-2">
           <Link
             href={`/reception/patients/${row.patientId}`}
-            className="truncate text-[14px] font-semibold hover:text-accent hover:underline"
+            className="truncate text-[14px] font-semibold hover:text-accent-ink hover:underline"
           >
             {row.patientName}
           </Link>
@@ -135,7 +135,7 @@ function ArrivalItem({ row }: { row: ArrivalRow }) {
             </Badge>
           )}
         </p>
-        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[12px] text-muted-foreground">
+        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[13px] text-muted-foreground">
           <span data-numeric className="whitespace-nowrap">{row.patientMrn}</span>
           <span aria-hidden>·</span>
           <span>{row.doctorName}</span>

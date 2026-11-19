@@ -35,7 +35,7 @@ export function LiveQueue({
       <CardHeader>
         <div>
           <CardTitle>Live Queue</CardTitle>
-          <p className="mt-1 text-[13px] text-muted-foreground">
+          <p className="mt-1 text-[14px] text-muted-foreground">
             {rows.length === 0
               ? "Nobody is waiting"
               : `${rows.length} in the queue right now`}
@@ -65,7 +65,7 @@ export function LiveQueue({
       ) : (
         <div className="px-2 pb-2">
           {/* Column headers, echoing the spec's queue table. */}
-          <div className="grid grid-cols-[60px_1fr_112px_68px] items-center gap-3 px-3 pb-2 pt-1 text-[12px] font-medium text-muted-foreground">
+          <div className="grid grid-cols-[60px_1fr_112px_68px] items-center gap-3 px-3 pb-2 pt-1 text-[13px] font-medium text-muted-foreground">
             <span>Token</span>
             <span>Patient</span>
             <span>Status</span>
@@ -100,7 +100,12 @@ function QueueRowItem({ row, threshold }: { row: QueueRow; threshold: number }) 
 
   return (
     <Link
-      href={`/doctor/patients/${row.patientId}`}
+      // The patient in the room opens their note; anyone waiting, their record.
+      href={
+        active && row.visitId
+          ? `/doctor/consultations/${row.visitId}`
+          : `/doctor/patients/${row.patientId}`
+      }
       className={cn(
         "grid grid-cols-[60px_1fr_112px_68px] items-center gap-3 rounded-lg px-3 py-2.5 transition-colors",
         active ? "bg-accent-soft/60" : "hover:bg-muted",
@@ -109,7 +114,7 @@ function QueueRowItem({ row, threshold }: { row: QueueRow; threshold: number }) 
       <span
         data-numeric
         className={cn(
-          "font-mono text-[13px] font-semibold",
+          "font-mono text-[14px] font-semibold",
           active ? "text-brand-700" : "text-foreground",
         )}
       >
@@ -118,7 +123,7 @@ function QueueRowItem({ row, threshold }: { row: QueueRow; threshold: number }) 
 
       <span className="min-w-0">
         <span className="flex items-center gap-1.5">
-          <span className="truncate text-[13px] font-medium">
+          <span className="truncate text-[14px] font-medium">
             {row.patientName}
           </span>
           {row.priority !== "NORMAL" && (
@@ -146,7 +151,7 @@ function QueueRowItem({ row, threshold }: { row: QueueRow; threshold: number }) 
             </Tooltip>
           )}
         </span>
-        <span className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <span className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
           <span data-numeric className="whitespace-nowrap">{row.patientMrn}</span>
           {row.age !== null && (
             <>
@@ -176,7 +181,7 @@ function QueueRowItem({ row, threshold }: { row: QueueRow; threshold: number }) 
       <span
         data-numeric
         className={cn(
-          "text-right text-[13px] tabular-nums",
+          "text-right text-[14px] tabular-nums",
           active
             ? "text-muted-foreground"
             : overdue

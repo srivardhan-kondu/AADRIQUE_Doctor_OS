@@ -230,7 +230,7 @@ function RegisterForm({
             aside={
               <button
                 type="button"
-                className="text-[11px] font-semibold text-accent hover:underline"
+                className="text-[12px] font-semibold text-accent-ink hover:underline"
                 onClick={() => setAgeMode(ageMode === "age" ? "dob" : "age")}
               >
                 {ageMode === "age" ? "Use date of birth" : "Use age"}
@@ -273,7 +273,7 @@ function RegisterForm({
         </Field>
 
         <fieldset>
-          <legend className="text-[12px] font-semibold text-muted-foreground">
+          <legend className="text-[13px] font-semibold text-muted-foreground">
             May we message them?
           </legend>
           <div className="mt-1.5 flex flex-wrap gap-x-5 gap-y-2">
@@ -294,7 +294,7 @@ function RegisterForm({
               onChange={(v) => set("emailOptIn", v)}
             />
           </div>
-          <p className="mt-1 text-[11px] text-muted-foreground">
+          <p className="mt-1 text-[12px] text-muted-foreground">
             Appointment and token messages go only on the channels ticked here.
           </p>
         </fieldset>
@@ -303,7 +303,7 @@ function RegisterForm({
           type="button"
           onClick={() => setMore(!more)}
           aria-expanded={more}
-          className="flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-foreground"
+          className="flex items-center gap-1.5 text-[14px] font-semibold text-muted-foreground hover:text-foreground"
         >
           <ChevronDown
             className={cn("size-4 transition-transform", more && "rotate-180")}
@@ -384,7 +384,7 @@ function RegisterForm({
         {error && (
           <p
             role="alert"
-            className="rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-[13px] text-destructive"
+            className="rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-[14px] text-destructive"
           >
             {error}
           </p>
@@ -424,7 +424,7 @@ function Field({
       <div className="flex items-baseline justify-between gap-2">
         <label
           htmlFor={htmlFor}
-          className="text-[12px] font-semibold text-muted-foreground"
+          className="text-[13px] font-semibold text-muted-foreground"
         >
           {label}
           {required && <span className="text-destructive"> *</span>}
@@ -450,7 +450,7 @@ function Consent({
   return (
     <label
       className={cn(
-        "flex items-center gap-2 text-[13px]",
+        "flex items-center gap-2 text-[14px]",
         disabled && "text-muted-foreground",
       )}
     >

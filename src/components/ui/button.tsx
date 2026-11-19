@@ -21,10 +21,10 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive text-destructive-foreground shadow-soft hover:bg-destructive/90",
         ai: "bg-ai text-ai-foreground shadow-soft hover:bg-ai/90",
-        link: "text-accent underline-offset-4 hover:underline",
+        link: "text-accent-ink underline-offset-4 hover:underline",
       },
       size: {
-        sm: "h-8 px-3.5 text-[13px]",
+        sm: "h-8 px-3.5 text-[14px]",
         default: "h-9 px-4",
         lg: "h-11 px-6 text-[15px]",
         icon: "size-9",

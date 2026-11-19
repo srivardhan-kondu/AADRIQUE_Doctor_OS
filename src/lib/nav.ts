@@ -1,6 +1,5 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  Activity,
   BarChart3,
   Bell,
   Blocks,
@@ -99,7 +98,6 @@ export const NAV: Record<Workspace, NavSection[]> = {
       label: "Organisation",
       items: [
         { label: "Doctors", href: "/admin/doctors", icon: Stethoscope },
-        { label: "Departments", href: "/admin/departments", icon: Building2 },
         { label: "Patients", href: "/admin/patients", icon: UsersRound, shortcut: "p" },
         { label: "Staff", href: "/admin/staff", icon: IdCard },
       ],
@@ -107,7 +105,7 @@ export const NAV: Record<Workspace, NavSection[]> = {
     {
       label: "Operations",
       items: [
-        { label: "Operations", href: "/admin/operations", icon: Activity },
+        { label: "Queue limits", href: "/admin/departments", icon: Gauge },
         { label: "Reports", href: "/admin/reports", icon: BarChart3 },
         { label: "Audit Log", href: "/admin/audit", icon: ClipboardList },
       ],

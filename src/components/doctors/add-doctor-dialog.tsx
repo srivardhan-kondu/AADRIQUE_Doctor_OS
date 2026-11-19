@@ -222,7 +222,7 @@ function AddDoctorForm({
         {error && (
           <p
             role="alert"
-            className="rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-[13px] text-destructive"
+            className="rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-[14px] text-destructive"
           >
             {error}
           </p>
@@ -262,7 +262,7 @@ function Created({
         <DialogDescription>{message}</DialogDescription>
       </DialogHeader>
       <div className="space-y-3 px-6">
-        <p className="text-[13px]">
+        <p className="text-[14px]">
           Temporary password — hand it over in person. It is shown only once.
         </p>
         <div className="flex items-center gap-2">
@@ -310,7 +310,7 @@ function Field({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="text-[12px] font-semibold text-muted-foreground">
+      <label htmlFor={id} className="text-[13px] font-semibold text-muted-foreground">
         {label}
         {required && <span className="text-destructive"> *</span>}
       </label>

@@ -167,7 +167,7 @@ export function FollowUpMenu({
           <div className="px-6">
             <label
               htmlFor={`fu-reason-${followUpId}`}
-              className="text-[12px] font-semibold text-muted-foreground"
+              className="text-[13px] font-semibold text-muted-foreground"
             >
               Why (optional)
             </label>
@@ -246,7 +246,7 @@ function ScheduleDialog({
           <div>
             <label
               htmlFor={`fu-date-${followUpId}`}
-              className="text-[12px] font-semibold text-muted-foreground"
+              className="text-[13px] font-semibold text-muted-foreground"
             >
               Date
             </label>

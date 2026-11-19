@@ -95,7 +95,7 @@ export function AuditLogView({
     <div className="space-y-5">
       {days.map((day) => (
         <Card key={day.label} className="p-0">
-          <p className="border-b border-border px-5 py-2.5 text-[12px] font-medium text-muted-foreground">
+          <p className="border-b border-border px-5 py-2.5 text-[13px] font-medium text-muted-foreground">
             {day.label}
             <span className="ml-2 font-normal normal-case tabular">
               {day.entries.length}{" "}
@@ -112,7 +112,7 @@ export function AuditLogView({
       ))}
 
       {hasMore && (
-        <p className="pb-2 text-center text-[12px] text-muted-foreground">
+        <p className="pb-2 text-center text-[13px] text-muted-foreground">
           Showing the most recent {entries.length}. Narrow the range or filter
           by person to see further back.
         </p>
@@ -127,7 +127,7 @@ function AuditRow({ entry }: { entry: AuditEntry }) {
 
   return (
     <li className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3">
-      <span className="w-14 shrink-0 text-[12px] font-semibold tabular text-muted-foreground">
+      <span className="w-14 shrink-0 text-[13px] font-semibold tabular text-muted-foreground">
         {entry.createdAt.toLocaleTimeString("en-IN", {
           hour: "2-digit",
           minute: "2-digit",
@@ -146,8 +146,8 @@ function AuditRow({ entry }: { entry: AuditEntry }) {
       </span>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-semibold">{entry.summary}</p>
-        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-muted-foreground">
+        <p className="truncate text-[14px] font-semibold">{entry.summary}</p>
+        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[12px] text-muted-foreground">
           <span>{AUDIT_ACTION_LABEL[entry.action]}</span>
           <span aria-hidden>·</span>
           <span>{entry.entityType}</span>
@@ -167,11 +167,11 @@ function AuditRow({ entry }: { entry: AuditEntry }) {
           <Badge variant="muted">{roleLabel(entry.actorRole)}</Badge>
         )}
         <Avatar className="size-7">
-          <AvatarFallback className="text-[10px]">
+          <AvatarFallback className="text-[12px]">
             {initials(entry.actorName)}
           </AvatarFallback>
         </Avatar>
-        <span className="text-[12px] font-semibold">{entry.actorName}</span>
+        <span className="text-[13px] font-semibold">{entry.actorName}</span>
       </div>
     </li>
   );

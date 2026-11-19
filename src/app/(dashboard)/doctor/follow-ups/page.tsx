@@ -99,7 +99,7 @@ function Stat({
 
   return (
     <Card className="px-4 py-3.5">
-      <p className="text-[12px] font-medium text-muted-foreground">
+      <p className="text-[13px] font-medium text-muted-foreground">
         {label}
       </p>
       <p
@@ -108,7 +108,7 @@ function Stat({
         {value}
       </p>
       {hint && (
-        <p className="mt-0.5 text-[12px] text-muted-foreground">{hint}</p>
+        <p className="mt-0.5 text-[13px] text-muted-foreground">{hint}</p>
       )}
     </Card>
   );

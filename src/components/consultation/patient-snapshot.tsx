@@ -47,7 +47,7 @@ export function PatientSnapshot({
             <p className="truncate font-display text-[15px] font-medium leading-tight">
               {patient.name}
             </p>
-            <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[11px] text-muted-foreground">
+            <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[12px] text-muted-foreground">
               <span data-numeric className="font-mono">
                 {patient.mrn}
               </span>
@@ -94,7 +94,7 @@ export function PatientSnapshot({
 
         <Link
           href={`/doctor/patients/${patient.id}`}
-          className="mt-3 flex items-center gap-1.5 text-[12px] font-medium text-accent hover:underline"
+          className="mt-3 flex items-center gap-1.5 text-[13px] font-medium text-accent-ink hover:underline"
         >
           Open Patient 360
           <ExternalLink className="size-3" />
@@ -113,7 +113,7 @@ export function PatientSnapshot({
         >
           <p
             className={cn(
-              "flex items-center gap-1.5 text-[12px] font-medium",
+              "flex items-center gap-1.5 text-[13px] font-medium",
               critical.length > 0 ? "text-destructive" : "text-muted-foreground",
             )}
           >
@@ -122,12 +122,12 @@ export function PatientSnapshot({
           </p>
           <ul className="mt-2 space-y-1.5">
             {patient.allergies.map((allergy) => (
-              <li key={allergy.id} className="text-[13px]">
+              <li key={allergy.id} className="text-[14px]">
                 <span className="font-medium">{allergy.substance}</span>
                 {allergy.reaction && (
                   <span
                     className={cn(
-                      "block text-[11px]",
+                      "block text-[12px]",
                       critical.length > 0
                         ? "text-destructive/80"
                         : "text-muted-foreground",
@@ -144,16 +144,16 @@ export function PatientSnapshot({
 
       {patient.conditions.length > 0 && (
         <div className="rounded-xl border border-border bg-card p-4 shadow-soft">
-          <p className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground">
+          <p className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground">
             <Activity className="size-3" />
             Chronic conditions
           </p>
           <ul className="mt-2 space-y-1">
             {patient.conditions.map((condition) => (
-              <li key={condition.id} className="text-[13px]">
+              <li key={condition.id} className="text-[14px]">
                 {condition.name}
                 {condition.code && (
-                  <span className="ml-1.5 font-mono text-[11px] text-muted-foreground">
+                  <span className="ml-1.5 font-mono text-[12px] text-muted-foreground">
                     {condition.code}
                   </span>
                 )}
@@ -165,7 +165,7 @@ export function PatientSnapshot({
 
       {patient.flags.length > 0 && (
         <div className="rounded-xl border border-border bg-card p-4 shadow-soft">
-          <p className="text-[12px] font-medium text-muted-foreground">
+          <p className="text-[13px] font-medium text-muted-foreground">
             Flags
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
@@ -180,7 +180,7 @@ export function PatientSnapshot({
 
       {vitals && (
         <div className="rounded-xl border border-border bg-card p-4 shadow-soft">
-          <p className="text-[12px] font-medium text-muted-foreground">
+          <p className="text-[13px] font-medium text-muted-foreground">
             Vitals
           </p>
           <dl className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-2.5">
@@ -191,7 +191,7 @@ export function PatientSnapshot({
             <Vital label="Weight" value={vitals.weightKg} unit="kg" />
             <Vital label="Height" value={vitals.heightCm} unit="cm" />
           </dl>
-          <p className="mt-3 text-[11px] text-muted-foreground">
+          <p className="mt-3 text-[12px] text-muted-foreground">
             Recorded{" "}
             {vitals.recordedAt.toLocaleTimeString("en-IN", {
               hour: "2-digit",
@@ -223,13 +223,13 @@ function SnapshotRow({
 }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <dt className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+      <dt className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
         <Icon className="size-3" />
         {label}
       </dt>
       <dd
         {...(numeric ? { "data-numeric": true } : {})}
-        className="truncate text-[12px] font-medium"
+        className="truncate text-[13px] font-medium"
       >
         {value}
       </dd>
@@ -249,13 +249,13 @@ function Vital({
 }) {
   return (
     <div>
-      <dt className="text-[12px] font-mediumr text-muted-foreground">
+      <dt className="text-[13px] font-medium text-muted-foreground">
         {label}
       </dt>
-      <dd data-numeric className="mt-0.5 text-[13px] font-semibold">
+      <dd data-numeric className="mt-0.5 text-[15px] font-semibold">
         {value ?? "—"}
         {value !== null && (
-          <span className="ml-0.5 text-[10px] font-normal text-muted-foreground">
+          <span className="ml-0.5 text-[12px] font-normal text-muted-foreground">
             {unit}
           </span>
         )}

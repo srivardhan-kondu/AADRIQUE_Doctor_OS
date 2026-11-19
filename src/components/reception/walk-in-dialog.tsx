@@ -179,12 +179,12 @@ function WalkInForm({
         <div>
           <label
             htmlFor="walkin-doctor"
-            className="text-[12px] font-semibold text-muted-foreground"
+            className="text-[13px] font-semibold text-muted-foreground"
           >
             Doctor
           </label>
           {available.length === 0 ? (
-            <p className="mt-1.5 rounded-lg bg-muted px-3 py-2 text-[13px] text-muted-foreground">
+            <p className="mt-1.5 rounded-lg bg-muted px-3 py-2 text-[14px] text-muted-foreground">
               No doctor is taking walk-ins today. Book the patient an
               appointment instead.
             </p>
@@ -207,7 +207,7 @@ function WalkInForm({
         </div>
 
         <fieldset>
-          <legend className="text-[12px] font-semibold text-muted-foreground">
+          <legend className="text-[13px] font-semibold text-muted-foreground">
             Priority
           </legend>
           <div className="mt-1.5 grid grid-cols-3 gap-2">
@@ -231,10 +231,10 @@ function WalkInForm({
                   onChange={() => setPriority(p.value)}
                   className="sr-only"
                 />
-                <span className="block text-[13px] font-semibold">
+                <span className="block text-[14px] font-semibold">
                   {p.label}
                 </span>
-                <span className="block text-[11px] leading-snug text-muted-foreground">
+                <span className="block text-[12px] leading-snug text-muted-foreground">
                   {p.hint}
                 </span>
               </label>
@@ -245,7 +245,7 @@ function WalkInForm({
         <div>
           <label
             htmlFor="walkin-reason"
-            className="text-[12px] font-semibold text-muted-foreground"
+            className="text-[13px] font-semibold text-muted-foreground"
           >
             Reason <span className="font-normal">(optional)</span>
           </label>

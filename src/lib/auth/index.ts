@@ -3,15 +3,13 @@ import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import {
-  SIGN_IN_ACCOUNT_LIMIT,
-  SIGN_IN_ADDRESS_LIMIT,
   callerAddress,
   rateLimit,
   resetRateLimit,
-  signInKeys,
+  signInBuckets,
 } from "@/lib/security/rate-limit";
 import { authConfig } from "./config";
-import { verifyPassword } from "./password";
+import { hashPassword, needsRehash, verifyPassword } from "./password";
 import { MfaInvalid, MfaRequired } from "./mfa-errors";
 import { consumeTotp } from "./two-factor";
 
@@ -56,17 +54,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // An unidentifiable caller shares one bucket rather than skipping it.
         const address =
           callerAddress(request?.headers ?? new Headers()) ?? "unknown";
-        const keys = signInKeys(address, email);
+        const buckets = signInBuckets(address, email);
+        const results = await Promise.all(
+          buckets.map((bucket) => rateLimit(bucket.key, bucket.options)),
+        );
 
-        const [byAddress, byAccount] = await Promise.all([
-          rateLimit(keys.address, SIGN_IN_ADDRESS_LIMIT),
-          rateLimit(keys.account, SIGN_IN_ACCOUNT_LIMIT),
-        ]);
-
-        if (!byAddress.allowed || !byAccount.allowed) {
-          // Refused exactly like a wrong password, so the limiter cannot be
-          // used to learn which accounts exist.
-          await verifyPassword(password, DUMMY_HASH);
+        if (results.some((result) => !result.allowed)) {
+          // Refused without hashing. The limits apply the same to accounts
+          // that exist and ones that do not, so a quick refusal reveals
+          // nothing — and hashing here would let a flood of refused attempts
+          // spend the server's CPU just as freely as allowed ones.
           return null;
         }
 
@@ -107,14 +104,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         // A genuine sign-in clears the counters, so a user is never held back
         // by their own earlier typos.
-        await Promise.all([
-          resetRateLimit(keys.address),
-          resetRateLimit(keys.account),
-        ]);
+        await Promise.all(buckets.map((bucket) => resetRateLimit(bucket.key)));
+
+        // The one moment the plain password is known: bring a hash made
+        // under older parameters up to current policy.
+        const upgradedHash = needsRehash(user.passwordHash)
+          ? await hashPassword(password)
+          : undefined;
 
         await prisma.user.update({
           where: { id: user.id },
-          data: { lastLoginAt: new Date() },
+          data: {
+            lastLoginAt: new Date(),
+            ...(upgradedHash ? { passwordHash: upgradedHash } : {}),
+          },
         });
 
         await prisma.auditLog.create({
@@ -151,5 +154,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
  * burn the same CPU time on a missing account as on a real one.
  */
 const DUMMY_HASH =
-  "scrypt$131072$8$1$AAAAAAAAAAAAAAAAAAAAAA==$" +
+  "scrypt2$131072$8$1$AAAAAAAAAAAAAAAAAAAAAA==$" +
   "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==";

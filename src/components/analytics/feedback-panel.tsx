@@ -19,7 +19,7 @@ export function FeedbackPanel({
     <Card>
       <CardHeader>
         <CardTitle>Patient feedback</CardTitle>
-        <p className="mt-0.5 text-[12px] text-muted-foreground">
+        <p className="mt-0.5 text-[13px] text-muted-foreground">
           {feedback.requested === 0
             ? "No feedback has been requested in this period."
             : `${feedback.responses} of ${feedback.requested} asked replied.`}
@@ -28,7 +28,7 @@ export function FeedbackPanel({
 
       <div className="px-5 pb-5">
         {feedback.responses === 0 ? (
-          <p className="py-4 text-[13px] text-muted-foreground">
+          <p className="py-4 text-[14px] text-muted-foreground">
             Nothing to summarise yet. Feedback requests go out automatically
             after a consultation is completed.
           </p>
@@ -48,13 +48,13 @@ export function FeedbackPanel({
                     key={star}
                     className={
                       star <= Math.round(feedback.averageRating ?? 0)
-                        ? "size-3.5 fill-accent text-accent"
+                        ? "size-3.5 fill-accent text-accent-ink"
                         : "size-3.5 text-muted-foreground/40"
                     }
                   />
                 ))}
               </div>
-              <span className="text-[12px] text-muted-foreground">
+              <span className="text-[13px] text-muted-foreground">
                 out of 5
               </span>
             </div>
@@ -65,7 +65,7 @@ export function FeedbackPanel({
 
                 return (
                   <li key={star} className="flex items-center gap-2">
-                    <span className="w-3 text-[11px] font-semibold tabular text-muted-foreground">
+                    <span className="w-3 text-[12px] font-semibold tabular text-muted-foreground">
                       {star}
                     </span>
                     <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
@@ -74,7 +74,7 @@ export function FeedbackPanel({
                         style={{ width: `${(count / max) * 100}%` }}
                       />
                     </div>
-                    <span className="w-6 text-right text-[11px] tabular text-muted-foreground">
+                    <span className="w-6 text-right text-[12px] tabular text-muted-foreground">
                       {count}
                     </span>
                   </li>
@@ -88,10 +88,10 @@ export function FeedbackPanel({
                   <li key={index} className="flex gap-2.5">
                     <MessageSquareQuote className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
                     <div className="min-w-0">
-                      <p className="text-[13px] leading-snug">
+                      <p className="text-[14px] leading-snug">
                         {comment.comment}
                       </p>
-                      <p className="mt-0.5 text-[11px] text-muted-foreground">
+                      <p className="mt-0.5 text-[12px] text-muted-foreground">
                         {comment.rating}/5 ·{" "}
                         {comment.at.toLocaleDateString("en-IN", {
                           day: "numeric",

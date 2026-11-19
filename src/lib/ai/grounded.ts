@@ -57,7 +57,6 @@ function compose(request: AIRequest): AISection[] {
     case "PATIENT_SUMMARY":
       return summary(request);
     case "CONSULTATION_NOTE_DRAFT":
-    case "VOICE_TO_NOTE":
       return noteDraft(request);
     case "FOLLOW_UP_MESSAGE":
       return followUpMessage(request);

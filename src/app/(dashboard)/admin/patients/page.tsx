@@ -46,7 +46,7 @@ export default async function AdminPatientsPage({
         description="The directory for your organisation. Search by name, mobile number, patient ID or appointment ID."
         actions={
           <>
-            <span className="hidden items-center gap-1.5 text-[12px] text-muted-foreground lg:flex">
+            <span className="hidden items-center gap-1.5 text-[13px] text-muted-foreground lg:flex">
               Focus search <Kbd>/</Kbd>
             </span>
             {hasPermission(actor, Permission.ADMIN_MANAGE) && (
@@ -73,7 +73,7 @@ export default async function AdminPatientsPage({
           </Suspense>
         </Card>
         {hasPermission(actor, Permission.ADMIN_MANAGE) && (
-          <p className="text-[12px] text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground">
             Exports contain identity, contact and consent only — no clinical
             content — and each one is recorded in the audit log.
           </p>
@@ -90,7 +90,7 @@ async function Results({ query }: { query: string }) {
   return (
     <>
       <div className="border-b border-border px-5 py-2.5">
-        <p className="text-[12px] text-muted-foreground">
+        <p className="text-[13px] text-muted-foreground">
           {query
             ? `${patients.length} ${patients.length === 1 ? "match" : "matches"}`
             : "Most recently seen"}

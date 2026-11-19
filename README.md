@@ -127,10 +127,12 @@ are labelled "simulated" everywhere they appear. To send for real:
   sent to their mobile, book and cancel, follow their token, rate a visit.
   A waiting-room display (`/display`) and a personal live token page. Token
   numbers only on public screens, never names.
-- **Admin** — doctors (add, department, clinic hours), staff accounts (add,
-  reset password, remove access), departments, patient directory with
-  audited export, operations, reports, audit log, AI activity, integrations,
-  and communications: a template editor and a workflow builder.
+- **Admin** — a live overview of today, doctors (add, department, clinic
+  hours), staff accounts (add, reset password, remove access), queue limits,
+  patient directory with audited export, reports, audit log, the AI
+  assistant's clinic documents and activity, messaging channels, and
+  communications: automatic messages, a template editor and a builder for
+  custom automations.
 - **Messaging** — WhatsApp (Meta Cloud API), SMS (MSG91) and email (Resend)
   once an integration is connected; signed delivery receipts and WhatsApp
   replies into the inbox. Until then, a clearly labelled simulated gateway.
@@ -162,9 +164,8 @@ src/
                         follow-ups, messages, analytics, copilot, profile
       nurse/            the vitals station
       reception/        front desk, queue, appointments, patients, notifications
-      admin/            overview, doctors, departments, operations, reports,
+      admin/            overview, doctors, queue limits (departments), reports,
                         audit, communications, AI, integrations, settings
-      design/           design system reference
     (auth)/             sign-in, forgot and reset password
     display/            the waiting-room screen
     q/[code]/           a patient's live token page (signed link)

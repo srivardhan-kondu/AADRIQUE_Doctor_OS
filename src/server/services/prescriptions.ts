@@ -231,22 +231,98 @@ export async function issueDraftPrescription(
   return draft.id;
 }
 
-/** The medicine catalogue, for the prescription's search box. */
-export async function searchMedications(term: string) {
+/** How this doctor last prescribed a medicine — offered when they pick it again. */
+export interface LastUse {
+  dosage: string | null;
+  frequency: string | null;
+  durationDays: number | null;
+  instructions: string | null;
+}
+
+export interface MedicationHit {
+  id: string;
+  name: string;
+  genericName: string | null;
+  form: string | null;
+  strength: string | null;
+  /** Times this doctor has issued it — what the results are ranked by. */
+  uses: number;
+  lastUse: LastUse | null;
+}
+
+const SELECT_MEDICATION = { id: true, name: true, genericName: true, form: true, strength: true } as const;
+
+/**
+ * The medicine catalogue, for the prescription's search box (spec §6).
+ *
+ * Ranked by how often the signed-in doctor prescribes each medicine, and
+ * carrying how they last prescribed it, so the usual dose fills itself in.
+ * With no search term it returns the doctor's most-prescribed medicines. The
+ * catalogue is shared; the usage is read only from this doctor's own issued
+ * prescriptions.
+ */
+export async function searchMedications(actor: RequestActor, term: string): Promise<MedicationHit[]> {
+  assertPermission(actor, Permission.PRESCRIPTION_READ);
   const query = term.trim();
-  if (query.length < 2) return [];
-  return prisma.medication.findMany({
-    where: {
-      active: true,
-      OR: [
-        { name: { contains: query, mode: "insensitive" } },
-        { genericName: { contains: query, mode: "insensitive" } },
-      ],
-    },
-    orderBy: { name: "asc" },
-    take: 12,
-    select: { id: true, name: true, genericName: true, form: true, strength: true },
-  });
+  const doctorId = actor.doctorId;
+  const mine = doctorId ? { prescription: { doctorId, status: "ISSUED" as const } } : null;
+
+  let medications;
+  if (query.length < 2) {
+    if (!mine) return [];
+    const frequent = await prisma.prescriptionItem.groupBy({
+      by: ["medicationId"],
+      where: { ...mine, medicationId: { not: null } },
+      _count: { medicationId: true },
+      orderBy: { _count: { medicationId: "desc" } },
+      take: 8,
+    });
+    const ids = frequent.map((f) => f.medicationId).filter((id): id is string => Boolean(id));
+    if (ids.length === 0) return [];
+    medications = await prisma.medication.findMany({
+      where: { id: { in: ids }, active: true },
+      select: SELECT_MEDICATION,
+    });
+  } else {
+    medications = await prisma.medication.findMany({
+      where: {
+        active: true,
+        OR: [
+          { name: { contains: query, mode: "insensitive" } },
+          { genericName: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      orderBy: { name: "asc" },
+      take: 30,
+      select: SELECT_MEDICATION,
+    });
+  }
+
+  if (!mine || medications.length === 0) {
+    return medications.slice(0, 12).map((m) => ({ ...m, uses: 0, lastUse: null }));
+  }
+
+  const ids = medications.map((m) => m.id);
+  const [counts, last] = await Promise.all([
+    prisma.prescriptionItem.groupBy({
+      by: ["medicationId"],
+      where: { ...mine, medicationId: { in: ids } },
+      _count: { medicationId: true },
+    }),
+    prisma.prescriptionItem.findMany({
+      where: { ...mine, medicationId: { in: ids } },
+      orderBy: { prescription: { issuedAt: "desc" } },
+      distinct: ["medicationId"],
+      select: { medicationId: true, dosage: true, frequency: true, durationDays: true, instructions: true },
+    }),
+  ]);
+  const uses = new Map(counts.map((c) => [c.medicationId, c._count.medicationId]));
+  const lastUse = new Map(last.map(({ medicationId, ...rest }) => [medicationId, rest]));
+
+  return medications
+    .map((m) => ({ ...m, uses: uses.get(m.id) ?? 0, lastUse: lastUse.get(m.id) ?? null }))
+    .sort((a, b) => b.uses - a.uses || a.name.localeCompare(b.name))
+    .slice(0, 12);
 }
 
 /** Everything a printed prescription carries (spec §6). */

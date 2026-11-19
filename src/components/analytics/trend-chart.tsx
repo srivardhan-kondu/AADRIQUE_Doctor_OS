@@ -227,13 +227,13 @@ export function TrendChart({
             top: Math.max(0, y(active.value) - 52),
           }}
         >
-          <p className="font-display text-[13px] font-medium tabular">
+          <p className="font-display text-[14px] font-medium tabular">
             {active.value}{" "}
             <span className="font-normal text-muted-foreground">
               {valueLabel}
             </span>
           </p>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-[12px] text-muted-foreground">
             {formatFullDay(active.at)}
           </p>
         </div>

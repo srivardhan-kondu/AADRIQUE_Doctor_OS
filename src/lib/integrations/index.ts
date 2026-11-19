@@ -186,41 +186,17 @@ class EmailAdapter extends BaseAdapter {
   }
 }
 
-class LabAdapter extends BaseAdapter {
-  readonly category = "LAB" as const;
-  readonly provider = "thyrocare";
-  readonly requiredConfig = ["centreCode"] as const;
-
-  async sync(context: IntegrationContext): Promise<SyncResult> {
-    const missing = this.missingRequirements(context);
-    if (missing) throw new Error(missing);
-    return {
-      processed: 0,
-      detail: "No new results since the last pull.",
-    };
-  }
-}
-
-class PharmacyAdapter extends BaseAdapter {
-  readonly category = "PHARMACY" as const;
-  readonly provider = "internal-pharmacy";
-  readonly requiresCredential = false;
-}
-
-class HmsAdapter extends BaseAdapter {
-  readonly category = "HMS" as const;
-  readonly provider = "legacy-hms";
-  readonly requiredConfig = ["baseUrl"] as const;
-}
-
 const ADAPTERS: IntegrationProvider[] = [
   new WhatsAppAdapter(),
   new SmsAdapter(),
   new EmailAdapter(),
-  new LabAdapter(),
-  new PharmacyAdapter(),
-  new HmsAdapter(),
 ];
+
+/**
+ * The categories with a working adapter. Lab, pharmacy and HMS exist in the
+ * schema for later, but nothing talks to them yet, so they are not offered.
+ */
+export const SUPPORTED_CATEGORIES = ["WHATSAPP", "SMS", "EMAIL"] as const satisfies readonly IntegrationCategory[];
 
 /**
  * The adapter for a stored integration.

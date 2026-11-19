@@ -26,7 +26,7 @@ export function TwoFactorForm({ enabled }: { enabled: boolean }) {
 
   const codeInput = (
     <div>
-      <label htmlFor="totp" className="mb-1.5 block text-[13px] font-medium">
+      <label htmlFor="totp" className="mb-1.5 block text-[14px] font-medium">
         Code from the app
       </label>
       <Input
@@ -42,7 +42,7 @@ export function TwoFactorForm({ enabled }: { enabled: boolean }) {
   );
 
   const alert = error && (
-    <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2.5 text-[13px] text-destructive">
+    <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2.5 text-[14px] text-destructive">
       {error}
     </p>
   );
@@ -54,7 +54,7 @@ export function TwoFactorForm({ enabled }: { enabled: boolean }) {
           <ShieldCheck className="size-4" />
           Two-factor sign-in is on.
         </p>
-        <p className="text-[13px] text-muted-foreground">
+        <p className="text-[14px] text-muted-foreground">
           To turn it off, type a current code. If you lose your phone, ask your administrator to reset your password —
           that also resets two-factor.
         </p>
@@ -71,7 +71,7 @@ export function TwoFactorForm({ enabled }: { enabled: boolean }) {
   if (!setup) {
     return (
       <div className="space-y-4">
-        <p className="text-[13px] text-muted-foreground">
+        <p className="text-[14px] text-muted-foreground">
           After your password, sign-in will ask for a six-digit code from an authenticator app on your phone — Google
           Authenticator, Microsoft Authenticator, 1Password or similar.
         </p>
@@ -97,7 +97,7 @@ export function TwoFactorForm({ enabled }: { enabled: boolean }) {
 
   return (
     <div className="space-y-4">
-      <p className="text-[13px]">1. Scan this with your authenticator app.</p>
+      <p className="text-[14px]">1. Scan this with your authenticator app.</p>
       <div
         className="mx-auto w-48 rounded-lg bg-white p-2"
         aria-label="QR code for your authenticator app"
@@ -105,14 +105,14 @@ export function TwoFactorForm({ enabled }: { enabled: boolean }) {
         // Our own SVG, drawn on the server from the otpauth link.
         dangerouslySetInnerHTML={{ __html: setup.qr }}
       />
-      <p className="text-[12px] text-muted-foreground">
+      <p className="text-[13px] text-muted-foreground">
         Can&apos;t scan? Enter this key instead:{" "}
         <code data-testid="totp-secret" className="break-all font-mono text-foreground">
           {setup.secret.match(/.{1,4}/g)?.join(" ")}
         </code>{" "}
         or <a href={setup.uri} className="underline underline-offset-4">open it in the app</a>.
       </p>
-      <p className="text-[13px]">2. Type the code it shows.</p>
+      <p className="text-[14px]">2. Type the code it shows.</p>
       {codeInput}
       {alert}
       <Button className="w-full" disabled={pending || code.length !== 6} onClick={() => run(() => confirmSetupAction(code), () => setSetup(null))}>

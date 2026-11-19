@@ -86,7 +86,7 @@ async function DoctorsScreen() {
                     <span className="truncate">{doctor.name}</span>
                     <span
                       className={cn(
-                        "inline-flex items-center gap-1 text-[11px] font-semibold",
+                        "inline-flex items-center gap-1 text-[12px] font-semibold",
                         doctor.online ? "text-success" : "text-muted-foreground",
                       )}
                     >
@@ -99,7 +99,7 @@ async function DoctorsScreen() {
                       {doctor.online ? "Online" : "Offline"}
                     </span>
                   </CardTitle>
-                  <p className="mt-0.5 truncate text-[12px] text-muted-foreground">
+                  <p className="mt-0.5 truncate text-[13px] text-muted-foreground">
                     {[doctor.department, doctor.specialization]
                       .filter(Boolean)
                       .join(" · ") || "No department set"}
@@ -118,7 +118,7 @@ async function DoctorsScreen() {
               </CardHeader>
 
               <div className="space-y-3 px-5 py-4">
-                <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[12px] sm:grid-cols-4">
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[13px] sm:grid-cols-4">
                   <Field label="Slot" value={`${doctor.consultationMinutes} min`} />
                   <Field
                     label="Today"
@@ -132,7 +132,7 @@ async function DoctorsScreen() {
                 </dl>
 
                 {(doctor.qualifications || doctor.registrationNo) && (
-                  <p className="text-[12px] text-muted-foreground">
+                  <p className="text-[13px] text-muted-foreground">
                     {doctor.qualifications}
                     {doctor.registrationNo && (
                       <>
@@ -150,11 +150,11 @@ async function DoctorsScreen() {
                 )}
 
                 <div>
-                  <p className="text-[12px] font-medium text-muted-foreground">
+                  <p className="text-[13px] font-medium text-muted-foreground">
                     Clinic hours
                   </p>
                   {doctor.availability.length === 0 ? (
-                    <p className="mt-1 text-[12px] text-muted-foreground">
+                    <p className="mt-1 text-[13px] text-muted-foreground">
                       No recurring availability set — nothing can be booked.
                     </p>
                   ) : (
@@ -162,7 +162,7 @@ async function DoctorsScreen() {
                       {doctor.availability.map((slot) => (
                         <li
                           key={slot.day}
-                          className="flex justify-between gap-3 text-[12px]"
+                          className="flex justify-between gap-3 text-[13px]"
                         >
                           <span className="text-muted-foreground">{slot.day}</span>
                           <span className="tabular">{slot.hours}</span>
@@ -183,7 +183,7 @@ async function DoctorsScreen() {
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[12px] font-medium text-muted-foreground">
+      <dt className="text-[13px] font-medium text-muted-foreground">
         {label}
       </dt>
       <dd className="mt-0.5 font-semibold tabular">{value}</dd>

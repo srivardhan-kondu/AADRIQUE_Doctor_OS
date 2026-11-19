@@ -65,10 +65,10 @@ export function UserMenu() {
           />
         </span>
         <span className="hidden min-w-0 flex-col items-start leading-tight xl:flex">
-          <span className="max-w-[150px] truncate text-[13px] font-semibold">
+          <span className="max-w-[150px] truncate text-[14px] font-semibold">
             {user.name}
           </span>
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-[12px] text-muted-foreground">
             {ROLE_LABEL[user.role]}
           </span>
         </span>
@@ -79,10 +79,10 @@ export function UserMenu() {
       <DropdownMenuContent className="w-64">
         <div className="px-2.5 py-2">
           <p className="text-sm font-semibold">{user.name}</p>
-          <p className="truncate text-[12px] text-muted-foreground">
+          <p className="truncate text-[13px] text-muted-foreground">
             {user.email}
           </p>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-[13px] text-muted-foreground">
             {user.department ? `${user.department} · ` : ""}
             {user.facility}
           </p>

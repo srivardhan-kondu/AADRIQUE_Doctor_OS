@@ -212,8 +212,14 @@ before implementing a feature.
   and white cards float on it. The sidebar sits on the same paper.
 - `font-display` is an editorial serif (Newsreader) for page titles and
   headline numbers, set at `font-normal`/`font-medium` — never bold. Card and
-  section titles, labels and tables stay in the sans (DM Sans).
+  section titles, labels and tables stay in the sans (IBM Plex Sans, chosen
+  because I, l and 1 are distinct — drug names and doses depend on it).
 - Labels are sentence case. No uppercase, letter-spaced micro-labels.
+- Doctors read at arm's length between patients: nothing smaller than
+  12px, and what they act on (names, allergies, drugs, doses, vitals) at
+  14px or more, in full ink rather than muted grey.
+- Text meets 4.5:1. Orange as text is `text-accent-ink`; the bright
+  `accent` is for fills, rings and icons, where it is too light for type.
 - Honey (`bg-highlight`, `bg-highlight-soft`) marks "you are here" and
   "today"; it is never a status colour.
 - Buttons, tabs and badges are pills; inputs are `rounded-lg`.

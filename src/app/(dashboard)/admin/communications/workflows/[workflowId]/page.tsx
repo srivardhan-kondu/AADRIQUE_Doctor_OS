@@ -58,8 +58,8 @@ export default async function WorkflowPage({
   return (
     <PageBody>
       <PageHeader
-        title={workflow.id ? workflow.name : "New workflow"}
-        description="When something happens, then these steps, in order. A condition that is not met stops the run."
+        title={workflow.id ? workflow.name : "Custom automation"}
+        description="When something happens, then these steps, in order. If a check is not met, nothing more is sent."
         actions={
           <Button asChild variant="ghost">
             <Link href="/admin/communications"><ArrowLeft />Communications</Link>
@@ -67,7 +67,7 @@ export default async function WorkflowPage({
         }
       />
       {workflow.problem && (
-        <p className="mb-4 rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-[13px] text-destructive">
+        <p className="mb-4 rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-[14px] text-destructive">
           The stored steps could not be read: {workflow.problem} Rebuild them below.
         </p>
       )}

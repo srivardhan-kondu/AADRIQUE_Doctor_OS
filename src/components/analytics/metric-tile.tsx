@@ -56,7 +56,7 @@ export function MetricTile({
 
   return (
     <Card className="px-4 py-3.5">
-      <p className="text-[12px] font-medium text-muted-foreground">
+      <p className="text-[13px] font-medium text-muted-foreground">
         {label}
       </p>
 
@@ -75,17 +75,17 @@ export function MetricTile({
 
       <div className="mt-1 min-h-4">
         {empty ? (
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-[12px] text-muted-foreground">
             {hint ?? "Nothing recorded in this period"}
           </p>
         ) : metric.delta === null ? (
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-[12px] text-muted-foreground">
             No earlier period to compare
           </p>
         ) : (
           <p
             className={cn(
-              "inline-flex items-center gap-1 text-[11px] font-semibold",
+              "inline-flex items-center gap-1 text-[12px] font-semibold",
               good === null
                 ? "text-muted-foreground"
                 : good

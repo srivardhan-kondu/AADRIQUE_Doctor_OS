@@ -219,14 +219,6 @@ enum FollowUpStatus {
   CANCELLED
 }
 
-enum CampaignStatus {
-  DRAFT
-  SCHEDULED
-  RUNNING
-  COMPLETED
-  CANCELLED
-}
-
 /// Spec §20 — notification priority levels.
 enum NotificationLevel {
   NORMAL
@@ -279,7 +271,6 @@ enum AIActionType {
   PATIENT_SUMMARY
   PRE_CONSULTATION_BRIEF
   CONSULTATION_NOTE_DRAFT
-  VOICE_TO_NOTE
   FOLLOW_UP_MESSAGE
   HISTORY_SEARCH
   KNOWLEDGE_ANSWER
@@ -352,7 +343,6 @@ model Organization {
   queues          Queue[]
   messages        Message[]
   templates       MessageTemplate[]
-  campaigns       CommunicationCampaign[]
   followUps       FollowUp[]
   feedback        Feedback[]
   notifications   Notification[]
@@ -562,6 +552,10 @@ model DoctorProfile {
   tokenPrefix         String  @default("A")
   acceptsWalkIns      Boolean @default(true)
   online              Boolean @default(false)
+
+  /// The doctor's own shortcuts: quick-text phrases for the note and
+  /// prescription sets. Validated by `src/server/services/favourites.ts`.
+  favourites Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1182,7 +1176,6 @@ model Message {
   patientId      String?
   appointmentId  String?
   templateId     String?
-  campaignId     String?
 
   channel   MessageChannel
   direction MessageDirection @default(OUTBOUND)
@@ -1214,42 +1207,12 @@ model Message {
   patient      Patient?               @relation(fields: [patientId], references: [id], onDelete: Cascade)
   appointment  Appointment?           @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
   template     MessageTemplate?       @relation(fields: [templateId], references: [id], onDelete: SetNull)
-  campaign     CommunicationCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
   sentBy       User?                  @relation("MessageSentBy", fields: [sentById], references: [id], onDelete: SetNull)
 
   @@index([patientId, createdAt])
   @@index([organizationId, status])
   @@index([organizationId, createdAt])
   @@index([providerRef])
-}
-
-model CommunicationCampaign {
-  id             String @id @default(cuid())
-  organizationId String
-
-  name        String
-  description String?
-  channel     MessageChannel
-  status      CampaignStatus @default(DRAFT)
-
-  /// Audience rule, evaluated server-side at send time.
-  audienceFilter Json    @default("{}")
-  scheduledFor   DateTime?
-  startedAt      DateTime?
-  completedAt    DateTime?
-
-  recipientCount Int @default(0)
-  sentCount      Int @default(0)
-  failedCount    Int @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  messages Message[]
-
-  @@index([organizationId, status])
 }
 
 model FollowUp {

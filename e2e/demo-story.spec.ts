@@ -30,7 +30,6 @@ test("the demo story: nurse, doctor, allergy warning, reports, patient portal", 
   await expect(doctor.getByText("146/92")).toBeVisible();
 
   // Prescribing a penicillin is flagged before anything is signed.
-  await doctor.getByRole("tab", { name: /Medications/ }).click();
   await doctor.getByRole("button", { name: "Add medicine" }).click();
   await doctor.getByLabel("Medicine 1", { exact: true }).fill("Amoxicillin 500 mg");
   await expect(doctor.getByRole("alert").filter({ hasText: /Recorded allergy/ })).toBeVisible({ timeout: 15_000 });

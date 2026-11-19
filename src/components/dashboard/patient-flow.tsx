@@ -26,7 +26,7 @@ export function PatientFlow({ flow }: { flow: DashboardData["flow"] }) {
       <CardHeader>
         <div>
           <CardTitle>Patient Flow</CardTitle>
-          <p className="mt-1 text-[13px] text-muted-foreground">
+          <p className="mt-1 text-[14px] text-muted-foreground">
             Where today&apos;s patients are right now
           </p>
         </div>
@@ -53,7 +53,7 @@ export function PatientFlow({ flow }: { flow: DashboardData["flow"] }) {
                       {count}
                     </span>
                   </div>
-                  <p className="mt-1.5 truncate text-[11px] font-medium text-muted-foreground">
+                  <p className="mt-1.5 truncate text-[12px] font-medium text-muted-foreground">
                     {stage.label}
                   </p>
                   {/* A proportional bar reads faster than the number alone. */}

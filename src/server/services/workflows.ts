@@ -929,11 +929,15 @@ export interface WorkflowRunRow {
 export async function listRecentRuns(
   actor: RequestActor,
   limit = 25,
+  options: { failedOnly?: boolean } = {},
 ): Promise<WorkflowRunRow[]> {
   assertPermission(actor, Permission.COMMUNICATION_TEMPLATE_MANAGE);
 
   const runs = await prisma.workflowRun.findMany({
-    where: { workflow: tenantScope(actor) },
+    where: {
+      workflow: tenantScope(actor),
+      ...(options.failedOnly ? { status: "FAILED" as const } : {}),
+    },
     orderBy: { startedAt: "desc" },
     take: limit,
     select: {

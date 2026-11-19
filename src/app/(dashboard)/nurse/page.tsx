@@ -85,7 +85,7 @@ function Section({
   if (patients.length === 0) return null;
   return (
     <section>
-      <h2 className="mb-2 text-[12px] font-medium text-muted-foreground">
+      <h2 className="mb-2 text-[13px] font-medium text-muted-foreground">
         {title}
       </h2>
       <Card className="divide-y divide-border">
@@ -101,20 +101,20 @@ function Section({
                   </Badge>
                 )}
               </p>
-              <p className="text-[12px] text-muted-foreground">
+              <p className="text-[13px] text-muted-foreground">
                 <span className="font-mono">{p.mrn}</span>
                 {p.age !== null && ` · ${p.age}y`} · <span className="capitalize">{p.gender.toLowerCase()}</span>
                 {` · ${p.doctorName}`}
                 {p.reason && ` · ${p.reason}`}
               </p>
               {p.allergies.length > 0 && (
-                <p className="mt-1 flex items-center gap-1 text-[12px] font-medium text-destructive">
+                <p className="mt-1 flex items-center gap-1 text-[13px] font-medium text-destructive">
                   <AlertTriangle className="size-3.5" />
                   Allergies: {p.allergies.join(", ")}
                 </p>
               )}
               {p.vitals && (
-                <p className="mt-1 text-[12px]">
+                <p className="mt-1 text-[13px]">
                   {p.vitals.summary}
                   {p.vitals.flags.map((f) => (
                     <Badge key={f} variant="warning" className="ml-1.5">

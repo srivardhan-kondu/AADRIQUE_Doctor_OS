@@ -128,7 +128,7 @@ export function PatientTimeline({ events }: { events: TimelineEvent[] }) {
             <section key={group.key} className="mb-6 last:mb-0">
               <h3
                 data-numeric
-                className="mb-2.5 text-[12px] font-medium text-muted-foreground"
+                className="mb-2.5 text-[13px] font-medium text-muted-foreground"
               >
                 {group.label}
               </h3>
@@ -165,7 +165,7 @@ function FilterChip({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "rounded-md border px-2.5 py-1 text-[12px] font-medium transition-colors",
+        "rounded-md border px-2.5 py-1 text-[13px] font-medium transition-colors",
         active
           ? "border-primary bg-primary text-primary-foreground"
           : "border-border bg-card text-muted-foreground hover:text-foreground",
@@ -193,7 +193,7 @@ function TimelineItem({ event }: { event: TimelineEvent }) {
 
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-center gap-2">
-          <span className="text-[13px] font-medium">{event.title}</span>
+          <span className="text-[14px] font-medium">{event.title}</span>
           {event.flag && (
             <Badge
               variant={event.flag === "ABNORMAL" ? "warning" : "destructive"}
@@ -204,12 +204,12 @@ function TimelineItem({ event }: { event: TimelineEvent }) {
           )}
         </span>
         {event.detail && (
-          <span className="mt-0.5 block text-[12px] leading-snug text-muted-foreground">
+          <span className="mt-0.5 block text-[13px] leading-snug text-muted-foreground">
             {event.detail}
           </span>
         )}
         {event.meta && (
-          <span className="mt-1 block text-[11px] text-muted-foreground">
+          <span className="mt-1 block text-[12px] text-muted-foreground">
             {event.meta}
           </span>
         )}
@@ -217,7 +217,7 @@ function TimelineItem({ event }: { event: TimelineEvent }) {
 
       <span
         data-numeric
-        className="shrink-0 text-[11px] tabular-nums text-muted-foreground"
+        className="shrink-0 text-[12px] tabular-nums text-muted-foreground"
       >
         {event.at.toLocaleTimeString("en-IN", {
           hour: "2-digit",

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, Clock } from "lucide-react";
+import { ChevronRight, Clock, FilePen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { DayGreeting } from "@/components/dashboard/day-greeting";
@@ -61,7 +61,7 @@ export function DailyBrief({
           <div className="mt-2">
             <DayGreeting name={doctor.name} details={details} online={doctor.online} />
           </div>
-          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-muted-foreground">
+          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[14px] text-muted-foreground">
             {brief.firstAppointment && (
               <span className="flex items-center gap-1.5">
                 <Clock className="size-3.5" />
@@ -100,7 +100,7 @@ export function DailyBrief({
             </Button>
           )}
           {nextPatient && (
-            <p className="mt-2.5 text-[12px] text-muted-foreground">
+            <p className="mt-2.5 text-[13px] text-muted-foreground">
               Next:{" "}
               <span className="font-mono text-foreground">{nextPatient.token}</span>{" "}
               · {nextPatient.patientName}
@@ -108,6 +108,25 @@ export function DailyBrief({
           )}
         </div>
       </div>
+
+      {metrics.unsignedNotes > 0 && (
+        // Unfinished clinical work is the one thing worth interrupting the
+        // day's numbers for.
+        <Link
+          href="/doctor/consultations?show=unsigned"
+          className="flex items-center gap-2 border-t border-border/70 bg-warning-soft/60 px-5 py-2.5 text-[14px] text-foreground transition-colors hover:bg-warning-soft"
+        >
+          <FilePen className="size-3.5 shrink-0 text-warning" />
+          <span className="min-w-0">
+            <span data-numeric className="font-semibold">
+              {metrics.unsignedNotes}
+            </span>{" "}
+            {metrics.unsignedNotes === 1 ? "note from a finished visit needs" : "notes from finished visits need"}{" "}
+            your signature
+          </span>
+          <ChevronRight className="ml-auto size-3.5 shrink-0" />
+        </Link>
+      )}
 
       <ul className="grid grid-cols-2 border-t border-border/70 sm:grid-cols-3 xl:grid-cols-6">
         {stats.map((stat) => (
@@ -125,7 +144,7 @@ export function DailyBrief({
               >
                 {stat.value}
               </span>
-              <span className="flex items-center gap-0.5 text-[13px] text-muted-foreground group-hover:text-foreground">
+              <span className="flex items-center gap-0.5 text-[14px] text-muted-foreground group-hover:text-foreground">
                 <span className="truncate">{stat.label}</span>
                 <ChevronRight className="size-3 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" />
               </span>

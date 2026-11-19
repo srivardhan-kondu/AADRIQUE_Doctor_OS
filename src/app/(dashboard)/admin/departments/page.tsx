@@ -12,7 +12,7 @@ import { Permission, hasPermission } from "@/lib/permissions";
 import { requireActor } from "@/server/context";
 import { listDepartments } from "@/server/services/admin";
 
-export const metadata: Metadata = { title: "Departments" };
+export const metadata: Metadata = { title: "Queue limits" };
 
 export const dynamic = "force-dynamic";
 
@@ -32,8 +32,8 @@ async function DepartmentsScreen() {
   if (!hasPermission(actor, Permission.ADMIN_MANAGE)) {
     return (
       <NoAccess
-        title="Departments"
-        what="to manage departments"
+        title="Queue limits"
+        what="to change queue limits"
         backHref="/admin"
         backLabel="Back to the admin overview"
       />
@@ -45,8 +45,8 @@ async function DepartmentsScreen() {
   return (
     <>
       <PageHeader
-        title="Departments"
-        description="The wait threshold and queue capacity every warning in the product is measured against."
+        title="Queue limits"
+        description="How long a patient may wait, and how many may wait, before the clinic is alerted."
       />
 
       {departments.length === 0 ? (
@@ -54,16 +54,16 @@ async function DepartmentsScreen() {
           <EmptyState
             icon={Building2}
             title="No departments yet"
-            description="Departments group doctors, queues and appointments inside a facility."
+            description="Each department's limits appear here once AADRIQUE sets up your clinic."
           />
         </Card>
       ) : (
         <Card className="p-0">
           <CardHeader className="border-b border-border">
-            <CardTitle>Queue limits</CardTitle>
-            <p className="mt-0.5 text-[12px] text-muted-foreground">
+            <CardTitle>By department</CardTitle>
+            <p className="mt-0.5 text-[13px] text-muted-foreground">
               A long wait means something different in paediatrics than in
-              orthopaedics, so each department carries its own numbers.
+              orthopaedics, so each department has its own numbers.
             </p>
           </CardHeader>
 
@@ -83,7 +83,7 @@ async function DepartmentsScreen() {
                     </Badge>
                     {!department.active && <Badge variant="outline">Inactive</Badge>}
                   </p>
-                  <p className="mt-0.5 text-[12px] text-muted-foreground">
+                  <p className="mt-0.5 text-[13px] text-muted-foreground">
                     {department.facility}
                     <span aria-hidden> · </span>
                     <span className="tabular">{department.doctorCount}</span>{" "}

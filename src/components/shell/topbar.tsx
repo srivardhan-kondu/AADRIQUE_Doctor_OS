@@ -32,7 +32,8 @@ export function Topbar({
 }: {
   onOpenPalette: () => void;
   onOpenMobileNav: () => void;
-  onToggleCopilot: () => void;
+  /** Absent when this viewer has no Copilot to open. */
+  onToggleCopilot?: () => void;
   copilotOpen: boolean;
   notifications: ShellNotification[];
 }) {
@@ -66,7 +67,7 @@ export function Topbar({
             <p className="truncate text-[16px] font-semibold leading-tight tracking-[-0.01em]">
               {greeting(now)}, {user.name.replace(/^Dr\.\s*/, "Dr. ")}
             </p>
-            <p className="mt-1 hidden min-w-0 items-center gap-2 text-[13px] text-muted-foreground sm:flex">
+            <p className="mt-1 hidden min-w-0 items-center gap-2 text-[14px] text-muted-foreground sm:flex">
               {user.department && (
                 <>
                   <span className="min-w-0 truncate">{user.department}</span>
@@ -109,7 +110,7 @@ export function Topbar({
       <button
         type="button"
         onClick={onOpenPalette}
-        className="group hidden h-10 w-64 items-center gap-2.5 rounded-full border border-border/70 bg-card pl-4 pr-2 text-left text-[13px] text-muted-foreground shadow-soft transition-colors hover:border-input hover:text-foreground md:flex xl:w-80"
+        className="group hidden h-10 w-64 items-center gap-2.5 rounded-full border border-border/70 bg-card pl-4 pr-2 text-left text-[14px] text-muted-foreground shadow-soft transition-colors hover:border-input hover:text-foreground md:flex xl:w-80"
       >
         <Search className="size-4 shrink-0" />
         <span className="flex-1 truncate">Search patients or actions</span>
@@ -130,27 +131,31 @@ export function Topbar({
 
       <NotificationCenter notifications={notifications} />
 
-      {/* Spec §6 — the Copilot panel is optional and contextual, so the shell
-          owns the toggle rather than any single screen. */}
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant={copilotOpen ? "ai" : "outline"}
-            size="sm"
-            onClick={onToggleCopilot}
-            aria-pressed={copilotOpen}
-            className="gap-1.5"
-          >
-            <Sparkles className={cn(!copilotOpen && "text-ai")} />
-            <span className="hidden sm:inline">AI Copilot</span>
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>
-          {copilotOpen ? "Hide" : "Open"} AI Copilot
-        </TooltipContent>
-      </Tooltip>
+      {onToggleCopilot && (
+        <>
+          {/* Spec §6 — the Copilot panel is optional and contextual, so the shell
+              owns the toggle rather than any single screen. */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={copilotOpen ? "ai" : "outline"}
+                size="sm"
+                onClick={onToggleCopilot}
+                aria-pressed={copilotOpen}
+                className="gap-1.5"
+              >
+                <Sparkles className={cn(!copilotOpen && "text-ai")} />
+                <span className="hidden sm:inline">AI Copilot</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {copilotOpen ? "Hide" : "Open"} AI Copilot
+            </TooltipContent>
+          </Tooltip>
 
-      <Separator orientation="vertical" className="hidden h-6 sm:block" />
+          <Separator orientation="vertical" className="hidden h-6 sm:block" />
+        </>
+      )}
 
       <UserMenu />
     </header>

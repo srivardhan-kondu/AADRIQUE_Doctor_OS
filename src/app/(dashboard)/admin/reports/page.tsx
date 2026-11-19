@@ -70,7 +70,7 @@ async function ReportsScreen({ searchParams }: PageProps) {
       <Card className="mb-5">
         <CardHeader>
           <CardTitle>OPD volume per day</CardTitle>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 text-[13px] text-muted-foreground">
             {metrics.opdVolume.value ?? 0} consultations across every
             department.
           </p>
@@ -151,7 +151,7 @@ async function ReportsScreen({ searchParams }: PageProps) {
         <Card>
           <CardHeader>
             <CardTitle>Doctor utilisation</CardTitle>
-            <p className="mt-0.5 text-[12px] text-muted-foreground">
+            <p className="mt-0.5 text-[13px] text-muted-foreground">
               Consultations against the slots each doctor&rsquo;s recurring
               availability offers. A rough measure — leave, blocks and
               overruns are not in it.
@@ -165,17 +165,17 @@ async function ReportsScreen({ searchParams }: PageProps) {
                 className="flex items-center gap-3 px-5 py-3"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-semibold">
+                  <p className="truncate text-[14px] font-semibold">
                     {doctor.name}
                   </p>
                   {doctor.department && (
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-[12px] text-muted-foreground">
                       {doctor.department}
                     </p>
                   )}
                 </div>
 
-                <span className="w-12 text-right text-[13px] font-semibold tabular">
+                <span className="w-12 text-right text-[14px] font-semibold tabular">
                   {doctor.visits}
                 </span>
 
@@ -196,7 +196,7 @@ async function ReportsScreen({ searchParams }: PageProps) {
                       }}
                     />
                   </div>
-                  <p className="mt-0.5 text-right text-[10px] tabular text-muted-foreground">
+                  <p className="mt-0.5 text-right text-[12px] tabular text-muted-foreground">
                     {doctor.utilization === null
                       ? "no hours set"
                       : `${doctor.utilization}%`}
@@ -214,7 +214,7 @@ async function ReportsScreen({ searchParams }: PageProps) {
             </CardHeader>
 
             {analytics.departments.length === 0 ? (
-              <p className="px-5 pb-5 text-[13px] text-muted-foreground">
+              <p className="px-5 pb-5 text-[14px] text-muted-foreground">
                 No consultations in this period.
               </p>
             ) : (
@@ -224,7 +224,7 @@ async function ReportsScreen({ searchParams }: PageProps) {
                     key={department.name}
                     className="flex items-center gap-3"
                   >
-                    <span className="w-36 shrink-0 truncate text-[13px]">
+                    <span className="w-36 shrink-0 truncate text-[14px]">
                       {department.name}
                     </span>
                     <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
@@ -239,7 +239,7 @@ async function ReportsScreen({ searchParams }: PageProps) {
                         }}
                       />
                     </div>
-                    <span className="w-8 text-right text-[12px] font-semibold tabular">
+                    <span className="w-8 text-right text-[13px] font-semibold tabular">
                       {department.visits}
                     </span>
                   </li>
@@ -251,7 +251,7 @@ async function ReportsScreen({ searchParams }: PageProps) {
           <Card>
             <CardHeader>
               <CardTitle>Peak hours</CardTitle>
-              <p className="mt-0.5 text-[12px] text-muted-foreground">
+              <p className="mt-0.5 text-[13px] text-muted-foreground">
                 When consultations actually start, across every doctor.
               </p>
             </CardHeader>

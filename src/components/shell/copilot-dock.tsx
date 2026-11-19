@@ -86,8 +86,8 @@ export function CopilotDock({ onClose }: { onClose: () => void }) {
           <Sparkles className="size-4 text-ai" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-semibold leading-none">AI Copilot</p>
-          <p className="mt-1 text-[11px] text-muted-foreground">
+          <p className="text-[14px] font-semibold leading-none">AI Copilot</p>
+          <p className="mt-1 text-[12px] text-muted-foreground">
             Drafts and summaries you review
           </p>
         </div>
@@ -104,7 +104,7 @@ export function CopilotDock({ onClose }: { onClose: () => void }) {
               <Sparkles />
               AI generated
             </Badge>
-            <p className="text-[12px] leading-relaxed text-foreground/80">
+            <p className="text-[13px] leading-relaxed text-foreground/80">
               The Copilot summarizes, drafts and retrieves from this patient&apos;s
               recorded data. It never diagnoses, never edits a signed record and
               never sends a message on its own. Everything it produces is marked
@@ -113,7 +113,7 @@ export function CopilotDock({ onClose }: { onClose: () => void }) {
           </div>
 
           <div>
-            <p className="mb-2 text-[12px] font-medium text-muted-foreground">
+            <p className="mb-2 text-[13px] font-medium text-muted-foreground">
               Actions
             </p>
             <ul className="space-y-1.5">
@@ -126,10 +126,10 @@ export function CopilotDock({ onClose }: { onClose: () => void }) {
                   >
                     <action.icon className="mt-0.5 size-4 shrink-0 text-ai" />
                     <span className="min-w-0">
-                      <span className="block text-[13px] font-medium leading-none">
+                      <span className="block text-[14px] font-medium leading-none">
                         {action.label}
                       </span>
-                      <span className="mt-1.5 block text-[12px] leading-snug text-muted-foreground">
+                      <span className="mt-1.5 block text-[13px] leading-snug text-muted-foreground">
                         {action.description}
                       </span>
                     </span>
@@ -139,7 +139,7 @@ export function CopilotDock({ onClose }: { onClose: () => void }) {
             </ul>
           </div>
 
-          <p className="rounded-lg bg-muted px-3 py-2.5 text-[12px] leading-relaxed text-muted-foreground">
+          <p className="rounded-lg bg-muted px-3 py-2.5 text-[13px] leading-relaxed text-muted-foreground">
             A brief and the note copilot live inside the consultation itself.
             Open a patient from your queue to use them there.
           </p>

@@ -93,7 +93,7 @@ export function InboxFilters({
             aria-pressed={channel === option.value}
             onClick={() => push({ channel: option.value || null })}
             className={cn(
-              "rounded px-2.5 py-1 text-[12px] font-semibold transition-colors",
+              "rounded px-2.5 py-1 text-[13px] font-semibold transition-colors",
               channel === option.value
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -109,7 +109,7 @@ export function InboxFilters({
         aria-pressed={failedOnly}
         onClick={() => push({ failed: failedOnly ? null : "1" })}
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-[12px] font-semibold transition-colors",
+          "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-[13px] font-semibold transition-colors",
           failedOnly
             ? "border-destructive bg-destructive-soft text-destructive"
             : "border-border bg-card text-muted-foreground hover:text-foreground",

@@ -91,7 +91,7 @@ export default async function PortalHomePage({
         Hello, {portal.patient.firstName}
       </h1>
       {portal.patients.length > 1 && (
-        <p className="mt-1 text-[13px] text-muted-foreground">
+        <p className="mt-1 text-[14px] text-muted-foreground">
           Signed in for {portal.patient.name}.
         </p>
       )}
@@ -99,11 +99,11 @@ export default async function PortalHomePage({
       <div className="mt-6 space-y-5">
         {home.token && (
           <Card className="flex items-center gap-4 border-accent/40 bg-accent-soft/40 p-5">
-            <Ticket className="size-6 shrink-0 text-accent" />
+            <Ticket className="size-6 shrink-0 text-accent-ink" />
             <div className="min-w-0 flex-1">
-              <p className="text-[13px] text-muted-foreground">Your token today</p>
+              <p className="text-[14px] text-muted-foreground">Your token today</p>
               <p className="font-mono text-2xl font-bold">{home.token.token}</p>
-              <p className="text-[13px] text-muted-foreground">{home.token.doctorName}</p>
+              <p className="text-[14px] text-muted-foreground">{home.token.doctorName}</p>
             </div>
             {home.token.statusPath && (
               <Button asChild>
@@ -128,7 +128,7 @@ export default async function PortalHomePage({
               <li key={a.id} className="flex items-center justify-between gap-3 px-4 py-3">
                 <div className="min-w-0">
                   <p className="text-[15px] font-semibold">{when(a.start)}</p>
-                  <p className="text-[13px] text-muted-foreground">
+                  <p className="text-[14px] text-muted-foreground">
                     {a.doctorName}
                     {a.department ? ` · ${a.department}` : ""}
                   </p>
@@ -146,7 +146,7 @@ export default async function PortalHomePage({
             {home.followUps.map((f) => (
               <li key={f.id} className="px-4 py-3">
                 <p className="text-[15px] font-semibold">Due {day(f.dueDate)}</p>
-                <p className="text-[13px] text-muted-foreground">
+                <p className="text-[14px] text-muted-foreground">
                   {f.reason ?? "Review"} · {f.doctorName}
                 </p>
               </li>
@@ -172,7 +172,7 @@ export default async function PortalHomePage({
             {home.past.map((a) => (
               <li key={a.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-[14px]">
                 <span>{day(a.start)} · {a.doctorName}</span>
-                <span className="text-[12px] text-muted-foreground">
+                <span className="text-[13px] text-muted-foreground">
                   {a.status === "COMPLETED" ? "Seen" : a.status.toLowerCase().replace("_", " ")}
                 </span>
               </li>
@@ -187,7 +187,7 @@ export default async function PortalHomePage({
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="mb-2 text-[13px] font-mediumr text-muted-foreground">
+      <h2 className="mb-2 text-[14px] font-medium text-muted-foreground">
         {title}
       </h2>
       <Card className="p-0">

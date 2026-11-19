@@ -125,7 +125,11 @@ export async function checkResetToken(token: string): Promise<"valid" | "expired
   return verifyResetToken(token, { userId: user.id, ...user }, secret());
 }
 
-export async function completePasswordReset(token: string, password: string): Promise<void> {
+export async function completePasswordReset(
+  token: string,
+  password: string,
+  address?: string | null,
+): Promise<void> {
   const userId = resetTokenUserId(token);
   const user = userId
     ? await prisma.user.findFirst({
@@ -177,6 +181,8 @@ export async function completePasswordReset(token: string, password: string): Pr
     }
   }, TX_OPTIONS);
 
-  // A locked-out person who just proved their inbox can sign in straight away.
-  await resetRateLimit(signInKeys("", user.email).account);
+  // A locked-out person who just proved their inbox can sign in straight away:
+  // the account-wide counter, and the one for the address they reset from.
+  const keys = signInKeys(address ?? "unknown", user.email);
+  await Promise.all([resetRateLimit(keys.account), resetRateLimit(keys.accountAddress)]);
 }

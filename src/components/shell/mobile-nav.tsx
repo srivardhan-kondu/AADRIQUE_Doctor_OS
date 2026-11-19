@@ -65,7 +65,7 @@ export function MobileNav({
             {NAV[workspace].map((section, i) => (
               <div key={section.label ?? `section-${i}`} className={cn(i > 0 && "mt-5")}>
                 {section.label && (
-                  <p className="mb-1.5 px-3 text-[12px] font-medium text-sidebar-muted">
+                  <p className="mb-1.5 px-3 text-[13px] font-medium text-sidebar-muted">
                     {section.label}
                   </p>
                 )}
@@ -89,14 +89,14 @@ export function MobileNav({
                           <item.icon
                             className={cn(
                               "size-[18px] shrink-0",
-                              active ? "text-accent" : "text-sidebar-muted",
+                              active ? "text-accent-ink" : "text-sidebar-muted",
                             )}
                           />
                           <span className="truncate">{item.label}</span>
                           {count !== undefined && count > 0 && (
                             <span
                               data-numeric
-                              className="ml-auto min-w-5 rounded-full bg-foreground/[0.06] px-1.5 py-0.5 text-center text-[11px] font-semibold"
+                              className="ml-auto min-w-5 rounded-full bg-foreground/[0.06] px-1.5 py-0.5 text-center text-[12px] font-semibold"
                             >
                               {count}
                             </span>

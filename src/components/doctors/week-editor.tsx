@@ -67,7 +67,7 @@ export function WeekEditor({
       <CardHeader>
         <div>
           <CardTitle>{title}</CardTitle>
-          <p className="mt-1 text-[13px] text-muted-foreground">
+          <p className="mt-1 text-[14px] text-muted-foreground">
             {week.some((r) => !r.isBlock)
               ? "Appointments can be booked inside these sessions."
               : "No sessions yet — nothing can be booked until hours are set."}
@@ -102,10 +102,10 @@ function Summary({ week }: { week: WeeklyRule[] }) {
         const breaks = week.filter((r) => r.dayOfWeek === day && r.isBlock);
         return (
           <div key={day} className="flex items-baseline justify-between gap-4 py-2">
-            <dt className="w-24 shrink-0 text-[13px] text-muted-foreground">
+            <dt className="w-24 shrink-0 text-[14px] text-muted-foreground">
               {DAY_NAMES[day]}
             </dt>
-            <dd className="min-w-0 text-right text-[13px]">
+            <dd className="min-w-0 text-right text-[14px]">
               {sessions.length === 0 ? (
                 <span className="text-muted-foreground">Closed</span>
               ) : (
@@ -116,7 +116,7 @@ function Summary({ week }: { week: WeeklyRule[] }) {
                 </span>
               )}
               {breaks.length > 0 && (
-                <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                <span className="mt-0.5 block text-[12px] text-muted-foreground">
                   {breaks
                     .map(
                       (b) =>
@@ -240,13 +240,13 @@ function Editor({
 
           return (
             <li key={day} className="flex flex-wrap items-start gap-3 py-3">
-              <span className="w-24 shrink-0 pt-1.5 text-[13px] font-medium">
+              <span className="w-24 shrink-0 pt-1.5 text-[14px] font-medium">
                 {DAY_NAMES[day]}
               </span>
 
               <div className="min-w-0 flex-1 space-y-2">
                 {dayRows.length === 0 && (
-                  <p className="pt-1.5 text-[13px] text-muted-foreground">Closed</p>
+                  <p className="pt-1.5 text-[14px] text-muted-foreground">Closed</p>
                 )}
                 {dayRows.map((row) => (
                   <div key={row.key} className="flex flex-wrap items-center gap-2">
@@ -323,7 +323,7 @@ function Editor({
       {error && (
         <p
           role="alert"
-          className="mt-3 rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-[13px] text-destructive"
+          className="mt-3 rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-[14px] text-destructive"
         >
           {error}
         </p>

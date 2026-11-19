@@ -55,7 +55,7 @@ export function PasswordForm({ forced }: { forced: boolean }) {
       {state.error && (
         <p
           role="alert"
-          className="rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-[13px] text-destructive"
+          className="rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-[14px] text-destructive"
         >
           {state.error}
         </p>
@@ -65,7 +65,7 @@ export function PasswordForm({ forced }: { forced: boolean }) {
         {pending && <LoaderCircle className="animate-spin" />}
         Change password
       </Button>
-      <p className="text-center text-[12px] text-muted-foreground">
+      <p className="text-center text-[13px] text-muted-foreground">
         Every other device you are signed in on will be signed out.
       </p>
     </form>
@@ -85,11 +85,11 @@ function Field({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="text-[13px] font-medium">
+      <label htmlFor={id} className="text-[14px] font-medium">
         {label}
       </label>
       <div className="mt-1.5">{children}</div>
-      {hint && <p className="mt-1 text-[12px] text-muted-foreground">{hint}</p>}
+      {hint && <p className="mt-1 text-[13px] text-muted-foreground">{hint}</p>}
     </div>
   );
 }

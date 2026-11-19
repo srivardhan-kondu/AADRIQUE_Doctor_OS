@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
@@ -31,6 +32,7 @@ import {
   setQueueStatusAction,
   skipAction,
   type ActionResult,
+  type CloseChoice,
 } from "@/app/(dashboard)/doctor/queue/actions";
 
 /**
@@ -41,19 +43,29 @@ import {
  * (spec §35 rule 5).
  */
 
+type Run = (choice?: CloseChoice) => Promise<ActionResult>;
+
 function useAction() {
   const router = useRouter();
   const [pending, startTransition] = React.useTransition();
+  // A refused close-out waiting on the doctor's choice, with how to retry it.
+  const [unsigned, setUnsigned] = React.useState<{
+    visitId: string;
+    patientName: string;
+    fn: Run;
+  } | null>(null);
 
   const run = React.useCallback(
-    (fn: () => Promise<ActionResult>) => {
+    (fn: Run, choice?: CloseChoice) => {
       startTransition(async () => {
-        const result = await fn();
+        const result = await fn(choice);
 
         if (result.ok) {
           if (result.message) toast.success(result.message);
           if (result.redirectTo) router.push(result.redirectTo);
           else router.refresh();
+        } else if (result.unsigned) {
+          setUnsigned({ ...result.unsigned, fn });
         } else {
           // Spec §38 — say what happened and what to do next.
           toast.error(result.message ?? "That did not work.", {
@@ -65,7 +77,63 @@ function useAction() {
     [router],
   );
 
-  return { pending, run };
+  const dialog = (
+    <UnsignedNoteDialog
+      state={unsigned}
+      onContinue={() => unsigned && run(unsigned.fn, { leaveUnsigned: true })}
+      onClose={() => setUnsigned(null)}
+    />
+  );
+
+  return { pending, run, dialog };
+}
+
+/**
+ * The visit being closed has a note the doctor wrote and has not signed.
+ * Signing it is one click away; leaving it is allowed, but said out loud.
+ */
+function UnsignedNoteDialog({
+  state,
+  onContinue,
+  onClose,
+}: {
+  state: { visitId: string; patientName: string } | null;
+  onContinue: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <Dialog open={state !== null} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{state?.patientName}&apos;s note is not signed</DialogTitle>
+          <DialogDescription>
+            If you continue, their visit closes with the note still a draft and
+            its prescription not issued. You can sign it later from
+            Consultations.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              onContinue();
+              onClose();
+            }}
+          >
+            Continue without signing
+          </Button>
+          {state && (
+            <Button asChild onClick={onClose}>
+              <Link href={`/doctor/consultations/${state.visitId}`}>
+                Open note to sign
+                <ArrowRight />
+              </Link>
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 /** Spec §41-B — the single most important button in the product. */
@@ -76,7 +144,7 @@ export function CallNextButton({
   disabled?: boolean;
   waitingCount: number;
 }) {
-  const { pending, run } = useAction();
+  const { pending, run, dialog } = useAction();
 
   // Spec §19 — high-frequency action, so it gets a shortcut.
   React.useEffect(() => {
@@ -92,7 +160,7 @@ export function CallNextButton({
         return;
       }
       e.preventDefault();
-      if (!disabled && waitingCount > 0) run(callNextAction);
+      if (!disabled && waitingCount > 0) run((choice) => callNextAction(choice));
     }
 
     window.addEventListener("keydown", onKeyDown);
@@ -100,21 +168,24 @@ export function CallNextButton({
   }, [disabled, waitingCount, run]);
 
   return (
-    <Button
-      variant="accent"
-      size="lg"
-      disabled={disabled || pending || waitingCount === 0}
-      onClick={() => run(callNextAction)}
-      className="gap-2"
-    >
-      {pending ? <LoaderCircle className="animate-spin" /> : <Stethoscope />}
-      {pending ? "Calling…" : "Call next"}
-      {!pending && waitingCount > 0 && (
-        <Kbd className="border-brand-700/40 bg-brand-700/30 text-accent-foreground">
-          N
-        </Kbd>
-      )}
-    </Button>
+    <>
+      {dialog}
+      <Button
+        variant="accent"
+        size="lg"
+        disabled={disabled || pending || waitingCount === 0}
+        onClick={() => run((choice) => callNextAction(choice))}
+        className="gap-2"
+      >
+        {pending ? <LoaderCircle className="animate-spin" /> : <Stethoscope />}
+        {pending ? "Calling…" : "Call next"}
+        {!pending && waitingCount > 0 && (
+          <Kbd className="border-brand-700/40 bg-brand-700/30 text-accent-foreground">
+            N
+          </Kbd>
+        )}
+      </Button>
+    </>
   );
 }
 
@@ -124,19 +195,22 @@ export function CallNextButton({
  * schedule" in its place.
  */
 export function StartMyDayButton() {
-  const { pending, run } = useAction();
+  const { pending, run, dialog } = useAction();
 
   return (
-    <Button
-      size="lg"
-      variant="accent"
-      disabled={pending}
-      onClick={() => run(callNextAction)}
-    >
-      {pending ? <LoaderCircle className="animate-spin" /> : null}
-      {pending ? "Calling in…" : "Start my day"}
-      {!pending && <ArrowRight />}
-    </Button>
+    <>
+      {dialog}
+      <Button
+        size="lg"
+        variant="accent"
+        disabled={pending}
+        onClick={() => run((choice) => callNextAction(choice))}
+      >
+        {pending ? <LoaderCircle className="animate-spin" /> : null}
+        {pending ? "Calling in…" : "Start my day"}
+        {!pending && <ArrowRight />}
+      </Button>
+    </>
   );
 }
 
@@ -148,34 +222,40 @@ export function StartConsultationButton({
   queueEntryId: string;
   isNext: boolean;
 }) {
-  const { pending, run } = useAction();
+  const { pending, run, dialog } = useAction();
 
   return (
-    <Button
-      variant={isNext ? "accent" : "outline"}
-      size="sm"
-      disabled={pending}
-      onClick={() => run(() => callPatientAction(queueEntryId))}
-    >
-      {pending ? <LoaderCircle className="animate-spin" /> : <Stethoscope />}
-      Start consultation
-    </Button>
+    <>
+        {dialog}
+        <Button
+          variant={isNext ? "accent" : "outline"}
+          size="sm"
+          disabled={pending}
+          onClick={() => run((choice) => callPatientAction(queueEntryId, choice))}
+        >
+          {pending ? <LoaderCircle className="animate-spin" /> : <Stethoscope />}
+          Start consultation
+        </Button>
+    </>
   );
 }
 
 export function CompleteButton({ queueEntryId }: { queueEntryId: string }) {
-  const { pending, run } = useAction();
+  const { pending, run, dialog } = useAction();
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      disabled={pending}
-      onClick={() => run(() => completeAction(queueEntryId))}
-    >
-      {pending ? <LoaderCircle className="animate-spin" /> : <CheckCircle2 />}
-      Complete
-    </Button>
+    <>
+        {dialog}
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={pending}
+          onClick={() => run((choice) => completeAction(queueEntryId, choice))}
+        >
+          {pending ? <LoaderCircle className="animate-spin" /> : <CheckCircle2 />}
+          Complete
+        </Button>
+    </>
   );
 }
 

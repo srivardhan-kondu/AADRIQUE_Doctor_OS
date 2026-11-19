@@ -78,7 +78,7 @@ async function AnalyticsScreen({ searchParams }: PageProps) {
         <CardHeader className="flex-row items-start justify-between gap-3">
           <div>
             <CardTitle>Patients seen per day</CardTitle>
-            <p className="mt-0.5 text-[12px] text-muted-foreground">
+            <p className="mt-0.5 text-[13px] text-muted-foreground">
               {metrics.patientsSeen.value ?? 0} consultations, averaging{" "}
               <span className="tabular">{metrics.patientsPerDay.value ?? 0}</span>{" "}
               a day.
@@ -152,7 +152,7 @@ async function AnalyticsScreen({ searchParams }: PageProps) {
         <Card>
           <CardHeader>
             <CardTitle>When your patients arrive</CardTitle>
-            <p className="mt-0.5 text-[12px] text-muted-foreground">
+            <p className="mt-0.5 text-[13px] text-muted-foreground">
               {analytics.busiestHour === null
                 ? "Not enough consultations to see a pattern yet."
                 : `Busiest around ${formatHour(analytics.busiestHour)}.`}

@@ -120,7 +120,7 @@ export function NotificationCenter({
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <div>
             <p className="text-sm font-semibold">Notifications</p>
-            <p className="text-[12px] text-muted-foreground">
+            <p className="text-[13px] text-muted-foreground">
               {unread > 0 ? `${unread} unread` : "You're all caught up"}
             </p>
           </div>
@@ -136,7 +136,7 @@ export function NotificationCenter({
           /* Spec §36 — useful empty states, never "No data found". */
           <div className="px-4 py-10 text-center">
             <p className="text-sm font-medium">Nothing needs you right now</p>
-            <p className="mt-1 text-[13px] text-muted-foreground">
+            <p className="mt-1 text-[14px] text-muted-foreground">
               Queue alerts and AI briefs will appear here as they happen.
             </p>
           </div>
@@ -165,7 +165,7 @@ export function NotificationCenter({
                         <span className="flex items-center gap-2">
                           <span
                             className={cn(
-                              "text-[12px] font-medium",
+                              "text-[13px] font-medium",
                               meta.text,
                             )}
                           >
@@ -173,15 +173,15 @@ export function NotificationCenter({
                           </span>
                           <span
                             data-numeric
-                            className="ml-auto text-[11px] text-muted-foreground"
+                            className="ml-auto text-[12px] text-muted-foreground"
                           >
                             {n.at}
                           </span>
                         </span>
-                        <span className="mt-1 block text-[13px] font-medium leading-snug">
+                        <span className="mt-1 block text-[14px] font-medium leading-snug">
                           {n.title}
                         </span>
-                        <span className="mt-0.5 block text-[12px] leading-snug text-muted-foreground">
+                        <span className="mt-0.5 block text-[13px] leading-snug text-muted-foreground">
                           {n.body}
                         </span>
                       </span>

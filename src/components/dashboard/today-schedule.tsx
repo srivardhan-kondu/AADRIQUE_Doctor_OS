@@ -20,7 +20,7 @@ export function TodaySchedule({ rows }: { rows: ScheduleRow[] }) {
       <CardHeader>
         <div>
           <CardTitle>Today&apos;s Schedule</CardTitle>
-          <p className="mt-1 text-[13px] text-muted-foreground">
+          <p className="mt-1 text-[14px] text-muted-foreground">
             {rows.length} {rows.length === 1 ? "appointment" : "appointments"}
           </p>
         </div>
@@ -54,7 +54,7 @@ export function TodaySchedule({ rows }: { rows: ScheduleRow[] }) {
                 >
                   <span
                     data-numeric
-                    className="w-[52px] shrink-0 text-[13px] font-semibold tabular-nums"
+                    className="w-[52px] shrink-0 text-[14px] font-semibold tabular-nums"
                   >
                     {row.time.toLocaleTimeString("en-IN", {
                       hour: "2-digit",
@@ -63,10 +63,10 @@ export function TodaySchedule({ rows }: { rows: ScheduleRow[] }) {
                     })}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[13px] font-medium">
+                    <span className="block truncate text-[14px] font-medium">
                       {row.patientName}
                     </span>
-                    <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
+                    <span className="mt-0.5 block truncate text-[12px] text-muted-foreground">
                       {row.reason ?? row.type.replace(/_/g, " ").toLowerCase()}
                     </span>
                   </span>

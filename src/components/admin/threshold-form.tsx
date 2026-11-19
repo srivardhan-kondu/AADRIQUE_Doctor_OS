@@ -45,7 +45,7 @@ export function ThresholdForm({
       <div>
         <label
           htmlFor={`wait-${departmentId}`}
-          className="text-[11px] font-semibold text-muted-foreground"
+          className="text-[12px] font-semibold text-muted-foreground"
         >
           Wait threshold
         </label>
@@ -59,14 +59,14 @@ export function ThresholdForm({
             onChange={(e) => setWait(e.target.value)}
             className="h-8 w-20 tabular"
           />
-          <span className="text-[12px] text-muted-foreground">min</span>
+          <span className="text-[13px] text-muted-foreground">min</span>
         </div>
       </div>
 
       <div>
         <label
           htmlFor={`capacity-${departmentId}`}
-          className="text-[11px] font-semibold text-muted-foreground"
+          className="text-[12px] font-semibold text-muted-foreground"
         >
           Queue capacity
         </label>

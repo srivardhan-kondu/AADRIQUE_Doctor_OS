@@ -40,7 +40,7 @@ export function SignInForm({ next, demo = false }: { next?: string; demo?: boole
         <div>
           <label
             htmlFor="email"
-            className="mb-1.5 block text-[13px] font-medium"
+            className="mb-1.5 block text-[14px] font-medium"
           >
             Email
           </label>
@@ -56,7 +56,7 @@ export function SignInForm({ next, demo = false }: { next?: string; demo?: boole
             aria-describedby={state.fieldErrors?.email ? "email-error" : undefined}
           />
           {state.fieldErrors?.email && (
-            <p id="email-error" className="mt-1.5 text-[12px] text-destructive">
+            <p id="email-error" className="mt-1.5 text-[13px] text-destructive">
               {state.fieldErrors.email}
             </p>
           )}
@@ -64,12 +64,12 @@ export function SignInForm({ next, demo = false }: { next?: string; demo?: boole
 
         <div>
           <div className="mb-1.5 flex items-baseline justify-between">
-            <label htmlFor="password" className="block text-[13px] font-medium">
+            <label htmlFor="password" className="block text-[14px] font-medium">
               Password
             </label>
             <Link
               href="/forgot-password"
-              className="text-[12px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+              className="text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
             >
               Forgot password?
             </Link>
@@ -103,7 +103,7 @@ export function SignInForm({ next, demo = false }: { next?: string; demo?: boole
             </button>
           </div>
           {state.fieldErrors?.password && (
-            <p id="password-error" className="mt-1.5 text-[12px] text-destructive">
+            <p id="password-error" className="mt-1.5 text-[13px] text-destructive">
               {state.fieldErrors.password}
             </p>
           )}
@@ -111,7 +111,7 @@ export function SignInForm({ next, demo = false }: { next?: string; demo?: boole
 
         {state.needsCode && (
           <div>
-            <label htmlFor="code" className="mb-1.5 block text-[13px] font-medium">
+            <label htmlFor="code" className="mb-1.5 block text-[14px] font-medium">
               Authenticator code
             </label>
             <Input
@@ -125,7 +125,7 @@ export function SignInForm({ next, demo = false }: { next?: string; demo?: boole
               autoFocus
               className="text-center font-mono tracking-[0.4em]"
             />
-            <p className="mt-1.5 text-[12px] text-muted-foreground">
+            <p className="mt-1.5 text-[13px] text-muted-foreground">
               The six digits your authenticator app shows for AADRIQUE Doctor OS.
             </p>
           </div>
@@ -137,7 +137,7 @@ export function SignInForm({ next, demo = false }: { next?: string; demo?: boole
             className="flex items-start gap-2.5 rounded-lg bg-destructive-soft px-3 py-2.5"
           >
             <AlertCircle className="mt-0.5 size-4 shrink-0 text-destructive" />
-            <p className="text-[13px] leading-snug text-destructive">
+            <p className="text-[14px] leading-snug text-destructive">
               {state.error}
             </p>
           </div>
@@ -148,7 +148,7 @@ export function SignInForm({ next, demo = false }: { next?: string; demo?: boole
 
       {demo && (
         <div className="mt-8 rounded-xl border border-border bg-muted/50 p-4">
-          <p className="text-[12px] font-medium text-muted-foreground">
+          <p className="text-[13px] font-medium text-muted-foreground">
             Demo accounts
           </p>
           <div className="mt-2.5 flex flex-wrap gap-1.5">
@@ -161,7 +161,7 @@ export function SignInForm({ next, demo = false }: { next?: string; demo?: boole
                   setPassword(DEMO_PASSWORD);
                 }}
                 className={cn(
-                  "rounded-md border px-2.5 py-1 text-[12px] font-medium transition-colors",
+                  "rounded-md border px-2.5 py-1 text-[13px] font-medium transition-colors",
                   email === account.email
                     ? "border-accent bg-accent-soft text-brand-700"
                     : "border-border bg-card text-muted-foreground hover:text-foreground",
@@ -171,7 +171,7 @@ export function SignInForm({ next, demo = false }: { next?: string; demo?: boole
             </button>
           ))}
         </div>
-        <p className="mt-2.5 text-[12px] text-muted-foreground">
+        <p className="mt-2.5 text-[13px] text-muted-foreground">
           Password for all demo accounts:{" "}
           <span className="font-mono text-foreground">{DEMO_PASSWORD}</span>
         </p>

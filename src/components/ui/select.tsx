@@ -76,7 +76,7 @@ function SelectLabel({
   return (
     <SelectPrimitive.Label
       className={cn(
-        "px-2 py-1.5 text-[12px] font-medium text-muted-foreground",
+        "px-2 py-1.5 text-[13px] font-medium text-muted-foreground",
         className,
       )}
       {...props}
@@ -102,7 +102,7 @@ function SelectItem({
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
       <span className="absolute right-2 flex size-3.5 items-center justify-center">
         <SelectPrimitive.ItemIndicator>
-          <Check className="size-4 text-accent" />
+          <Check className="size-4 text-accent-ink" />
         </SelectPrimitive.ItemIndicator>
       </span>
     </SelectPrimitive.Item>

@@ -11,7 +11,7 @@ import {
 } from "@/lib/permissions";
 import type { RequestActor } from "@/server/context";
 import { writeAudit } from "./audit";
-import { ServiceError, invalidState, notFound } from "./errors";
+import { ServiceError, UnsignedNoteError, invalidState, notFound } from "./errors";
 import {
   ACTIVE_STATUSES,
   SETTLED_STATUSES,
@@ -26,6 +26,7 @@ import {
 } from "@/server/rules/queue";
 import { fireTrigger } from "./workflows";
 import { addDays, startOfDay } from "@/server/rules/appointments";
+import { hasWrittenNote } from "@/server/rules/consultation";
 
 /**
  * Spec §12 — token and queue management.
@@ -362,6 +363,47 @@ async function loadEntry(actor: RequestActor, queueEntryId: string) {
   return entry;
 }
 
+/**
+ * Refuses to close a visit whose note the doctor has written but not signed —
+ * closing it would leave the note a draft and its prescription unissued, to be
+ * found later and finished from memory. `leaveUnsigned` is the doctor's
+ * explicit "continue anyway".
+ */
+async function assertNoteSignedOrWaived(
+  db: Prisma.TransactionClient,
+  visitId: string,
+  leaveUnsigned: boolean | undefined,
+): Promise<void> {
+  if (leaveUnsigned) return;
+  const consultation = await db.consultation.findUnique({
+    where: { visitId },
+    select: {
+      status: true,
+      symptoms: true,
+      history: true,
+      examination: true,
+      assessment: true,
+      plan: true,
+      doctorNotes: true,
+      patient: { select: { firstName: true, lastName: true } },
+    },
+  });
+  if (!consultation || consultation.status === "SIGNED") return;
+
+  const items = await db.prescriptionItem.count({
+    where: { prescription: { visitId, status: "DRAFT" } },
+  });
+  if (!hasWrittenNote(consultation, items)) return;
+
+  const { firstName, lastName } = consultation.patient;
+  throw new UnsignedNoteError(visitId, `${firstName} ${lastName ?? ""}`.trim());
+}
+
+export interface CloseOptions {
+  /** The doctor chose to close the visit with its note still a draft. */
+  leaveUnsigned?: boolean;
+}
+
 export interface CallNextResult {
   queueEntryId: string;
   visitId: string;
@@ -382,6 +424,7 @@ export async function callNext(
   doctorId: string,
   /** Call this waiting patient instead of the next in line. */
   queueEntryId?: string,
+  options: CloseOptions = {},
 ): Promise<CallNextResult | null> {
   assertPermission(actor, Permission.QUEUE_MANAGE);
 
@@ -417,6 +460,9 @@ export async function callNext(
     });
 
     if (active) {
+      if (active.visit) {
+        await assertNoteSignedOrWaived(tx, active.visit.id, options.leaveUnsigned);
+      }
       const now = new Date();
       await tx.queueEntry.update({
         where: { id: active.id },
@@ -574,6 +620,7 @@ export async function callNext(
 export async function completeConsultation(
   actor: RequestActor,
   queueEntryId: string,
+  options: CloseOptions = {},
 ): Promise<void> {
   assertPermission(actor, Permission.QUEUE_MANAGE);
 
@@ -582,6 +629,9 @@ export async function completeConsultation(
   assertCanComplete(entry.status);
 
   await prisma.$transaction(async (tx) => {
+    if (entry.visit) {
+      await assertNoteSignedOrWaived(tx, entry.visit.id, options.leaveUnsigned);
+    }
     const now = new Date();
 
     await tx.queueEntry.update({

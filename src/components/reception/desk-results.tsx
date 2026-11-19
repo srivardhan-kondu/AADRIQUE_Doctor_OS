@@ -29,7 +29,7 @@ export function DeskResults({
   return (
     <Card className="overflow-hidden">
       <div className="border-b border-border px-5 py-2.5">
-        <p className="text-[12px] text-muted-foreground">
+        <p className="text-[13px] text-muted-foreground">
           {patients.length === 0
             ? `No match for “${query}”`
             : `${patients.length} ${patients.length === 1 ? "match" : "matches"} for “${query}”`}
@@ -76,10 +76,10 @@ export function DeskResults({
                   href={`/reception/patients/${patient.id}`}
                   className="min-w-0 flex-1"
                 >
-                  <span className="block truncate text-[14px] font-semibold hover:text-accent">
+                  <span className="block truncate text-[14px] font-semibold hover:text-accent-ink">
                     {patient.name}
                   </span>
-                  <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[12px] text-muted-foreground">
+                  <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[13px] text-muted-foreground">
                     <span data-numeric className="font-mono">
                       {patient.mrn}
                     </span>

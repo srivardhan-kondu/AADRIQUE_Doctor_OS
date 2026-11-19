@@ -136,11 +136,11 @@ export function NoteCopilot({
     <div className="space-y-3 rounded-xl border border-ai-border bg-ai-soft/40 p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="flex items-center gap-2 text-[13px] font-semibold">
+          <p className="flex items-center gap-2 text-[14px] font-semibold">
             <Sparkles className="size-3.5 text-ai" />
             Documentation copilot
           </p>
-          <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+          <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">
             Your words, laid out under clinical headings. Nothing is added or
             interpreted, and nothing reaches the note until you insert it.
           </p>
@@ -169,9 +169,9 @@ export function NoteCopilot({
           onChange={(e) => setDictation(e.target.value)}
           maxLength={8000}
           placeholder="Patient reports headache for three days, no fever, sleep is poor. Known hypertensive. On examination BP 148 over 92, chest clear. Advise hydration, review in two weeks."
-          className="resize-none bg-card text-[13px]"
+          className="resize-none bg-card text-[14px]"
         />
-        <p className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <p className="mt-1 flex items-center gap-1.5 text-[12px] text-muted-foreground">
           <Mic className="size-3" />
           Dictate straight into this box with your keyboard&rsquo;s microphone.
         </p>
@@ -216,7 +216,7 @@ export function NoteCopilot({
           ) && (
             <div className="flex justify-end">
               {inserted ? (
-                <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-success">
+                <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-success">
                   <Check className="size-3.5" />
                   Added to the note — review and save
                 </span>

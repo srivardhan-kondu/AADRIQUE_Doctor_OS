@@ -5,19 +5,15 @@ import { useRouter } from "next/navigation";
 import {
   Activity,
   LoaderCircle,
-  Play,
   PlugZap,
   Power,
-  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   checkIntegrationAction,
-  runDueWorkflowsAction,
   setIntegrationConnectedAction,
-  syncIntegrationAction,
   toggleWorkflowAction,
   type ActionResult,
 } from "@/app/(dashboard)/admin/actions";
@@ -87,22 +83,6 @@ export function WorkflowToggle({
   );
 }
 
-export function RunDueWorkflowsButton() {
-  const { pending, run } = useAdminAction();
-
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      disabled={pending}
-      onClick={() => run(runDueWorkflowsAction)}
-    >
-      {pending ? <LoaderCircle className="animate-spin" /> : <Play />}
-      Run what is due
-    </Button>
-  );
-}
-
 export function IntegrationControls({
   integrationId,
   connected,
@@ -122,16 +102,6 @@ export function IntegrationControls({
       >
         {pending ? <LoaderCircle className="animate-spin" /> : <Activity />}
         Check
-      </Button>
-
-      <Button
-        variant="ghost"
-        size="sm"
-        disabled={pending}
-        onClick={() => run(() => syncIntegrationAction(integrationId))}
-      >
-        <RefreshCw />
-        Sync
       </Button>
 
       <Button

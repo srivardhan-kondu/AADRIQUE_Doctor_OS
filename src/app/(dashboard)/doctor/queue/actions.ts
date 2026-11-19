@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { PermissionError, TenantError } from "@/lib/permissions";
 import { requireActor, requireDoctorId } from "@/server/context";
-import { ServiceError } from "@/server/services/errors";
+import { ServiceError, UnsignedNoteError } from "@/server/services/errors";
 import {
   callNext,
   completeConsultation,
@@ -26,12 +26,28 @@ export interface ActionResult {
   /** What the user can do about a failure (spec §38). */
   action?: string;
   redirectTo?: string;
+  /** The visit being closed has a note the doctor wrote but did not sign. */
+  unsigned?: { visitId: string; patientName: string };
+}
+
+export interface CloseChoice {
+  /** The doctor saw the unsigned-note warning and chose to continue. */
+  leaveUnsigned?: boolean;
 }
 
 const idSchema = z.string().min(1).max(64);
+const choiceSchema = z.object({ leaveUnsigned: z.boolean().optional() }).default({});
 
 /** Turns a thrown error into something the UI can show without leaking detail. */
 function toResult(error: unknown): ActionResult {
+  if (error instanceof UnsignedNoteError) {
+    return {
+      ok: false,
+      message: error.message,
+      action: error.action,
+      unsigned: { visitId: error.visitId, patientName: error.patientName },
+    };
+  }
   if (error instanceof ServiceError) {
     return { ok: false, message: error.message, action: error.action };
   }
@@ -59,11 +75,11 @@ function refresh() {
   revalidatePath("/reception/queue");
 }
 
-export async function callNextAction(): Promise<ActionResult> {
+export async function callNextAction(choice?: CloseChoice): Promise<ActionResult> {
   try {
     const actor = await requireActor();
     const doctorId = await requireDoctorId(actor);
-    const result = await callNext(actor, doctorId);
+    const result = await callNext(actor, doctorId, undefined, choiceSchema.parse(choice));
 
     refresh();
 
@@ -82,11 +98,19 @@ export async function callNextAction(): Promise<ActionResult> {
 }
 
 /** Calls one waiting patient in, rather than whoever is next in line. */
-export async function callPatientAction(queueEntryId: string): Promise<ActionResult> {
+export async function callPatientAction(
+  queueEntryId: string,
+  choice?: CloseChoice,
+): Promise<ActionResult> {
   try {
     const actor = await requireActor();
     const doctorId = await requireDoctorId(actor);
-    const result = await callNext(actor, doctorId, idSchema.parse(queueEntryId));
+    const result = await callNext(
+      actor,
+      doctorId,
+      idSchema.parse(queueEntryId),
+      choiceSchema.parse(choice),
+    );
 
     refresh();
 
@@ -108,10 +132,13 @@ export async function callPatientAction(queueEntryId: string): Promise<ActionRes
   }
 }
 
-export async function completeAction(queueEntryId: string): Promise<ActionResult> {
+export async function completeAction(
+  queueEntryId: string,
+  choice?: CloseChoice,
+): Promise<ActionResult> {
   try {
     const actor = await requireActor();
-    await completeConsultation(actor, idSchema.parse(queueEntryId));
+    await completeConsultation(actor, idSchema.parse(queueEntryId), choiceSchema.parse(choice));
     refresh();
     return { ok: true, message: "Consultation completed." };
   } catch (error) {

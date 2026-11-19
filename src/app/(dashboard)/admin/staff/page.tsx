@@ -73,12 +73,12 @@ export default async function StaffPage() {
                     <Badge variant="warning">Temporary password</Badge>
                   )}
                 </p>
-                <p className="truncate text-[12px] text-muted-foreground">{member.email}</p>
+                <p className="truncate text-[13px] text-muted-foreground">{member.email}</p>
               </div>
               <Badge variant="outline" className="shrink-0">
                 {ROLE_LABEL[member.role]}
               </Badge>
-              <p className="hidden w-32 shrink-0 text-right text-[12px] text-muted-foreground sm:block">
+              <p className="hidden w-32 shrink-0 text-right text-[13px] text-muted-foreground sm:block">
                 {member.lastLoginAt
                   ? `Signed in ${member.lastLoginAt.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`
                   : "Never signed in"}

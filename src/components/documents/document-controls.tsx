@@ -67,13 +67,13 @@ export function UploadDocumentDialog({ patientId, visitId = null }: { patientId:
           <DialogDescription>PDF, PNG, JPEG or WebP, up to 4 MB.</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-3">
-          <label className="block text-[12px] font-medium text-muted-foreground">
+          <label className="block text-[13px] font-medium text-muted-foreground">
             Type
             <select
               name="kind"
               value={kind}
               onChange={(e) => setKind(e.target.value)}
-              className="mt-1 block h-9 w-full rounded-lg border border-input bg-background px-3 text-[13px] text-foreground"
+              className="mt-1 block h-9 w-full rounded-lg border border-input bg-background px-3 text-[14px] text-foreground"
             >
               {KINDS.map(([value, label]) => (
                 <option key={value} value={value}>
@@ -82,7 +82,7 @@ export function UploadDocumentDialog({ patientId, visitId = null }: { patientId:
               ))}
             </select>
           </label>
-          <label className="block text-[12px] font-medium text-muted-foreground">
+          <label className="block text-[13px] font-medium text-muted-foreground">
             {kind === "LAB_REPORT" ? "Test" : "Name"}
             <Input
               name="title"
@@ -92,7 +92,7 @@ export function UploadDocumentDialog({ patientId, visitId = null }: { patientId:
               className="mt-1"
             />
           </label>
-          <label className="block text-[12px] font-medium text-muted-foreground">
+          <label className="block text-[13px] font-medium text-muted-foreground">
             File
             <Input
               name="file"
@@ -104,18 +104,18 @@ export function UploadDocumentDialog({ patientId, visitId = null }: { patientId:
           </label>
           {kind === "LAB_REPORT" && (
             <>
-              <label className="block text-[12px] font-medium text-muted-foreground">
+              <label className="block text-[13px] font-medium text-muted-foreground">
                 Key findings <span className="font-normal">(optional)</span>
                 <Input name="summary" maxLength={1000} placeholder="Hb 10.2 g/dL, others normal" className="mt-1" />
               </label>
-              <label className="flex items-center gap-2 text-[13px]">
+              <label className="flex items-center gap-2 text-[14px]">
                 <input type="checkbox" name="abnormal" className="size-4" />
                 Has abnormal values
               </label>
             </>
           )}
           {error && (
-            <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-[13px] text-destructive">
+            <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-[14px] text-destructive">
               {error}
             </p>
           )}

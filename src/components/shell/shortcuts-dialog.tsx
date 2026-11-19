@@ -64,7 +64,7 @@ function Group({
 }) {
   return (
     <div>
-      <p className="mb-2 text-[12px] font-medium text-muted-foreground">
+      <p className="mb-2 text-[13px] font-medium text-muted-foreground">
         {title}
       </p>
       <ul className="space-y-1">{children}</ul>
@@ -75,12 +75,12 @@ function Group({
 function Row({ keys, label }: { keys: string[]; label: string }) {
   return (
     <li className="flex items-center justify-between gap-4 rounded-md py-1">
-      <span className="text-[13px]">{label}</span>
+      <span className="text-[14px]">{label}</span>
       <span className="flex items-center gap-1">
         {keys.map((k, i) => (
           <span key={k} className="flex items-center gap-1">
             {i > 0 && (
-              <span className="text-[10px] text-muted-foreground">then</span>
+              <span className="text-[12px] text-muted-foreground">then</span>
             )}
             <Kbd>{k}</Kbd>
           </span>

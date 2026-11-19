@@ -57,22 +57,22 @@ export function ThreadList({
                 )}
               >
                 <Avatar className="mt-0.5 size-9 shrink-0">
-                  <AvatarFallback className="text-[12px]">
+                  <AvatarFallback className="text-[13px]">
                     {initials(thread.patientName)}
                   </AvatarFallback>
                 </Avatar>
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline justify-between gap-2">
-                    <p className="truncate text-[13px] font-semibold">
+                    <p className="truncate text-[14px] font-semibold">
                       {thread.patientName}
                     </p>
-                    <span className="shrink-0 text-[11px] text-muted-foreground tabular">
+                    <span className="shrink-0 text-[12px] text-muted-foreground tabular">
                       {relativeDay(thread.lastMessageAt)}
                     </span>
                   </div>
 
-                  <p className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-muted-foreground">
+                  <p className="mt-0.5 line-clamp-2 text-[13px] leading-snug text-muted-foreground">
                     {thread.lastDirection === "INBOUND" && (
                       <span className="font-semibold text-foreground">
                         Reply:{" "}
@@ -85,12 +85,12 @@ export function ThreadList({
                     <ChannelBadge channel={thread.lastChannel} />
                     <DeliveryState status={thread.lastStatus} />
                     {thread.failedCount > 0 && (
-                      <span className="text-[12px] font-medium text-destructive">
+                      <span className="text-[13px] font-medium text-destructive">
                         {thread.failedCount} failed
                       </span>
                     )}
                     {thread.unreadInbound > 0 && (
-                      <span className="rounded-full bg-accent px-1.5 text-[10px] font-bold text-accent-foreground tabular">
+                      <span className="rounded-full bg-accent px-1.5 text-[12px] font-bold text-accent-foreground tabular">
                         {thread.unreadInbound}
                       </span>
                     )}
@@ -101,7 +101,7 @@ export function ThreadList({
           );
         })}
         {hiddenThreads > 0 && (
-          <li className="flex items-center gap-3 px-4 py-3 text-[12px] text-muted-foreground">
+          <li className="flex items-center gap-3 px-4 py-3 text-[13px] text-muted-foreground">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted">
               <Lock className="size-4" />
             </span>

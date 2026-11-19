@@ -29,7 +29,7 @@ export function PatientDocuments({
       </CardHeader>
       <CardContent>
         {documents.length === 0 ? (
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-[14px] text-muted-foreground">
             No reports yet. Upload lab results or documents the patient brings, so they sit with the record.
           </p>
         ) : (
@@ -45,16 +45,16 @@ export function PatientDocuments({
                         href={`/api/documents/${d.id}`}
                         target="_blank"
                         rel="noopener"
-                        className="block truncate text-[13px] font-medium underline-offset-4 hover:underline"
+                        className="block truncate text-[14px] font-medium underline-offset-4 hover:underline"
                       >
                         {d.name}
                       </a>
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-[12px] text-muted-foreground">
                         {DOCUMENT_KINDS[d.kind]} ·{" "}
                         {d.uploadedAt.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                         {d.uploadedBy && ` · ${d.uploadedBy}`} · {Math.max(1, Math.round(d.sizeBytes / 1024))} KB
                       </p>
-                      {d.lab?.summary && <p className="mt-0.5 text-[12px]">{d.lab.summary}</p>}
+                      {d.lab?.summary && <p className="mt-0.5 text-[13px]">{d.lab.summary}</p>}
                       {d.lab && (
                         <div className="mt-1 flex flex-wrap items-center gap-1.5">
                           {d.lab.abnormal && <Badge variant="destructive">Abnormal</Badge>}

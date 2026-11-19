@@ -80,8 +80,8 @@ export function OperationalPulse({
     <Tooltip>
       <TooltipTrigger asChild>
         <div className="rounded-xl bg-sidebar-accent px-3.5 py-2.5 text-left shadow-soft">
-          <p className="text-[12px] font-medium text-sidebar-muted">OPD health</p>
-          <p className={cn("mt-1 flex items-center gap-2 text-[13px] font-semibold", meta.text)}>
+          <p className="text-[13px] font-medium text-sidebar-muted">OPD health</p>
+          <p className={cn("mt-1 flex items-center gap-2 text-[14px] font-semibold", meta.text)}>
             {dot}
             {meta.label}
           </p>

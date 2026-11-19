@@ -58,13 +58,13 @@ export function AddOnLocked({
             {label}
             <Badge variant="accent">Add-on</Badge>
           </p>
-          <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
+          <p className="mt-1.5 text-[14px] leading-relaxed text-muted-foreground">
             {description}
           </p>
           {note && (
-            <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">{note}</p>
+            <p className="mt-1.5 text-[14px] leading-relaxed text-muted-foreground">{note}</p>
           )}
-          <p className="mt-3 text-[12px] font-medium">
+          <p className="mt-3 text-[13px] font-medium">
             Contact AADRIQUE to add it to your plan.
           </p>
         </div>

@@ -171,7 +171,7 @@ export function WorkflowEditor({
               <Card className="p-4">
                 <div className="mb-3 flex items-center gap-2">
                   <StepBadge type={step.type} />
-                  <span className="text-[12px] font-semibold text-muted-foreground">
+                  <span className="text-[13px] font-semibold text-muted-foreground">
                     Step {index + 1}
                   </span>
                   <span className="ml-auto flex gap-0.5">
@@ -209,16 +209,16 @@ export function WorkflowEditor({
 
       <div className="space-y-4">
         <Card className="p-5">
-          <p className="text-[12px] font-mediumr text-muted-foreground">
+          <p className="text-[13px] font-medium text-muted-foreground">
             In plain words
           </p>
           <ol className="mt-3 space-y-2">
-            <li className="flex items-start gap-2 text-[13px] font-semibold">
+            <li className="flex items-start gap-2 text-[14px] font-semibold">
               <StepBadge type="TRIGGER" />
               {TRIGGERS[trigger].label}
             </li>
             {steps.map((step, index) => (
-              <li key={step.key} className="flex items-start gap-2 text-[13px] text-muted-foreground">
+              <li key={step.key} className="flex items-start gap-2 text-[14px] text-muted-foreground">
                 <StepBadge type={step.type} />
                 <span>
                   {index + 1}. {describeStep(strip(step))}
@@ -229,7 +229,7 @@ export function WorkflowEditor({
         </Card>
 
         {(error || problem) && (
-          <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-[13px] text-destructive">
+          <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-[14px] text-destructive">
             {error ?? problem}
           </p>
         )}
@@ -458,7 +458,7 @@ function ActionFields({
       {step.action === "CREATE_FOLLOW_UP" && (
         <div className="flex flex-wrap gap-2">
           <Input type="number" min={0} max={365} className="w-28" aria-label="Days after" value={step.afterDays ?? 7} onChange={(e) => onChange({ ...step, afterDays: Math.max(0, Number(e.target.value) || 0) })} />
-          <span className="self-center text-[13px] text-muted-foreground">days later, for</span>
+          <span className="self-center text-[14px] text-muted-foreground">days later, for</span>
           <Input className="min-w-48 flex-1" aria-label="Reason" value={step.title ?? ""} onChange={(e) => onChange({ ...step, title: e.target.value })} placeholder="Review" maxLength={140} />
         </div>
       )}
@@ -490,7 +490,7 @@ function StepBadge({ type }: { type: "TRIGGER" | WorkflowStep["type"] }) {
 function Field({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label htmlFor={id} className="text-[12px] font-semibold text-muted-foreground">{label}</label>
+      <label htmlFor={id} className="text-[13px] font-semibold text-muted-foreground">{label}</label>
       <div className="mt-1.5">{children}</div>
     </div>
   );

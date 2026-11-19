@@ -115,10 +115,10 @@ async function Desk({ searchParams }: PageProps) {
 
       <div className="mb-5 space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-[12px] text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground">
             Search by name, mobile number, patient ID or appointment ID.
           </p>
-          <span className="hidden items-center gap-1.5 text-[12px] text-muted-foreground sm:flex">
+          <span className="hidden items-center gap-1.5 text-[13px] text-muted-foreground sm:flex">
             Focus search <Kbd>/</Kbd>
           </span>
         </div>
@@ -148,7 +148,7 @@ function Stat({ label, value, href }: { label: string; value: number; href: stri
   return (
     <Card className="transition-colors hover:border-input">
       <Link href={href} className="group block px-4 py-3.5">
-        <p className="flex items-center gap-0.5 text-[12px] font-medium text-muted-foreground group-hover:text-foreground">
+        <p className="flex items-center gap-0.5 text-[13px] font-medium text-muted-foreground group-hover:text-foreground">
           {label}
           <ChevronRight className="size-3 opacity-0 transition-opacity group-hover:opacity-100" />
         </p>

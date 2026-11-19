@@ -126,7 +126,7 @@ export function AuditFilters({
             aria-pressed={String(days) === range.value}
             onClick={() => push({ days: range.value })}
             className={cn(
-              "rounded px-2.5 py-1 text-[12px] font-semibold transition-colors",
+              "rounded px-2.5 py-1 text-[13px] font-semibold transition-colors",
               String(days) === range.value
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",

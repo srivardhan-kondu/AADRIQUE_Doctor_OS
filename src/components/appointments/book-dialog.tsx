@@ -161,7 +161,7 @@ function BookForm({
           <div>
             <label
               htmlFor="book-doctor"
-              className="text-[12px] font-semibold text-muted-foreground"
+              className="text-[13px] font-semibold text-muted-foreground"
             >
               Doctor
             </label>
@@ -188,7 +188,7 @@ function BookForm({
           <div>
             <label
               htmlFor="book-date"
-              className="text-[12px] font-semibold text-muted-foreground"
+              className="text-[13px] font-semibold text-muted-foreground"
             >
               Date
             </label>
@@ -205,7 +205,7 @@ function BookForm({
           <div className="min-w-44 flex-1">
             <label
               htmlFor="book-type"
-              className="text-[12px] font-semibold text-muted-foreground"
+              className="text-[13px] font-semibold text-muted-foreground"
             >
               Type
             </label>
@@ -234,7 +234,7 @@ function BookForm({
         <div>
           <label
             htmlFor="book-reason"
-            className="text-[12px] font-semibold text-muted-foreground"
+            className="text-[13px] font-semibold text-muted-foreground"
           >
             Reason <span className="font-normal">(optional)</span>
           </label>
@@ -289,12 +289,12 @@ export function SelectedPatient({
 }) {
   return (
     <div className="flex items-center gap-3 rounded-lg border border-accent/40 bg-accent-soft/40 px-3 py-2.5">
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent-ink">
         <UserRound className="size-4" />
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-[14px] font-semibold">{patient.name}</p>
-        <p className="text-[12px] text-muted-foreground">
+        <p className="text-[13px] text-muted-foreground">
           <span data-numeric>{patient.mrn}</span>
           {patient.age !== null && (
             <>
@@ -347,7 +347,7 @@ export function PatientPicker({
     <div>
       <label
         htmlFor={id}
-        className="text-[12px] font-semibold text-muted-foreground"
+        className="text-[13px] font-semibold text-muted-foreground"
       >
         Patient
       </label>
@@ -372,7 +372,7 @@ export function PatientPicker({
             ))}
           </div>
         ) : results.length === 0 ? (
-          <div className="px-3 py-6 text-center text-[13px] text-muted-foreground">
+          <div className="px-3 py-6 text-center text-[14px] text-muted-foreground">
             <p>
               {term
                 ? `Nobody matches “${term}”.${noMatch ? "" : " Register them at the front desk first."}`
@@ -393,10 +393,10 @@ export function PatientPicker({
                   )}
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-semibold">
+                    <p className="truncate text-[14px] font-semibold">
                       {row.name}
                     </p>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-[12px] text-muted-foreground">
                       <span data-numeric>{row.mrn}</span>
                       <span aria-hidden> · </span>
                       <span data-numeric>{row.phone}</span>

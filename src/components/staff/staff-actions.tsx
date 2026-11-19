@@ -48,7 +48,7 @@ function OneTimePassword({ password }: { password: string }) {
   const [copied, setCopied] = React.useState(false);
   return (
     <div className="space-y-2 px-6">
-      <p className="text-[13px]">
+      <p className="text-[14px]">
         Temporary password — hand it over in person. It is shown only once, and
         they will choose their own when they sign in.
       </p>
@@ -141,7 +141,7 @@ export function AddStaffDialog() {
               }}
             >
               <div>
-                <label htmlFor="staff-name" className="text-[12px] font-semibold text-muted-foreground">
+                <label htmlFor="staff-name" className="text-[13px] font-semibold text-muted-foreground">
                   Full name
                 </label>
                 <Input
@@ -154,7 +154,7 @@ export function AddStaffDialog() {
                 />
               </div>
               <div>
-                <label htmlFor="staff-email" className="text-[12px] font-semibold text-muted-foreground">
+                <label htmlFor="staff-email" className="text-[13px] font-semibold text-muted-foreground">
                   Email
                 </label>
                 <Input
@@ -168,7 +168,7 @@ export function AddStaffDialog() {
                 />
               </div>
               <div>
-                <label htmlFor="staff-role" className="text-[12px] font-semibold text-muted-foreground">
+                <label htmlFor="staff-role" className="text-[13px] font-semibold text-muted-foreground">
                   Role
                 </label>
                 <Select value={form.role} onValueChange={(role) => setForm({ ...form, role })}>
@@ -187,7 +187,7 @@ export function AddStaffDialog() {
               {error && (
                 <p
                   role="alert"
-                  className="rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-[13px] text-destructive"
+                  className="rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-[14px] text-destructive"
                 >
                   {error}
                 </p>

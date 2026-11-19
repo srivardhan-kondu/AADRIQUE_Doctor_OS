@@ -172,8 +172,9 @@ A separate workspace (also from the sparkle button in the top bar):
 - **Patient summary** — choose a patient, get a cited summary.
 - **Find in history** — ask about a patient's past ("last migraine-related
   visit").
-- **Hospital knowledge** — ask about clinic policies from the approved
-  documents ("What is the current discharge workflow?").
+- **Hospital knowledge** — ask about the clinic documents your administrator
+  has added under *AI Assistants* ("What is the current discharge
+  workflow?").
 
 Everything is marked AI, cites its sources, and waits for your review.
 

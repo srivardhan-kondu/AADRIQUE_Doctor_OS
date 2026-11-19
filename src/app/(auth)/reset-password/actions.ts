@@ -1,6 +1,8 @@
 "use server";
 
+import { headers } from "next/headers";
 import { z } from "zod";
+import { callerAddress } from "@/lib/security/rate-limit";
 import { ServiceError } from "@/server/services/errors";
 import { completePasswordReset } from "@/server/services/password-reset";
 
@@ -16,7 +18,7 @@ export async function resetPasswordAction(_prev: ResetState, form: FormData): Pr
   if (!parsed.success) return { error: "Enter a new password." };
   if (parsed.data.password !== parsed.data.confirm) return { error: "The two passwords do not match." };
   try {
-    await completePasswordReset(parsed.data.token, parsed.data.password);
+    await completePasswordReset(parsed.data.token, parsed.data.password, callerAddress(await headers()));
     return { done: true };
   } catch (error) {
     if (error instanceof ServiceError) return { error: [error.message, error.action].filter(Boolean).join(" ") };

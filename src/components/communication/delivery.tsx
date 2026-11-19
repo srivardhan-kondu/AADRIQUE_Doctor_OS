@@ -51,7 +51,7 @@ export function DeliveryState({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 text-[11px] font-semibold",
+        "inline-flex items-center gap-1 text-[12px] font-semibold",
         tone,
         className,
       )}
@@ -90,7 +90,7 @@ export function ChannelBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[12px] font-medium text-muted-foreground",
+        "inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[13px] font-medium text-muted-foreground",
         className,
       )}
     >

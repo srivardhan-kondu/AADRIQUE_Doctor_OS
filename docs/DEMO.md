@@ -131,10 +131,11 @@ follow-ups, messages and reports.
 
 *Admin window, `/admin`.*
 
-- **Reports / Operations**: visits, no-shows, waiting times, doctor load.
-- **Communications → Workflows**: the automations, as editable rules —
-  "confirm on booking, remind 24 h before, ask for feedback 2 h after". Open
-  one and show it is a readable list of steps, not code.
+- **Overview**: how today is running and what needs attention.
+- **Reports**: visits, no-shows, waiting times, doctor load.
+- **Communications**: the automatic messages — "confirm on booking, remind
+  24 h before, ask for feedback 2 h after" — each with an on/off switch.
+  **Edit** one to show it is a readable list of steps.
 - **Templates**: the messages patients receive, editable.
 - **Staff**: add a user — they get a one-time password and must choose
   their own; reset a password and their session ends immediately.
@@ -142,7 +143,11 @@ follow-ups, messages and reports.
 - **Patients → Lakshmi → Export data**: her complete record as a file — the
   DPDP right of access. (*Erase identity* exists too; don't click it in the
   demo.)
-- **Integrations**: WhatsApp, SMS, email, lab — with live status.
+- **Integrations**: WhatsApp, SMS and email, with their status. The demo
+  has no vendor account, so they show *Not configured* and messages are
+  recorded, not sent.
+- **AI Assistants**: add a clinic document, then ask the doctor's AI
+  Copilot about it.
 
 ## Questions clients ask
 

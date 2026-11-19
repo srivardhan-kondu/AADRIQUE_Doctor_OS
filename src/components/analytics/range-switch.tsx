@@ -31,7 +31,7 @@ export function RangeSwitch({ days }: { days: number }) {
               router.replace(`${pathname}?${params}`, { scroll: false });
             }}
             className={cn(
-              "rounded px-2.5 py-1 text-[12px] font-semibold transition-colors",
+              "rounded px-2.5 py-1 text-[13px] font-semibold transition-colors",
               active
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",

@@ -89,7 +89,7 @@ export default async function WaitingRoomPage() {
               </p>
               <p
                 data-numeric
-                className="mt-1 font-mono text-7xl font-bold leading-none text-accent"
+                className="mt-1 font-mono text-7xl font-bold leading-none text-accent-ink"
               >
                 {panel.nowServing ?? "—"}
               </p>

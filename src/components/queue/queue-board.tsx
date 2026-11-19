@@ -86,7 +86,7 @@ function ActiveCard({ board }: { board: QueueBoard }) {
           <p className="truncate font-display text-xl font-medium">
             {active.patientName}
           </p>
-          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] text-muted-foreground">
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px] text-muted-foreground">
             <span data-numeric className="whitespace-nowrap">{active.patientMrn}</span>
             {active.age !== null && (
               <>
@@ -98,7 +98,7 @@ function ActiveCard({ board }: { board: QueueBoard }) {
             <span data-numeric>{active.phone}</span>
           </p>
           {active.reason && (
-            <p className="mt-1.5 text-[13px]">{active.reason}</p>
+            <p className="mt-1.5 text-[14px]">{active.reason}</p>
           )}
           {active.allergyCount > 0 && (
             <Badge variant="destructive" className="mt-2">
@@ -145,7 +145,7 @@ function WaitingList({
       <CardHeader>
         <div>
           <CardTitle>Waiting</CardTitle>
-          <p className="mt-1 text-[13px] text-muted-foreground">
+          <p className="mt-1 text-[14px] text-muted-foreground">
             {board.waiting.length === 0
               ? "Nobody in line"
               : `${board.waiting.length} in line · average wait ${formatWait(board.averageWaitMinutes)}`}
@@ -202,7 +202,7 @@ function QueueEntryRow({
     >
       <span
         data-numeric
-        className="w-12 shrink-0 font-mono text-[13px] font-semibold"
+        className="w-12 shrink-0 font-mono text-[14px] font-semibold"
       >
         {entry.token}
       </span>
@@ -216,7 +216,7 @@ function QueueEntryRow({
         className="min-w-0 flex-1 basis-32"
       >
         <span className="flex items-center gap-1.5">
-          <span className="truncate text-[13px] font-medium">
+          <span className="truncate text-[14px] font-medium">
             {entry.patientName}
           </span>
           {isNext && <Badge variant="accent">Next</Badge>}
@@ -232,7 +232,7 @@ function QueueEntryRow({
             <AlertTriangle className="size-3.5 shrink-0 text-destructive" />
           )}
         </span>
-        <span className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <span className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
           <span data-numeric className="whitespace-nowrap">{entry.patientMrn}</span>
           {entry.reason && (
             <>
@@ -252,7 +252,7 @@ function QueueEntryRow({
       <span
         data-numeric
         className={cn(
-          "w-16 shrink-0 text-right text-[13px] tabular-nums",
+          "w-16 shrink-0 text-right text-[14px] tabular-nums",
           overdue ? "font-semibold text-destructive" : "text-muted-foreground",
         )}
       >
@@ -289,26 +289,26 @@ function PatientDisplayCard({ board }: { board: QueueBoard }) {
       <CardHeader>
         <div>
           <CardTitle>Patient display</CardTitle>
-          <p className="mt-1 text-[13px] text-muted-foreground">
+          <p className="mt-1 text-[14px] text-muted-foreground">
             What the waiting-area screen shows
           </p>
         </div>
       </CardHeader>
 
       <div className="mx-5 mb-5 rounded-2xl bg-navy-900 p-5 text-center text-navy-100">
-        <p className="text-[12px] font-medium text-navy-400">
+        <p className="text-[13px] font-medium text-navy-400">
           Current token
         </p>
         <p
           data-numeric
-          className="mt-2 font-mono text-4xl font-bold text-accent"
+          className="mt-2 font-mono text-4xl font-bold text-accent-ink"
         >
           {board.currentToken ?? "—"}
         </p>
 
         <div className="mt-5 grid grid-cols-2 gap-4 border-t border-navy-800 pt-4">
           <div>
-            <p className="text-[12px] font-medium text-navy-400">
+            <p className="text-[13px] font-medium text-navy-400">
               Next
             </p>
             <p data-numeric className="mt-1 font-mono text-lg font-semibold">
@@ -316,7 +316,7 @@ function PatientDisplayCard({ board }: { board: QueueBoard }) {
             </p>
           </div>
           <div>
-            <p className="text-[12px] font-medium text-navy-400">
+            <p className="text-[13px] font-medium text-navy-400">
               In queue
             </p>
             <p data-numeric className="mt-1 font-display text-lg font-medium">
@@ -326,7 +326,7 @@ function PatientDisplayCard({ board }: { board: QueueBoard }) {
         </div>
 
         {board.room && (
-          <p className="mt-4 text-[12px] text-navy-400">
+          <p className="mt-4 text-[13px] text-navy-400">
             {board.doctorName} · {board.room}
           </p>
         )}
@@ -341,7 +341,7 @@ function CompletedList({ entries }: { entries: QueueBoardEntry[] }) {
       <CardHeader>
         <div>
           <CardTitle>Seen today</CardTitle>
-          <p className="mt-1 text-[13px] text-muted-foreground">
+          <p className="mt-1 text-[14px] text-muted-foreground">
             {entries.length} {entries.length === 1 ? "patient" : "patients"}
           </p>
         </div>
@@ -367,11 +367,11 @@ function CompletedList({ entries }: { entries: QueueBoardEntry[] }) {
               >
                 <span
                   data-numeric
-                  className="w-12 shrink-0 font-mono text-[12px] text-muted-foreground"
+                  className="w-12 shrink-0 font-mono text-[13px] text-muted-foreground"
                 >
                   {entry.token}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-[13px]">
+                <span className="min-w-0 flex-1 truncate text-[14px]">
                   {entry.patientName}
                 </span>
                 <StatusChip

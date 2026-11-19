@@ -77,7 +77,7 @@ export function Composer({
 
   if (consented.length === 0 || !channel) {
     return (
-      <p className="text-[13px] text-muted-foreground">
+      <p className="text-[14px] text-muted-foreground">
         {patientName.split(" ")[0]} has not agreed to be contacted on any
         channel. The front desk can record a preference on their record.
       </p>
@@ -131,7 +131,7 @@ export function Composer({
                 aria-pressed={channel === option}
                 onClick={() => setChannel(option)}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-[12px] font-semibold transition-colors",
+                  "inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-[13px] font-semibold transition-colors",
                   channel === option
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -175,11 +175,11 @@ export function Composer({
         maxLength={2000}
         placeholder={`Write to ${patientName.split(" ")[0]} on ${CHANNEL_LABEL[channel]}…`}
         aria-label="Message body"
-        className="resize-none text-[13px]"
+        className="resize-none text-[14px]"
       />
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[12px] text-muted-foreground">
+        <p className="text-[13px] text-muted-foreground">
           {unfilled.length > 0 ? (
             <span className="inline-flex items-center gap-1.5 font-semibold text-warning">
               <Sparkles className="size-3.5" />

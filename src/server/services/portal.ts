@@ -55,16 +55,28 @@ export async function portalOrganization(slug: string) {
   return organization;
 }
 
-/** Active patients in the organization whose mobile is this number. */
+/** The whole number as digits, country code included, for comparing two numbers. */
+function phoneDigits(value: string): string {
+  return canonicalPhone(value).replace(/\D/g, "");
+}
+
+/**
+ * Active patients in the organization whose mobile is this number.
+ *
+ * The whole number must match, country code included. Matching on the last
+ * ten digits alone would let `+1 98765 43210` stand in for a patient whose
+ * number is `+91 98765 43210` — and the sign-in code would go to the `+1`
+ * number.
+ */
 async function patientsWithPhone(organizationId: string, phone: string) {
-  const lastTen = phone.replace(/\D/g, "").slice(-10);
-  if (lastTen.length !== 10) return [];
+  const digits = phoneDigits(phone);
+  if (digits.length < 10) return [];
   const candidates = await prisma.patient.findMany({
-    where: { organizationId, active: true, phone: { contains: lastTen.slice(-4) } },
+    where: { organizationId, active: true, phone: { contains: digits.slice(-4) } },
     select: { id: true, firstName: true, lastName: true, phone: true, mrn: true },
-    take: 50,
+    take: 200,
   });
-  return candidates.filter((p) => p.phone.replace(/\D/g, "").endsWith(lastTen));
+  return candidates.filter((p) => phoneDigits(p.phone) === digits);
 }
 
 /* --------------------------------- sign-in -------------------------------- */
@@ -128,7 +140,9 @@ export async function requestSignInCode(
   const receipt = await dispatch(
     {
       channel: whatsappRoute ? "WHATSAPP" : "SMS",
-      to: phone,
+      // The number on the patient's record, never the one typed into the
+      // form: the code proves the visitor holds the registered phone.
+      to: canonicalPhone(patients[0].phone),
       subject: null,
       body,
       providerTemplateId: whatsappRoute ? null : (smsTemplate?.providerTemplateId ?? null),
@@ -150,26 +164,50 @@ export async function requestSignInCode(
     : {};
 }
 
-/** Checks a code; on success, the number is verified and the code is spent. */
+/** Code checks one caller may make, across every number, in ten minutes. */
+const VERIFY_ADDRESS_LIMIT = { limit: 30, windowMs: 10 * 60_000 };
+
+/**
+ * Checks a code; on success, the number is verified and the code is spent.
+ *
+ * `address` is the caller's IP, from the action; every code check from it
+ * counts against one limit, so guesses cannot be spread across numbers.
+ */
 export async function verifySignInCode(
   organizationId: string,
   phoneInput: string,
   code: string,
+  address?: string,
 ): Promise<{ phone: string; patientIds: string[] }> {
+  if (address !== undefined) {
+    const byAddress = await rateLimit(`portal:verify:ip:${address}`, VERIFY_ADDRESS_LIMIT);
+    if (!byAddress.allowed) {
+      const minutes = Math.ceil(byAddress.retryAfter / 60);
+      throw new ServiceError(
+        "INVALID_STATE",
+        `Too many attempts. Try again in ${minutes <= 1 ? "a minute" : `${minutes} minutes`}.`,
+      );
+    }
+  }
+
   const phone = canonicalPhone(phoneInput);
   const otp = await prisma.portalOtp.findFirst({
     where: { organizationId, phone, expiresAt: { gt: new Date() } },
     orderBy: { createdAt: "desc" },
   });
 
-  if (!otp || otp.attempts >= MAX_CODE_ATTEMPTS) {
-    throw invalidState("That code has expired.", "Ask for a new one.");
-  }
+  if (!otp) throw invalidState("That code has expired.", "Ask for a new one.");
 
-  await prisma.portalOtp.update({
-    where: { id: otp.id },
+  // Spend an attempt and check the limit in one statement. Reading the count
+  // and then incrementing it would let a burst of parallel guesses all pass
+  // the check before any of them counted — far more than five tries a code.
+  const claimed = await prisma.portalOtp.updateMany({
+    where: { id: otp.id, attempts: { lt: MAX_CODE_ATTEMPTS } },
     data: { attempts: { increment: 1 } },
   });
+  if (claimed.count === 0) {
+    throw invalidState("That code has expired.", "Ask for a new one.");
+  }
 
   if (!codeMatches(code.trim(), phone, otp.codeHash, secret())) {
     const left = MAX_CODE_ATTEMPTS - otp.attempts - 1;

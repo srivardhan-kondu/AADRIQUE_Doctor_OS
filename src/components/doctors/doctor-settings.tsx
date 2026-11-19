@@ -77,7 +77,7 @@ export function PracticeSettings({
       <CardHeader>
         <div>
           <CardTitle>Practice</CardTitle>
-          <p className="mt-1 text-[13px] text-muted-foreground">
+          <p className="mt-1 text-[14px] text-muted-foreground">
             Slot length sets how the day is divided into appointments.
           </p>
         </div>
@@ -88,7 +88,7 @@ export function PracticeSettings({
           <div>
             <label
               htmlFor={`dept-${doctorId}`}
-              className="text-[12px] font-semibold text-muted-foreground"
+              className="text-[13px] font-semibold text-muted-foreground"
             >
               Department
             </label>
@@ -110,7 +110,7 @@ export function PracticeSettings({
         <div>
           <label
             htmlFor={`slot-${doctorId}`}
-            className="text-[12px] font-semibold text-muted-foreground"
+            className="text-[13px] font-semibold text-muted-foreground"
           >
             Consultation slot
           </label>
@@ -137,8 +137,8 @@ export function PracticeSettings({
             onChange={(e) => setWalkIns(e.target.checked)}
           />
           <span>
-            <span className="block text-[13px] font-medium">Accept walk-ins</span>
-            <span className="block text-[12px] text-muted-foreground">
+            <span className="block text-[14px] font-medium">Accept walk-ins</span>
+            <span className="block text-[13px] text-muted-foreground">
               The front desk can add patients without an appointment to the
               queue.
             </span>
@@ -187,7 +187,7 @@ export function OnDutySwitch({
         })
       }
       className={cn(
-        "inline-flex h-9 items-center gap-2.5 rounded-lg border px-3 text-[13px] font-semibold transition-colors",
+        "inline-flex h-9 items-center gap-2.5 rounded-lg border px-3 text-[14px] font-semibold transition-colors",
         online
           ? "border-success/40 bg-success-soft text-success"
           : "border-border bg-card text-muted-foreground hover:text-foreground",

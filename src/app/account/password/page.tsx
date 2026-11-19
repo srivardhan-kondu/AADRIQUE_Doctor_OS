@@ -29,7 +29,7 @@ export default async function ChangePasswordPage() {
           <h1 className="font-display text-xl font-medium tracking-tight">
             {forced ? "Choose your password" : "Change password"}
           </h1>
-          <p className="mb-5 mt-1 text-[13px] text-muted-foreground">
+          <p className="mb-5 mt-1 text-[14px] text-muted-foreground">
             {forced
               ? `Welcome, ${actor.name}. You signed in with a temporary password — replace it with one only you know.`
               : `Signed in as ${actor.email}.`}
@@ -37,7 +37,7 @@ export default async function ChangePasswordPage() {
           <PasswordForm forced={forced} />
         </div>
         {!forced && (
-          <p className="mt-4 text-center text-[13px]">
+          <p className="mt-4 text-center text-[14px]">
             <Link href={homeFor(actor.role)} className="text-muted-foreground hover:text-foreground">
               Back to your workspace
             </Link>

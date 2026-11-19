@@ -69,7 +69,7 @@ async function Worklist({ searchParams }: PageProps) {
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <nav className="flex gap-1 text-[13px]" aria-label="Filter consultations">
+        <nav className="flex gap-1 text-[14px]" aria-label="Filter consultations">
           <Tab href={hrefFor(undefined, query)} active={!show}>
             All
           </Tab>
@@ -119,13 +119,13 @@ async function Worklist({ searchParams }: PageProps) {
                   )}
                 >
                   <div className="w-24 shrink-0">
-                    <p className="text-[13px] font-semibold tabular">
+                    <p className="text-[14px] font-semibold tabular">
                       {row.startedAt.toLocaleDateString("en-IN", {
                         day: "numeric",
                         month: "short",
                       })}
                     </p>
-                    <p className="text-[11px] text-muted-foreground tabular">
+                    <p className="text-[12px] text-muted-foreground tabular">
                       {row.startedAt.toLocaleTimeString("en-IN", {
                         hour: "numeric",
                         minute: "2-digit",
@@ -139,11 +139,11 @@ async function Worklist({ searchParams }: PageProps) {
                       <span className="truncate text-[14px] font-semibold">
                         {row.patientName}
                       </span>
-                      <span data-numeric className="font-mono text-[12px] text-muted-foreground">
+                      <span data-numeric className="font-mono text-[13px] text-muted-foreground">
                         {row.patientMrn}
                       </span>
                     </p>
-                    <p className="mt-0.5 truncate text-[13px] text-muted-foreground">
+                    <p className="mt-0.5 truncate text-[14px] text-muted-foreground">
                       {row.assessment ?? row.chiefComplaint ?? "No complaint recorded"}
                     </p>
                   </div>

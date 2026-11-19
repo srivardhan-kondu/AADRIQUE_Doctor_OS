@@ -10,7 +10,8 @@ import {
 import type { RequestActor } from "@/server/context";
 import { writeAudit } from "./audit";
 import { issueDraftPrescription } from "./prescriptions";
-import { invalidState, notFound } from "./errors";
+import { ServiceError, invalidState, notFound } from "./errors";
+import { followUpDueDate } from "@/server/rules/consultation";
 import { fireTrigger } from "./workflows";
 
 /**
@@ -77,6 +78,29 @@ export interface ConsultationWorkspace {
   };
   vitals: ConsultationVitals | null;
   token: string | null;
+  /** The patient is in the room from today's queue — "Sign & call next" applies. */
+  inRoom: boolean;
+  /** Spec §6 — structured diagnoses on this visit, primary first. */
+  diagnoses: Array<{ id: string; name: string; code: string | null; isPrimary: boolean }>;
+  /** The review already booked from this visit, if any. */
+  followUp: { dueDate: Date } | null;
+  /** Issued prescriptions from the patient's earlier visits, newest first. */
+  previousPrescriptions: Array<{
+    id: string;
+    visitId: string;
+    issuedAt: Date;
+    doctorName: string;
+    advice: string | null;
+    items: Array<{
+      medicationId: string | null;
+      medicationName: string;
+      dosage: string | null;
+      frequency: string | null;
+      route: string | null;
+      durationDays: number | null;
+      instructions: string | null;
+    }>;
+  }>;
   /** Spec §6 — previous visits, readable without leaving the workspace. */
   history: Array<{
     visitId: string;
@@ -85,6 +109,7 @@ export interface ConsultationWorkspace {
     chiefComplaint: string | null;
     assessment: string | null;
     plan: string | null;
+    diagnoses: string[];
     status: string;
   }>;
   prescriptions: Array<{
@@ -120,8 +145,18 @@ export async function getConsultationWorkspace(
     where: { id: visitId, ...tenantScope(actor) },
     include: {
       doctor: { select: { id: true, user: { select: { name: true } } } },
-      queueEntry: { select: { token: true } },
+      queueEntry: { select: { token: true, status: true } },
       consultation: true,
+      diagnoses: {
+        orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+        select: { id: true, name: true, code: true, isPrimary: true },
+      },
+      followUps: {
+        where: { status: { in: ["PENDING", "SCHEDULED"] } },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { dueDate: true },
+      },
       vitals: { orderBy: { recordedAt: "desc" }, take: 1, include: { recordedBy: { select: { name: true } } } },
       prescriptions: {
         orderBy: { createdAt: "desc" },
@@ -155,7 +190,7 @@ export async function getConsultationWorkspace(
       },
     }));
 
-  const previousVisits = await prisma.visit.findMany({
+  const previousVisitsQuery = prisma.visit.findMany({
     where: {
       patientId: visit.patientId,
       ...tenantScope(actor),
@@ -172,8 +207,39 @@ export async function getConsultationWorkspace(
       consultation: {
         select: { assessment: true, plan: true, status: true },
       },
+      diagnoses: {
+        orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+        select: { name: true },
+      },
     },
   });
+
+  // Spec §6 — what this patient was prescribed before, so a repeat is one
+  // click. Scoped through the visit, which carries the tenant.
+  const previousPrescriptionsQuery = prisma.prescription.findMany({
+    where: {
+      patientId: visit.patientId,
+      status: "ISSUED",
+      visitId: { not: visit.id },
+      visit: tenantScope(actor),
+    },
+    orderBy: { issuedAt: "desc" },
+    take: 5,
+    select: {
+      id: true,
+      visitId: true,
+      issuedAt: true,
+      createdAt: true,
+      advice: true,
+      doctor: { select: { user: { select: { name: true } } } },
+      items: { orderBy: { sortOrder: "asc" } },
+    },
+  });
+
+  const [previousVisits, previousPrescriptions] = await Promise.all([
+    previousVisitsQuery,
+    previousPrescriptionsQuery,
+  ]);
 
   const vital = visit.vitals[0] ?? null;
   const patient = visit.patient;
@@ -253,6 +319,26 @@ export async function getConsultationWorkspace(
         }
       : null,
     token: visit.queueEntry?.token ?? null,
+    inRoom:
+      visit.queueEntry?.status === "IN_CONSULTATION" || visit.queueEntry?.status === "CALLED",
+    diagnoses: visit.diagnoses,
+    followUp: visit.followUps[0] ? { dueDate: visit.followUps[0].dueDate } : null,
+    previousPrescriptions: previousPrescriptions.map((p) => ({
+      id: p.id,
+      visitId: p.visitId,
+      issuedAt: p.issuedAt ?? p.createdAt,
+      doctorName: p.doctor.user.name,
+      advice: p.advice,
+      items: p.items.map((i) => ({
+        medicationId: i.medicationId,
+        medicationName: i.medicationName,
+        dosage: i.dosage,
+        frequency: i.frequency,
+        route: i.route,
+        durationDays: i.durationDays,
+        instructions: i.instructions,
+      })),
+    })),
     history: previousVisits.map((v) => ({
       visitId: v.id,
       at: v.startedAt,
@@ -260,6 +346,7 @@ export async function getConsultationWorkspace(
       chiefComplaint: v.chiefComplaint,
       assessment: v.consultation?.assessment ?? null,
       plan: v.consultation?.plan ?? null,
+      diagnoses: v.diagnoses.map((d) => d.name),
       status: v.consultation?.status ?? "DRAFT",
     })),
     prescriptions: visit.prescriptions.map((p) => ({
@@ -349,12 +436,25 @@ export async function saveDraft(
  * Spec §26, §54 — signing moves the consultation out of draft and closes the
  * visit. After this it is immutable.
  */
+export interface SignOptions {
+  /** Book a review this many days out, in the same transaction. */
+  followUpInDays?: number | null;
+}
+
 export async function signConsultation(
   actor: RequestActor,
   visitId: string,
   input: ConsultationDraft,
+  options: SignOptions = {},
 ): Promise<void> {
   assertPermission(actor, Permission.CONSULTATION_SIGN);
+  const followUpInDays = options.followUpInDays ?? null;
+  if (followUpInDays !== null) {
+    assertPermission(actor, Permission.FOLLOWUP_MANAGE);
+    if (!Number.isInteger(followUpInDays) || followUpInDays < 1 || followUpInDays > 365) {
+      throw new ServiceError("VALIDATION", "A follow-up is between 1 day and a year away.");
+    }
+  }
 
   const consultation = await loadForWrite(actor, visitId);
 
@@ -375,6 +475,8 @@ export async function signConsultation(
     where: { id: visitId },
     select: { queueEntryId: true, appointmentId: true, status: true },
   });
+
+  let followUpId: string | null = null;
 
   await prisma.$transaction(async (tx) => {
     const now = new Date();
@@ -414,6 +516,44 @@ export async function signConsultation(
       });
     }
 
+    // Spec §42 — the review the doctor promised, booked with the signature
+    // rather than retyped on the follow-ups screen. One per visit: choosing
+    // again moves the existing one.
+    if (followUpInDays !== null) {
+      const dueDate = followUpDueDate(now, followUpInDays);
+      const existing = await tx.followUp.findFirst({
+        where: { visitId, status: { in: ["PENDING", "SCHEDULED"] } },
+        select: { id: true },
+      });
+      const reason = data.assessment?.trim().split("\n")[0]?.slice(0, 200) ?? null;
+      const followUp = existing
+        ? await tx.followUp.update({
+            where: { id: existing.id },
+            data: { dueDate },
+            select: { id: true },
+          })
+        : await tx.followUp.create({
+            data: {
+              organizationId: actor.organizationId,
+              patientId: consultation.patientId,
+              doctorId: consultation.doctorId,
+              visitId,
+              dueDate,
+              reason: reason ? `Review: ${reason}` : "Review",
+              status: "PENDING",
+            },
+            select: { id: true },
+          });
+      followUpId = followUp.id;
+      await writeAudit(tx, actor, {
+        action: existing ? "RECORD_UPDATED" : "RECORD_CREATED",
+        entityType: "FollowUp",
+        entityId: followUp.id,
+        summary: `Follow-up in ${followUpInDays} days · Patient ${consultation.patient.mrn}`,
+        metadata: { patientMrn: consultation.patient.mrn, dueDate: dueDate.toISOString() },
+      });
+    }
+
     await writeAudit(tx, actor, {
       action: "CONSULTATION_SIGNED",
       entityType: "Consultation",
@@ -426,6 +566,9 @@ export async function signConsultation(
   // Spec §28 — signing is a trigger. Fired after the transaction, so an
   // automation can never undo a signature.
   await fireTrigger(actor, "CONSULTATION_SIGNED", { type: "Visit", id: visitId });
+  if (followUpId) {
+    await fireTrigger(actor, "FOLLOW_UP_DUE", { type: "FollowUp", id: followUpId });
+  }
 
   // Signing also completes the visit, so whatever listens for a completed
   // visit (the feedback request) hears about it — unless the queue already
@@ -538,4 +681,119 @@ export async function listConsultations(
     })),
     counts: { unsigned, overdue, signed30d },
   };
+}
+
+/* -------------------------------------------------------------------------
+ * Spec §6 — structured diagnoses. Written while the note is a draft, frozen
+ * with it when it is signed. Edits are not audited for the same reason
+ * autosaves are not; the signature is the recorded event.
+ * ---------------------------------------------------------------------- */
+
+export interface DiagnosisView {
+  id: string;
+  name: string;
+  code: string | null;
+  isPrimary: boolean;
+}
+
+const MAX_DIAGNOSES = 10;
+
+export const diagnosisInputSchema = z.object({
+  name: z.string().trim().min(2, "Name the diagnosis.").max(160),
+  code: z.string().trim().max(20).nullish(),
+});
+
+async function listDiagnoses(visitId: string): Promise<DiagnosisView[]> {
+  return prisma.diagnosis.findMany({
+    where: { visitId },
+    orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+    select: { id: true, name: true, code: true, isPrimary: true },
+  });
+}
+
+async function loadDraftForDiagnoses(actor: RequestActor, visitId: string) {
+  assertPermission(actor, Permission.CONSULTATION_UPDATE);
+  const consultation = await loadForWrite(actor, visitId);
+  if (consultation.status === "SIGNED") {
+    throw invalidState(
+      "This consultation is signed; its diagnoses cannot change.",
+      "Record any change in a new visit.",
+    );
+  }
+  return consultation;
+}
+
+export async function addDiagnosis(
+  actor: RequestActor,
+  visitId: string,
+  input: z.input<typeof diagnosisInputSchema>,
+): Promise<DiagnosisView[]> {
+  const consultation = await loadDraftForDiagnoses(actor, visitId);
+  const { name, code } = diagnosisInputSchema.parse(input);
+
+  const existing = await listDiagnoses(visitId);
+  if (existing.some((d) => d.name.toLowerCase() === name.toLowerCase())) return existing;
+  if (existing.length >= MAX_DIAGNOSES) {
+    throw new ServiceError("VALIDATION", `A visit can carry at most ${MAX_DIAGNOSES} diagnoses.`);
+  }
+
+  await prisma.diagnosis.create({
+    data: {
+      visitId,
+      consultationId: consultation.id,
+      patientId: consultation.patientId,
+      name,
+      code: code || null,
+      // The first diagnosis is the primary one.
+      isPrimary: existing.length === 0,
+    },
+  });
+  return listDiagnoses(visitId);
+}
+
+export async function removeDiagnosis(
+  actor: RequestActor,
+  visitId: string,
+  diagnosisId: string,
+): Promise<DiagnosisView[]> {
+  await loadDraftForDiagnoses(actor, visitId);
+
+  await prisma.$transaction(async (tx) => {
+    // Scoped by visit, which loadForWrite proved belongs to this doctor.
+    const removed = await tx.diagnosis.findFirst({
+      where: { id: diagnosisId, visitId },
+      select: { isPrimary: true },
+    });
+    if (!removed) return;
+    await tx.diagnosis.delete({ where: { id: diagnosisId } });
+    if (removed.isPrimary) {
+      const next = await tx.diagnosis.findFirst({
+        where: { visitId },
+        orderBy: { createdAt: "asc" },
+        select: { id: true },
+      });
+      if (next) await tx.diagnosis.update({ where: { id: next.id }, data: { isPrimary: true } });
+    }
+  }, TX_OPTIONS);
+
+  return listDiagnoses(visitId);
+}
+
+/** The diagnoses this doctor records most, for one-click picking. */
+export async function recentDiagnoses(actor: RequestActor): Promise<string[]> {
+  assertPermission(actor, Permission.CONSULTATION_READ);
+  if (!actor.doctorId) return [];
+
+  const since = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
+  const rows = await prisma.diagnosis.groupBy({
+    by: ["name"],
+    where: {
+      createdAt: { gte: since },
+      visit: { doctorId: actor.doctorId, ...tenantScope(actor) },
+    },
+    _count: { name: true },
+    orderBy: { _count: { name: "desc" } },
+    take: 12,
+  });
+  return rows.map((r) => r.name);
 }

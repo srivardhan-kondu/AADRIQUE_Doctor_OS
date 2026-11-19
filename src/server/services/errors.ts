@@ -29,3 +29,22 @@ export function notFound(what: string): ServiceError {
 export function invalidState(message: string, action?: string): ServiceError {
   return new ServiceError("INVALID_STATE", message, action);
 }
+
+/**
+ * Closing a visit would leave a note the doctor wrote unsigned (and its
+ * prescription unissued). The caller decides: open the note, or go on and
+ * leave it as a draft to sign later.
+ */
+export class UnsignedNoteError extends ServiceError {
+  constructor(
+    readonly visitId: string,
+    readonly patientName: string,
+  ) {
+    super(
+      "CONFLICT",
+      `${patientName}'s note is not signed.`,
+      "Sign it first, or continue and sign it later from Consultations.",
+    );
+    this.name = "UnsignedNoteError";
+  }
+}
